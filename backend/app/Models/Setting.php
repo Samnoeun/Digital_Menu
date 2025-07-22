@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
+class Setting extends Model
 {
     use HasFactory;
-    public function settings()
+    public function user()
     {
-        return $this->hasOne(Setting::class);
+        return $this->belongsTo(User::class);
     }
 }
