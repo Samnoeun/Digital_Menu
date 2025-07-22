@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\OrderItem;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateItemRequest extends FormRequest
+class UpdateOrderItemRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
