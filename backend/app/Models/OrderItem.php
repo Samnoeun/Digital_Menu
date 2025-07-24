@@ -17,4 +17,5 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Item::class);
     }
+    protected $fillable = ['order_id', 'item_id', 'quantity', 'special_note'];
 }

@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\OrderItemController;
+use App\Http\Controllers\Api\TableController;
 
 // 🔓 Public Authentication Routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -19,7 +22,10 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
-    // API Resources protected by token (optional: move these outside if you want them public)
-    Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('items', ItemController::class);
 });
+
+Route::apiResource('categories', CategoryController::class);
+Route::apiResource('items', ItemController::class);
+Route::apiResource('tables', TableController::class);
+Route::apiResource('orders', OrderController::class);
+Route::apiResource('order-items', OrderItemController::class);
