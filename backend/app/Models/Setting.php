@@ -12,4 +12,19 @@ class Setting extends Model
     {
         return $this->belongsTo(User::class);
     }
+    protected $fillable = [
+        'user_id',
+        'restaurant_name',
+        'logo',
+        'address',
+        'currency',
+        'language',
+        'dark_mode',
+        'color',
+    ];
+    protected $hidden = [
+        'created_at',
+        'updated_at',
+    ];
+
 }

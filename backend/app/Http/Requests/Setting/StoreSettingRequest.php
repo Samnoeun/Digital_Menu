@@ -11,7 +11,7 @@ class StoreSettingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -21,8 +21,14 @@ class StoreSettingRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            //
-        ];
+       return [
+            'restaurant_name' => 'required|string|max:255',
+            'logo' => 'nullable|image|max:2048',
+            'address' => 'required|string',
+            'currency' => 'required|string',
+            'language' => 'required|string',
+            'dark_mode' => 'boolean',
+            'color' => 'nullable|string'
+    ];
     }
 }

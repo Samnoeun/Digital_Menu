@@ -20,8 +20,10 @@ return new class extends Migration
             $table->string('currency');
             $table->string('language');
             $table->boolean('dark_mode')->default(false);
+            $table->string('color')->default('purple'); // ✅ Added this line
             $table->timestamps();
-        });
+});
+
     }
 
     /**
