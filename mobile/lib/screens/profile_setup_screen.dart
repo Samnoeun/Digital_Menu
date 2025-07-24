@@ -18,8 +18,8 @@ class ProfileSetupScreen extends StatelessWidget {
               child: Icon(Icons.person, size: 50, color: Colors.white),
             ),
             const SizedBox(height: 20),
-            TextField(decoration: const InputDecoration(labelText: 'Restaurant Name')),
-            TextField(decoration: const InputDecoration(labelText: 'Location')),
+            const TextField(decoration: InputDecoration(labelText: 'Restaurant Name')),
+            const TextField(decoration: InputDecoration(labelText: 'Location')),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
