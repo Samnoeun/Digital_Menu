@@ -3,47 +3,44 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Setting\StoreSettingRequest as SettingStoreSettingRequest;
+use App\Http\Requests\Setting\UpdateSettingRequest as SettingUpdateSettingRequest;
+use App\Http\Requests\StoreSettingRequest;
+use App\Http\Requests\UpdateSettingRequest;
+use App\Http\Resources\SettingResource;
+use App\Models\Setting;
 
 class SettingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return SettingResource::collection(Setting::all());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(SettingStoreSettingRequest $request)
     {
-        //
+        $setting = Setting::create($request->validated());
+        return new SettingResource($setting);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        //
+        $setting = Setting::findOrFail($id);
+        return new SettingResource($setting);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(SettingUpdateSettingRequest $request, string $id)
     {
-        //
+        $setting = Setting::findOrFail($id);
+        $setting->update($request->validated());
+        return new SettingResource($setting);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        //
+        $setting = Setting::findOrFail($id);
+        $setting->delete();
+
+        return response()->json(['message' => 'Setting deleted successfully.']);
     }
 }

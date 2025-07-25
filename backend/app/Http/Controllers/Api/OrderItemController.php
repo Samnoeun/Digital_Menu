@@ -3,47 +3,42 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OrderItem\StoreOrderItemRequest;
+use App\Http\Requests\OrderItem\UpdateOrderItemRequest;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 
 class OrderItemController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $orderItems = OrderItem::with(['order', 'item'])->get();
+        return response()->json($orderItems);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreOrderItemRequest $request)
     {
-        //
+        $orderItem = OrderItem::create($request->validated());
+        return response()->json(['message' => 'Order item created', 'order_item' => $orderItem], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $orderItem = OrderItem::with(['order', 'item'])->findOrFail($id);
+        return response()->json($orderItem);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(UpdateOrderItemRequest $request, $id)
     {
-        //
+        $orderItem = OrderItem::findOrFail($id);
+        $orderItem->update($request->validated());
+        return response()->json(['message' => 'Order item updated', 'order_item' => $orderItem]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $orderItem = OrderItem::findOrFail($id);
+        $orderItem->delete();
+        return response()->json(['message' => 'Order item deleted']);
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->string('table_number'); // or $table->foreignId('table_id')->constrained()
+            $table->foreignId('table_id')->constrained()->onDelete('cascade');
             $table->string('status')->default('pending');
             $table->timestamps();
         });
