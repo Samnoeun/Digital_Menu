@@ -87,7 +87,7 @@ class _AddMenuScreenState extends State<AddMenuScreen> {
         actions: [
           TextButton(
             onPressed: _saveMenuItem,
-            child: Text(
+            child: const Text(
               'Save',
               style: TextStyle(
                 color: Colors.deepPurple,
@@ -155,7 +155,7 @@ class _AddMenuScreenState extends State<AddMenuScreen> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.attach_money),
               ),
-              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
             ),
             const SizedBox(height: 16),
             TextField(

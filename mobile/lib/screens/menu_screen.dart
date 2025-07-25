@@ -5,6 +5,10 @@ import 'qr_screen.dart';
 import 'settings_screen.dart';
 import 'menu_detail_screen.dart';
 import 'qr_menu_view_screen.dart';
+import 'home_screen.dart';
+import 'order_screen.dart';
+import 'menu_preview_screen.dart';
+import 'category_list_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -16,10 +20,13 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   int _selectedIndex = 0;
   final List<Widget> _pages = [
-    const MenuPage(),
-    const CategoryScreen(),
-    const QrScreen(),
-    const SettingsScreen(),
+    const HomeScreen(), // index 0
+    const OrderScreen(), // index 1
+    const MenuPreviewScreen(), // index 2
+    const MenuPage(), // index 3
+    const CategoryListScreen(), // index 4 (Category tab)
+    const QrScreen(), // index 5
+    const SettingsScreen(), // index 6
   ];
 
   void _onItemTapped(int index) {
@@ -39,10 +46,25 @@ class _MenuScreenState extends State<MenuScreen> {
         type: BottomNavigationBarType.fixed,
         onTap: _onItemTapped,
         items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: 'Orders',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.remove_red_eye),
+            label: 'Preview',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Menu'),
-          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Category'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category),
+            label: 'Category',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.qr_code), label: 'QR'),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
         ],
       ),
     );
@@ -58,8 +80,8 @@ class MenuPage extends StatefulWidget {
 
 class _MenuPageState extends State<MenuPage> {
   bool _isSelectionMode = false;
-  Set<int> _selectedItems = {};
-  
+  final Set<int> _selectedItems = {};
+
   List<MenuItem> menuItems = [
     MenuItem(
       id: 1,
@@ -112,7 +134,7 @@ class _MenuPageState extends State<MenuPage> {
       } else {
         _selectedItems.add(index);
       }
-      
+
       if (_selectedItems.isEmpty) {
         _isSelectionMode = false;
       }
@@ -139,7 +161,9 @@ class _MenuPageState extends State<MenuPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Items'),
-          content: Text('Are you sure you want to delete ${_selectedItems.length} item(s)?'),
+          content: Text(
+            'Are you sure you want to delete ${_selectedItems.length} item(s)?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -150,7 +174,8 @@ class _MenuPageState extends State<MenuPage> {
               onPressed: () {
                 setState(() {
                   // Sort indices in descending order to avoid index shifting issues
-                  final sortedIndices = _selectedItems.toList()..sort((a, b) => b.compareTo(a));
+                  final sortedIndices = _selectedItems.toList()
+                    ..sort((a, b) => b.compareTo(a));
                   for (int index in sortedIndices) {
                     menuItems.removeAt(index);
                   }
@@ -171,7 +196,9 @@ class _MenuPageState extends State<MenuPage> {
   }
 
   void _generateQRForSelected() {
-    final selectedMenuItems = _selectedItems.map((index) => menuItems[index]).toList();
+    final selectedMenuItems = _selectedItems
+        .map((index) => menuItems[index])
+        .toList();
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -197,7 +224,8 @@ class _MenuPageState extends State<MenuPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MenuDetailScreen(menuItem: menuItems[index]),
+                      builder: (_) =>
+                          MenuDetailScreen(menuItem: menuItems[index]),
                     ),
                   );
                 },
@@ -243,7 +271,9 @@ class _MenuPageState extends State<MenuPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Delete Menu Item'),
-          content: Text('Are you sure you want to delete "${menuItems[index].name}"?'),
+          content: Text(
+            'Are you sure you want to delete "${menuItems[index].name}"?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -255,7 +285,9 @@ class _MenuPageState extends State<MenuPage> {
                 _deleteMenuItem(index);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Menu item deleted successfully')),
+                  const SnackBar(
+                    content: Text('Menu item deleted successfully'),
+                  ),
                 );
               },
               child: const Text('Delete'),
@@ -270,7 +302,9 @@ class _MenuPageState extends State<MenuPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isSelectionMode ? '${_selectedItems.length} selected' : 'Your Menu'),
+        title: Text(
+          _isSelectionMode ? '${_selectedItems.length} selected' : 'Your Menu',
+        ),
         // Remove the automaticallyImplyLeading to hide back button
         automaticallyImplyLeading: false,
         leading: _isSelectionMode
@@ -283,12 +317,16 @@ class _MenuPageState extends State<MenuPage> {
             ? [
                 IconButton(
                   icon: const Icon(Icons.qr_code),
-                  onPressed: _selectedItems.isNotEmpty ? _generateQRForSelected : null,
+                  onPressed: _selectedItems.isNotEmpty
+                      ? _generateQRForSelected
+                      : null,
                   tooltip: 'Generate QR Code',
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete),
-                  onPressed: _selectedItems.isNotEmpty ? _deleteSelectedItems : null,
+                  onPressed: _selectedItems.isNotEmpty
+                      ? _deleteSelectedItems
+                      : null,
                   tooltip: 'Delete Selected',
                 ),
               ]
@@ -321,9 +359,12 @@ class _MenuPageState extends State<MenuPage> {
               itemBuilder: (context, index) {
                 final item = menuItems[index];
                 final isSelected = _selectedItems.contains(index);
-                
+
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   child: ListTile(
                     leading: _isSelectionMode
                         ? Checkbox(
@@ -354,9 +395,17 @@ class _MenuPageState extends State<MenuPage> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(item.category, style: TextStyle(color: Colors.grey[600])),
-                        Text('\$${item.price.toStringAsFixed(2)}', 
-                             style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                        Text(
+                          item.category,
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                        Text(
+                          '\$${item.price.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
                       ],
                     ),
                     trailing: _isSelectionMode

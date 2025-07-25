@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
 import 'register_screen.dart';
-import 'profile_setup_screen.dart';
+import 'menu_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -78,19 +78,33 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await ApiService.login(
+      final result = await ApiService.login(
         emailController.text.trim(),
         passwordController.text.trim(),
       );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login successful")),
-        );
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileSetupScreen()));
+
+      if (result['success'] == true) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result['message']),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Redirect to home page (MenuScreen) after successful login
+          Navigator.pushReplacement(
+            context, 
+            MaterialPageRoute(builder: (_) => const MenuScreen())
+          );
+        }
+      } else {
+        setState(() {
+          generalError = result['message'];
+        });
       }
     } catch (e) {
       setState(() {
-        generalError = e.toString();
+        generalError = 'An unexpected error occurred. Please try again.';
       });
     }
     
@@ -442,8 +456,8 @@ class _LoginScreenState extends State<LoginScreen> {
             decoration: InputDecoration(
               labelText: label,
               prefixIcon: Icon(
-                icon, 
-                color: errorText != null ? Colors.red.shade400 : Colors.deepPurple.shade400,
+                icon,
+                 color: errorText != null ? Colors.red.shade400 : Colors.deepPurple.shade400,
               ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
