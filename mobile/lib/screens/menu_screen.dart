@@ -21,7 +21,7 @@ class _MenuScreenState extends State<MenuScreen> {
   int _selectedIndex = 0;
   final List<Widget> _pages = [
     const HomeScreen(), // index 0
-    const OrderScreen(), // index 1
+    // const OrderScreen(), 
     const MenuPreviewScreen(), // index 2
     const MenuPage(), // index 3
     const CategoryListScreen(), // index 4 (Category tab)
