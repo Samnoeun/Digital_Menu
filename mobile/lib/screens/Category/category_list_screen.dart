@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'add_category_screen.dart';
 import 'category_detail_screen.dart';
-import '../models/category_model.dart';
-import '../services/category_services.dart';
+import '../../models/category_model.dart';
+import '../../services/category_services.dart';
 
 class CategoryListScreen extends StatefulWidget {
   const CategoryListScreen({Key? key}) : super(key: key);

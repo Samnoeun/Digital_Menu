@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/category_model.dart';
-import '../services/category_services.dart';
+import '../../models/category_model.dart';
+import '../../services/category_services.dart';
 
 class AddCategoryScreen extends StatefulWidget {
   final Category? category;
