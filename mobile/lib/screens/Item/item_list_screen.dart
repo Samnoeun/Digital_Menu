@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_item_screen.dart';
-import '../models/item_model.dart';
-import '../services/item_services.dart';
+import '../../models/item_model.dart';
+import '../../services/item_services.dart';
 
 class ItemListScreen extends StatefulWidget {
   const ItemListScreen({Key? key}) : super(key: key);

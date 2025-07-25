@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/category_model.dart';
-import '../models/item_model.dart' as item_model;
-import '../services/category_services.dart';
+import '../../models/category_model.dart';
+import '../../models/item_model.dart' as item_model;
+import '../../services/category_services.dart';
 
 class AddItemScreen extends StatefulWidget {
   final item_model.Item? item;
