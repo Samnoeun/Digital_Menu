@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderItemController;
+use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TableController;
 
 // 🔓 Public Authentication Routes
@@ -29,4 +30,5 @@ Route::apiResource('items', ItemController::class);
 Route::apiResource('tables', TableController::class);
 Route::apiResource('orders', OrderController::class);
 Route::apiResource('order-items', OrderItemController::class);
+Route::apiResource('settings', SettingController::class);
 
