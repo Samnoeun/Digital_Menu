@@ -10,15 +10,17 @@ class Category {
   });
 
   factory Category.fromJson(Map<String, dynamic> json) {
+    var itemsJson = json['items'] as List<dynamic>? ?? [];
+    List<Item> itemsList = itemsJson.map((e) => Item.fromJson(e)).toList();
+
     return Category(
       id: json['id'],
       name: json['name'],
-      items: (json['items'] as List<dynamic>)
-          .map((itemJson) => Item.fromJson(itemJson))
-          .toList(),
+      items: itemsList,
     );
   }
 }
+
 
 class Item {
   final int id;
