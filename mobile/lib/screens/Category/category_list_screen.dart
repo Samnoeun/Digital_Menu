@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'add_category_screen.dart';
 import 'category_detail_screen.dart';
 import '../../models/category_model.dart';
-import '../../services/category_services.dart';
+import '../../services/api_services.dart';
 
 class CategoryListScreen extends StatefulWidget {
   const CategoryListScreen({Key? key}) : super(key: key);
@@ -28,7 +28,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
   Future<void> _fetchCategories() async {
     try {
-      final categories = await CategoryService.getCategories();
+      final categories = await ApiService.getCategories();
       setState(() {
         _categories = categories;
         _isLoading = false;
@@ -69,7 +69,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
     if (confirm == true) {
       try {
-        await CategoryService.deleteCategory(id);
+        await ApiService.deleteCategory(id);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$categoryName deleted successfully'),

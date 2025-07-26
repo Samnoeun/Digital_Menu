@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../../models/category_model.dart';
 import '../../models/item_model.dart' as item_model;
-import '../../services/category_services.dart';
+import '../../services/api_services.dart';
 
 class AddItemScreen extends StatefulWidget {
   final item_model.Item? item;
@@ -53,7 +53,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
   Future<void> _fetchCategories() async {
     setState(() => _isLoading = true);
     try {
-      final cats = await CategoryService.getCategories();
+      final cats = await ApiService.getCategories();
       setState(() {
         if (cats.isNotEmpty) {
           _categories = cats;

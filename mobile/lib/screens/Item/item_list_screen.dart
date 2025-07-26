@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'add_item_screen.dart';
-import '../../models/item_model.dart';
-import '../../services/item_services.dart';
+import '../../models/category_model.dart';
+import '../../models/item_model.dart' as itm;
+import '../../services/api_services.dart';
 
 class ItemListScreen extends StatefulWidget {
   const ItemListScreen({Key? key}) : super(key: key);
@@ -11,7 +12,7 @@ class ItemListScreen extends StatefulWidget {
 }
 
 class _ItemListScreenState extends State<ItemListScreen> {
-  List<Item> _items = [];
+  List<itm.Item> _items = [];
   bool _isLoading = true;
 
   @override
@@ -23,7 +24,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
   Future<void> _fetchItems() async {
     setState(() => _isLoading = true);
     try {
-      final items = await ItemService.getItems();
+      final items = await ApiService.getItems();
       setState(() => _items = items);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -63,7 +64,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
     if (confirm != true) return;
 
     try {
-      await ItemService.deleteItem(id);
+      await ApiService.deleteItem(id);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$itemName deleted successfully'),

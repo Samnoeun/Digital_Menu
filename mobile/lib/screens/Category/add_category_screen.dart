@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/category_model.dart';
-import '../../services/category_services.dart';
+import '../../services/api_services.dart';
 
 class AddCategoryScreen extends StatefulWidget {
   final Category? category;
@@ -37,7 +37,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
 
     try {
       if (widget.category == null) {
-        await CategoryService.createCategory(_nameController.text.trim());
+        await ApiService.createCategory(_nameController.text.trim());
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${_nameController.text.trim()} created successfully'),
@@ -47,7 +47,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
           ),
         );
       } else {
-        await CategoryService.updateCategory(
+        await ApiService.updateCategory(
           widget.category!.id,
           _nameController.text.trim(),
         );
@@ -115,7 +115,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
 
                 if (confirm == true) {
                   try {
-                    await CategoryService.deleteCategory(widget.category!.id);
+                    await ApiService.deleteCategory(widget.category!.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('${widget.category!.name} deleted successfully'),
