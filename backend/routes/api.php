@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderItemController;
+use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\Api\TableController;
 
 // 🔓 Public Authentication Routes
@@ -21,7 +22,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', function (Request $request) {
         return $request->user();
     });
-
+    Route::prefix('restaurant')->group(function () {
+        Route::get('/', [RestaurantController::class, 'show']);
+        Route::post('/', [RestaurantController::class, 'store']);
+        Route::put('/', [RestaurantController::class, 'update']);
+        Route::post('/upload-logo', [RestaurantController::class, 'uploadLogo']);
+    });
 });
 
 Route::apiResource('categories', CategoryController::class);

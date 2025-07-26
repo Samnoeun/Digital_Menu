@@ -28,8 +28,12 @@ class User extends Authenticatable
     ];
 
     // Relationship with Setting model
-    public function settings()
+    // public function settings()
+    // {
+    //     return $this->hasOne(Setting::class);
+    // }
+    public function restaurant()
     {
-        return $this->hasOne(Setting::class);
+        return $this->hasOne(Restaurant::class);
     }
 }
