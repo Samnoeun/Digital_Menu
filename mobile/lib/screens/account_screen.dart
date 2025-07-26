@@ -56,7 +56,7 @@ class _AccountScreenState extends State<AccountScreen> {
             Text('Account'),
           ],
         ),
-        backgroundColor: const Color.fromARGB(255, 224, 215, 240), // changed here
+        backgroundColor: const Color.fromARGB(255, 201, 191, 218), // changed here
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
@@ -71,7 +71,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: const Color.fromARGB(255, 160, 124, 222), // changed here
+                    backgroundColor: const Color.fromARGB(255, 191, 168, 232), // changed here
                     backgroundImage: _profileImage != null
                         ? FileImage(_profileImage!)
                         : null,
@@ -84,7 +84,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
-                      border: Border.all(color: const Color.fromARGB(255, 174, 143, 229)), // changed here
+                      border: Border.all(color: const Color.fromARGB(255, 166, 140, 212)), // changed here
                     ),
                     child: Icon(Icons.edit, size: 18, color: const Color.fromARGB(255, 167, 135, 222)), // changed here, remove const due to variable
                   ),
