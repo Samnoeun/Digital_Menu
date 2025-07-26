@@ -158,16 +158,9 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   textStyle: const TextStyle(fontSize: 18),
                 ),
-<<<<<<< HEAD
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Perform save operation here
-                  }
-                },
-                child: const Text('Save Changes'),
-=======
+
                 onPressed: _saveChanges,
->>>>>>> list-table
+                
               ),
             ),
           ],
