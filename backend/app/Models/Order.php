@@ -22,4 +22,5 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+    protected $fillable = ['table_id', 'status'];
 }

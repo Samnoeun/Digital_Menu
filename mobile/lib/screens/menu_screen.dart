@@ -8,6 +8,7 @@ import 'qr_menu_view_screen.dart';
 import 'home_screen.dart';
 import 'order_screen.dart';
 import 'menu_preview_screen.dart';
+import 'category_list_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -20,10 +21,10 @@ class _MenuScreenState extends State<MenuScreen> {
   int _selectedIndex = 0;
   final List<Widget> _pages = [
     const HomeScreen(), // index 0
-    const OrderScreen(), // index 1
+    // const OrderScreen(), 
     const MenuPreviewScreen(), // index 2
     const MenuPage(), // index 3
-    const CategoryScreen(), // index 4
+    const CategoryListScreen(), // index 4 (Category tab)
     const QrScreen(), // index 5
     const SettingsScreen(), // index 6
   ];
