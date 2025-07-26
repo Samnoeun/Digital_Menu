@@ -66,10 +66,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    // Save changes logic here
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Changes saved!')),
-                    );
+                    // Perform save operation here
                   }
                 },
                 child: const Text('Save Changes'),
