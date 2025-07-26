@@ -4,8 +4,8 @@ import 'settings_screen.dart';
 import 'home_screen.dart';
 import 'order_screen.dart';
 import 'menu_preview_screen.dart';
-import 'category_list_screen.dart';
-import 'item_list_screen.dart';
+import 'Category/category_list_screen.dart';
+import 'Item/item_list_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -17,13 +17,13 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   int _selectedIndex = 0;
   final List<Widget> _pages = [
-    const HomeScreen(), // index 1
-    const OrderScreen(), // index 2
-    const MenuPreviewScreen(), // index 3
-    const ItemListScreen(),// index 4
-    const CategoryListScreen(), // index 5 (Category tab)
-    const QrScreen(), // index 6
-    const SettingsScreen(), // index 7
+    const HomeScreen(), // index 0
+    const OrderScreen(), // index 1
+    const MenuPreviewScreen(), // index 2
+    const ItemListScreen(), // index 3
+    const CategoryListScreen(), // index 4 ← Category tab
+    const QrScreen(), // index 5
+    const SettingsScreen(), // index 6
   ];
 
   void _onItemTapped(int index) {
@@ -68,7 +68,6 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 }
 
-
 class MenuItem {
   final int id;
   final String name;
@@ -86,4 +85,3 @@ class MenuItem {
     required this.imageUrl,
   });
 }
-
