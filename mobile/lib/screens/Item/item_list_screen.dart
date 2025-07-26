@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_item_screen.dart';
 import '../../models/category_model.dart';
-import '../../models/item_model.dart' as itm;
+import '../../models/item_model.dart' as item;
 import '../../services/api_services.dart';
 
 class ItemListScreen extends StatefulWidget {
@@ -12,7 +12,7 @@ class ItemListScreen extends StatefulWidget {
 }
 
 class _ItemListScreenState extends State<ItemListScreen> {
-  List<itm.Item> _items = [];
+  List<item.Item> _items = [];
   bool _isLoading = true;
 
   @override
