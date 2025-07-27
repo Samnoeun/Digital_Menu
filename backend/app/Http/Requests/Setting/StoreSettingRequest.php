@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Setting;
 
+use App\Http\Resources\UserResource;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreSettingRequest extends FormRequest
@@ -11,7 +12,7 @@ class StoreSettingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +23,15 @@ class StoreSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'id' => $this->id,
+            'user' => new UserResource($this->user),
+            'restaurant_name' => $this->restaurant_name,
+            'logo' => $this->logo ? url('storage/' . $this->logo) : null,
+            'address' => $this->address,
+            'currency' => $this->currency,
+            'language' => $this->language,
+            'dark_mode' => $this->dark_mode,
+            'created_at' => $this->created_at,
         ];
     }
 }

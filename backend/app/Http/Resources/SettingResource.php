@@ -14,6 +14,16 @@ class SettingResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'user' => new UserResource($this->whenLoaded('user')),
+            'restaurant_name' => $this->restaurant_name,
+            'logo' => $this->logo,
+            'address' => $this->address,
+            'currency' => $this->currency,
+            'language' => $this->language,
+            'dark_mode' => $this->dark_mode,
+            'created_at' => $this->created_at->toDateTimeString(),
+        ];
     }
 }

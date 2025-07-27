@@ -8,6 +8,17 @@ use Illuminate\Database\Eloquent\Model;
 class Setting extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'restaurant_name',
+        'logo',
+        'address',
+        'currency',
+        'language',
+        'dark_mode',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

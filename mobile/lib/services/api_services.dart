@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
-import '../models/category_model.dart' as cat;
-import '../models/item_model.dart' as itm;
-
-
+import '../models/category_model.dart' as category;
+import '../models/item_model.dart' as item;
 
 class ApiService {
   static const String baseUrl = 'http://192.168.108.122:8000/api';
@@ -106,7 +104,7 @@ class ApiService {
   }
 
   // Category service
-  static Future<List<cat.Category>> getCategories() async {
+  static Future<List<category.Category>> getCategories() async {
     final response = await http.get(Uri.parse('$baseUrl/categories'));
 
     if (response.statusCode == 200) {
@@ -115,7 +113,7 @@ class ApiService {
         return []; // Return empty list if data is null
       }
       final List data = jsonData['data'];
-      return data.map((json) => cat.Category.fromJson(json)).toList();
+      return data.map((json) => category.Category.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load categories: ${response.statusCode}');
     }
@@ -151,12 +149,12 @@ class ApiService {
   }
 
   // Itemservice
-  static Future<List<itm.Item>> getItems() async {
+  static Future<List<item.Item>> getItems() async {
     final response = await http.get(Uri.parse('$baseUrl/items'));
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body);
       return (jsonData['data'] as List)
-          .map((itemJson) => itm.Item.fromJson(itemJson))
+          .map((itemJson) => item.Item.fromJson(itemJson))
           .toList();
     } else {
       throw Exception('Failed to load items');
