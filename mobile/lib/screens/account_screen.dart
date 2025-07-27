@@ -1,4 +1,4 @@
-import 'dart:io'; 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -22,7 +22,7 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
-
+    
     if (picked != null) {
       setState(() {
         _profileImage = File(picked.path);
@@ -56,14 +56,14 @@ class _AccountScreenState extends State<AccountScreen> {
             Text('Account'),
           ],
         ),
-        backgroundColor: const Color.fromARGB(255, 201, 191, 218), // changed here
+        backgroundColor: const Color.fromARGB(255, 201, 191, 218),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // 👤 Profile Image with edit
+
             GestureDetector(
               onTap: _pickImage,
               child: Stack(
@@ -71,10 +71,9 @@ class _AccountScreenState extends State<AccountScreen> {
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundColor: const Color.fromARGB(255, 191, 168, 232), // changed here
-                    backgroundImage: _profileImage != null
-                        ? FileImage(_profileImage!)
-                        : null,
+                    backgroundColor: const Color.fromARGB(255, 191, 168, 232),
+                    backgroundImage:
+                        _profileImage != null ? FileImage(_profileImage!) : null,
                     child: _profileImage == null
                         ? const Icon(Icons.storefront, size: 60, color: Colors.white)
                         : null,
@@ -84,9 +83,10 @@ class _AccountScreenState extends State<AccountScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: Colors.white,
-                      border: Border.all(color: const Color.fromARGB(255, 166, 140, 212)), // changed here
+                      border: Border.all(color: const Color.fromARGB(255, 166, 140, 212)),
                     ),
-                    child: Icon(Icons.edit, size: 18, color: const Color.fromARGB(255, 167, 135, 222)), // changed here, remove const due to variable
+                    child: const Icon(Icons.edit,
+                        size: 18, color: Color.fromARGB(255, 167, 135, 222)),
                   ),
                 ],
               ),
@@ -112,10 +112,10 @@ class _AccountScreenState extends State<AccountScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  // Name (read-only)
+                  // Editable Restaurant Name
                   TextFormField(
                     controller: restaurantNameController,
-                    readOnly: true,
+
                     decoration: InputDecoration(
                       labelText: 'Restaurant Name',
                       prefixIcon: const Icon(Icons.store),
@@ -123,13 +123,15 @@ class _AccountScreenState extends State<AccountScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
+                    validator: (value) =>
+                        value == null || value.isEmpty ? 'Name is required' : null,
                   ),
                   const SizedBox(height: 20),
 
-                  // Email (read-only)
+                  // Editable Email
                   TextFormField(
                     controller: emailController,
-                    readOnly: true,
+
                     decoration: InputDecoration(
                       labelText: 'Email Address',
                       prefixIcon: const Icon(Icons.email),
@@ -138,6 +140,16 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                     keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Email is required';
+                      }
+                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+                      if (!emailRegex.hasMatch(value)) {
+                        return 'Enter a valid email';
+                      }
+                      return null;
+                    },
                   ),
                 ],
               ),
@@ -152,7 +164,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 icon: const Icon(Icons.save),
                 label: const Text('Save Changes'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple.shade400, // changed here
+                  backgroundColor: Colors.deepPurple.shade400,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
