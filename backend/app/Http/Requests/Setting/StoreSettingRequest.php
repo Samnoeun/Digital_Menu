@@ -21,14 +21,14 @@ class StoreSettingRequest extends FormRequest
      */
     public function rules(): array
     {
-       return [
+        return [
             'user_id' => 'required|exists:users,id',
-            'restaurant_name' => 'required|string|max:255',
-            'logo' => 'nullable|string|max:255',
-            'address' => 'required|string|max:255',
-            'currency' => 'required|string|max:10',
-            'language' => 'required|string|max:10',
-            'dark_mode' => 'boolean',
+            'restaurant_name' => 'required|string',
+            'logo' => 'nullable|image|max:2048',
+            'address' => 'required|string',
+            'currency' => 'required|string',
+            'language' => 'required|string',
+            'dark_mode' => 'required', // Don't use boolean directly
         ];
     }
 }
