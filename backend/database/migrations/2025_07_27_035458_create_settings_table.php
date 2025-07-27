@@ -13,13 +13,17 @@ return new class extends Migration
     {
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
+
+            // Foreign key to users table
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+
             $table->string('restaurant_name');
-            $table->string('logo')->nullable();
+            $table->string('logo')->nullable(); // Can be null if no logo is uploaded
             $table->string('address');
             $table->string('currency');
             $table->string('language');
             $table->boolean('dark_mode')->default(false);
+
             $table->timestamps();
         });
     }
