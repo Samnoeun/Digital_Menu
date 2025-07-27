@@ -22,11 +22,11 @@ class UpdateSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'restaurant_name' => 'required|string|max:255',
-            'logo' => 'nullable|string|max:255',
-            'address' => 'required|string|max:255',
-            'currency' => 'required|string|max:10',
-            'language' => 'required|string|max:10',
+            'restaurant_name' => 'sometimes|required|string',
+            'logo' => 'nullable|image|max:2048',
+            'address' => 'sometimes|required|string',
+            'currency' => 'sometimes|required|string',
+            'language' => 'sometimes|required|string',
             'dark_mode' => 'boolean',
         ];
     }
