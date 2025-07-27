@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Setting\StoreSettingRequest;
 use App\Http\Requests\Setting\UpdateSettingRequest;
 use App\Http\Resources\SettingResource;
@@ -57,13 +58,24 @@ class SettingController extends Controller
     {
         $data = $request->validated();
 
+        // If a new logo file is uploaded
         if ($request->hasFile('logo')) {
+            // Delete old logo if exists
+            if ($setting->logo && Storage::exists('public/' . $setting->logo)) {
+                Storage::delete('public/' . $setting->logo);
+            }
+
+            // Store new logo and update path in data
             $data['logo'] = $request->file('logo')->store('logos', 'public');
         }
 
         $setting->update($data);
-        return new SettingResource($setting->load('user'));
+
+        return new SettingResource($setting->fresh()->load('user'));
     }
+
+
+
 
     public function destroy(Setting $setting)
     {
