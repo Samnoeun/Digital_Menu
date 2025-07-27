@@ -33,4 +33,3 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/logo/app_logo.png"
-

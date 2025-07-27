@@ -5,7 +5,6 @@ class Item {
   final String? imagePath;
   final String? description;
   final double price;
-  final String? categoryName; // for display
 
   Item({
     required this.id,
@@ -14,7 +13,6 @@ class Item {
     this.imagePath,
     this.description,
     required this.price,
-    this.categoryName,
   });
 
   factory Item.fromJson(Map<String, dynamic> json) {
@@ -24,8 +22,7 @@ class Item {
       name: json['name'],
       imagePath: json['image_path'],
       description: json['description'],
-      price: double.tryParse(json['price'].toString()) ?? 0.0,
-      categoryName: json['category']?['name'], // if you eager load category
+      price: double.parse(json['price'].toString()),
     );
   }
 }
