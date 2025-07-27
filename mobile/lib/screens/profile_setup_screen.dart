@@ -9,7 +9,6 @@ class ProfileSetupScreen extends StatefulWidget {
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
 }
-
 class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
