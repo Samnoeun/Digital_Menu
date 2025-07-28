@@ -13,7 +13,7 @@ class ItemListScreen extends StatefulWidget {
 
 class _ItemListScreenState extends State<ItemListScreen> {
   List<item.Item> _items = [];
-  List<item.Item> _filteredItems = []; // List for filtered items
+  List<item.Item> _filteredItems = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -49,7 +49,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
       final items = await ApiService.getItems();
       setState(() {
         _items = items;
-        _filteredItems = items; // Initialize filtered list with all items
+        _filteredItems = items;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -133,7 +133,6 @@ class _ItemListScreenState extends State<ItemListScreen> {
       ),
       body: Column(
         children: [
-          // Search Bar
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -159,7 +158,6 @@ class _ItemListScreenState extends State<ItemListScreen> {
               textInputAction: TextInputAction.search,
             ),
           ),
-          // Item List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -275,28 +273,43 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                     ),
                                   ],
                                 ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => AddItemScreen(item: item),
-                                          ),
-                                        );
-                                        if (result == true) _fetchItems();
-                                      },
-                                      tooltip: 'Edit Item',
+                                trailing: PopupMenuButton<String>(
+                                  onSelected: (value) async {
+                                    if (value == 'edit') {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => AddItemScreen(item: item),
+                                        ),
+                                      );
+                                      if (result == true) _fetchItems();
+                                    } else if (value == 'delete') {
+                                      _deleteItem(item.id, item.name);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text(
+                                        'Edit',
+                                        style: TextStyle(
+                                          color: Colors.blue[700],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deleteItem(item.id, item.name),
-                                      tooltip: 'Delete Item',
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text(
+                                        'Delete',
+                                        style: TextStyle(
+                                          color: Colors.red[700],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
                                     ),
                                   ],
+                                  icon: const Icon(Icons.more_vert),
                                 ),
                               ),
                             );
