@@ -8,10 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Setting extends Model
 {
     use HasFactory;
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+
     protected $fillable = [
         'user_id',
         'restaurant_name',
@@ -21,4 +18,9 @@ class Setting extends Model
         'language',
         'dark_mode',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

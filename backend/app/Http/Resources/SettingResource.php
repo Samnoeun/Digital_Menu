@@ -16,14 +16,14 @@ class SettingResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user_id' => $this->user_id,
+            'user' => new UserResource($this->whenLoaded('user')),
             'restaurant_name' => $this->restaurant_name,
             'logo' => $this->logo,
             'address' => $this->address,
             'currency' => $this->currency,
             'language' => $this->language,
-            'dark_mode' => (bool) $this->dark_mode,
-           
+            'dark_mode' => $this->dark_mode,
+            'created_at' => $this->created_at->toDateTimeString(),
         ];
     }
 }
