@@ -78,33 +78,24 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final result = await ApiService.login(
+      await ApiService.login(
         emailController.text.trim(),
         passwordController.text.trim(),
       );
 
-      if (result['success'] == true) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: Colors.green,
-            ),
-          );
-          // Redirect to home page (MenuScreen) after successful login
-          Navigator.pushReplacement(
-            context, 
-            MaterialPageRoute(builder: (_) => const MenuScreen())
-          );
-        }
-      } else {
-        setState(() {
-          generalError = result['message'];
-        });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login successful")),
+        );
+        // Redirect to home page (MenuScreen) after successful login
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (_) => const MenuScreen())
+        );
       }
     } catch (e) {
       setState(() {
-        generalError = 'An unexpected error occurred. Please try again.';
+        generalError = e.toString();
       });
     }
     

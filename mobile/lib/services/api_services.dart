@@ -6,7 +6,7 @@ class ApiService {
   static const String baseUrl = 'http://192.168.108.122:8000/api';
   static String? _token;
 
-  static Future<Map<String, dynamic>> register(String name, String email, String password, String confirmPassword) async {
+  static Future<UserModel?> register(String name, String email, String password, String confirmPassword) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/register'),
@@ -20,31 +20,18 @@ class ApiService {
       );
 
       final data = json.decode(response.body);
-      
-      if (response.statusCode == 201 && data['success'] == true) {
+      if (response.statusCode == 200) {
         _token = data['token'];
-        return {
-          'success': true,
-          'message': data['message'],
-          'user': UserModel.fromJson(data['user']),
-        };
+        return UserModel.fromJson(data['user']);
       } else {
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Registration failed',
-          'errors': data['errors'] ?? {},
-        };
+        throw data['message'] ?? 'Registration failed';
       }
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Network error. Please check your connection and try again.',
-        'errors': {},
-      };
+      throw Exception('Error: $e');
     }
   }
 
-  static Future<Map<String, dynamic>> login(String email, String password) async {
+  static Future<UserModel?> login(String email, String password) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
@@ -56,27 +43,14 @@ class ApiService {
       );
 
       final data = json.decode(response.body);
-      
-      if (response.statusCode == 200 && data['success'] == true) {
+      if (response.statusCode == 200) {
         _token = data['token'];
-        return {
-          'success': true,
-          'message': data['message'],
-          'user': UserModel.fromJson(data['user']),
-        };
+        return UserModel.fromJson(data['user']);
       } else {
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Login failed',
-          'errors': data['errors'] ?? {},
-        };
+        throw data['message'] ?? 'Login failed';
       }
     } catch (e) {
-      return {
-        'success': false,
-        'message': 'Network error. Please check your connection and try again.',
-        'errors': {},
-      };
+      throw Exception('Error: $e');
     }
   }
 

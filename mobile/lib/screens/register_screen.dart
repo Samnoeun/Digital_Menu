@@ -17,69 +17,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController confirmPasswordController = TextEditingController();
   bool isLoading = false;
 
-  // Error message variables
-  String? nameError;
-  String? emailError;
-  String? passwordError;
-  String? confirmPasswordError;
-  String? generalError;
-
   void registerUser() async {
-    // Clear previous errors
     setState(() {
-      nameError = null;
-      emailError = null;
-      passwordError = null;
-      confirmPasswordError = null;
-      generalError = null;
       isLoading = true;
     });
 
     try {
-      final result = await ApiService.register(
+      await ApiService.register(
         nameController.text.trim(),
         emailController.text.trim(),
         passwordController.text.trim(),
         confirmPasswordController.text.trim(),
       );
 
-      if (result['success'] == true) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result['message']),
-              backgroundColor: Colors.green,
-            ),
-          );
-          // Redirect to profile setup after successful registration
-          Navigator.pushReplacement(
-            context, 
-            MaterialPageRoute(builder: (_) => const ProfileSetupScreen())
-          );
-        }
-      } else {
-        // Handle validation errors
-        final errors = result['errors'] as Map<String, dynamic>? ?? {};
-        
-        setState(() {
-          generalError = result['message'];
-          
-          // Set specific field errors
-          if (errors['name'] != null) {
-            nameError = (errors['name'] as List).first;
-          }
-          if (errors['email'] != null) {
-            emailError = (errors['email'] as List).first;
-          }
-          if (errors['password'] != null) {
-            passwordError = (errors['password'] as List).first;
-          }
-        });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registered successfully")),
+        );
+        // Redirect to profile setup after successful registration
+        Navigator.pushReplacement(
+          context, 
+          MaterialPageRoute(builder: (_) => const ProfileSetupScreen())
+        );
       }
     } catch (e) {
-      setState(() {
-        generalError = 'An unexpected error occurred. Please try again.';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     }
 
     setState(() {
@@ -201,34 +165,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-
-                          // General error message
-                          if (generalError != null)
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              margin: const EdgeInsets.only(bottom: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.red.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.red.shade200),
-                              ),
-                              child: Text(
-                                generalError!,
-                                style: TextStyle(
-                                  color: Colors.red.shade700,
-                                  fontSize: 14,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
                           
-                          // Custom styled text fields with error handling
+                          // Custom styled text fields
                           _buildStyledTextField(
                             controller: nameController,
                             label: 'Username',
                             icon: Icons.person_outline,
-                            errorText: nameError,
                           ),
                           const SizedBox(height: 16),
                           
@@ -237,7 +179,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             label: 'Email',
                             icon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
-                            errorText: emailError,
                           ),
                           const SizedBox(height: 16),
                           
@@ -246,7 +187,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             label: 'Password',
                             icon: Icons.lock_outline,
                             isPassword: true,
-                            errorText: passwordError,
                           ),
                           const SizedBox(height: 16),
                           
@@ -255,7 +195,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             label: 'Confirm Password',
                             icon: Icons.lock_outline,
                             isPassword: true,
-                            errorText: confirmPasswordError,
                           ),
                           const SizedBox(height: 24),
                           
@@ -396,69 +335,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required IconData icon,
     bool isPassword = false,
     TextInputType? keyboardType,
-    String? errorText,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(
-              color: errorText != null ? Colors.red.shade300 : Colors.grey.shade200,
-              width: errorText != null ? 2 : 1,
-            ),
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: isPassword,
-            keyboardType: keyboardType,
-            onChanged: (value) {
-              // Clear error when user starts typing
-              if (errorText != null) {
-                setState(() {
-                  if (controller == nameController) {
-                    nameError = null;
-                  } else if (controller == emailController) {
-                    emailError = null;
-                  } else if (controller == passwordController) {
-                    passwordError = null;
-                  } else if (controller == confirmPasswordController) {
-                    confirmPasswordError = null;
-                  }
-                  generalError = null;
-                });
-              }
-            },
-            decoration: InputDecoration(
-              labelText: label,
-              prefixIcon: Icon(
-                icon, 
-                color: errorText != null ? Colors.red.shade400 : Colors.deepPurple.shade400,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              labelStyle: TextStyle(
-                color: errorText != null ? Colors.red.shade600 : Colors.grey.shade600,
-              ),
-            ),
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Colors.deepPurple.shade400),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          labelStyle: TextStyle(color: Colors.grey.shade600),
         ),
-        // Error message
-        if (errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, left: 16),
-            child: Text(
-              errorText!,
-              style: TextStyle(
-                color: Colors.red.shade600,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-      ],
+      ),
     );
   }
 
