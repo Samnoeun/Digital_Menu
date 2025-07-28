@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
+import '../models/setting_model.dart';
 
 class ApiService {
   static const String baseUrl = 'http://192.168.108.113:8000/api';
@@ -212,6 +214,118 @@ class ApiService {
     final response = await http.delete(Uri.parse('$baseUrl/items/$id'));
     if (response.statusCode != 200) {
       throw Exception('Failed to delete item');
+    }
+  }
+
+  // Settings service
+  // Get a specific setting by ID
+  static Future<Map<String, dynamic>?> getSetting(int id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/settings/$id'),
+      headers: {
+        'Accept': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      return jsonData['data'] ?? jsonData;
+    } else {
+      throw Exception('Failed to load setting');
+    }
+  }
+
+  // Create setting with multipart/form-data (for logo upload)
+  static Future<void> createSetting({
+    required String restaurantName,
+    required String address,
+    File? logoFile,
+    String? currency,
+    String? language,
+    bool? darkMode,
+  }) async {
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/settings'));
+
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (_token != null) 'Authorization': 'Bearer $_token',
+    });
+
+    request.fields['restaurant_name'] = restaurantName;
+    request.fields['address'] = address;
+
+    if (currency != null) request.fields['currency'] = currency;
+    if (language != null) request.fields['language'] = language;
+    if (darkMode != null) request.fields['dark_mode'] = darkMode ? '1' : '0';
+
+    if (logoFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('logo', logoFile.path),
+      );
+    }
+
+    final response = await request.send();
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      final respStr = await response.stream.bytesToString();
+      throw Exception('Failed to create setting: $respStr');
+    }
+  }
+
+  // Update setting with multipart/form-data (logo optional)
+  static Future<void> updateSetting({
+    required int id,
+    required String restaurantName,
+    required String address,
+    File? logoFile,
+    String? currency,
+    String? language,
+    bool? darkMode,
+  }) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/settings/$id?_method=PUT'),
+    );
+
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (_token != null) 'Authorization': 'Bearer $_token',
+    });
+
+    request.fields['restaurant_name'] = restaurantName;
+    request.fields['address'] = address;
+
+    if (currency != null) request.fields['currency'] = currency;
+    if (language != null) request.fields['language'] = language;
+    if (darkMode != null) request.fields['dark_mode'] = darkMode ? '1' : '0';
+
+    if (logoFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('logo', logoFile.path),
+      );
+    }
+
+    final response = await request.send();
+
+    if (response.statusCode != 200) {
+      final respStr = await response.stream.bytesToString();
+      throw Exception('Failed to update setting: $respStr');
+    }
+  }
+
+  // Delete setting by ID
+  static Future<void> deleteSetting(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/settings/$id'),
+      headers: {
+        'Accept': 'application/json',
+        if (_token != null) 'Authorization': 'Bearer $_token',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete setting');
     }
   }
 }
