@@ -1,11 +1,13 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
+import '../models/order_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.122:8000/api';
+  static const String baseUrl = 'http://192.168.108.185:8000/api';
 
   static String? _token;
 
@@ -214,4 +216,99 @@ class ApiService {
       throw Exception('Failed to delete item');
     }
   }
+static Future<List<dynamic>> getOrders() async {
+  try {
+    final response = await http.get(
+      Uri.parse('$baseUrl/orders'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is Map && data.containsKey('data')) {
+        return data['data'] is List ? data['data'] : [];
+      }
+      return data is List ? data : [];
+    } else {
+      throw Exception('Failed to load orders: ${response.statusCode}');
+    }
+  } catch (e) {
+    debugPrint('Error in getOrders: $e');
+    rethrow;
+  }
+}
+static Future<Map<String, dynamic>> updateOrderStatus(int orderId, String newStatus) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/orders/$orderId/status'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $_token',
+    },
+    body: json.encode({'status': newStatus}), // Send as JSON body
+  );
+  
+  if (response.statusCode == 200) {
+    return json.decode(response.body);
+  } else {
+    throw Exception('Failed to update order status');
+  }
+}
+static Future<Map<String, dynamic>> submitOrder({
+  required int tableNumber,
+  required List<Map<String, dynamic>> items,
+}) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/orders'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
+      body: json.encode({
+        'table_number': tableNumber,
+        'items': items.map((item) => {
+          'item_id': item['item_id'] ?? item['id'],
+          'quantity': item['quantity'],
+          'special_note': item['special_note'] ?? '',
+        }).toList(),
+      }),
+    );
+
+    final responseBody = json.decode(response.body);
+    
+    if (response.statusCode == 201) {
+      return responseBody;
+    } else if (response.statusCode == 422) {
+      throw Exception(responseBody['message'] ?? 'Validation failed');
+    } else {
+      throw Exception(responseBody['message'] ?? 'Failed to submit order');
+    }
+  } catch (e) {
+    throw Exception('Failed to submit order: ${e.toString()}');
+  }
+}
+static Future<Map<String, dynamic>> updateOrder(int orderId, Map<String, dynamic> data) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/orders/$orderId'),
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $_token',
+    },
+    body: json.encode(data),
+  );
+  return json.decode(response.body);
+}
+
+static Future<void> deleteOrder(int orderId) async {
+  await http.delete(
+    Uri.parse('$baseUrl/orders/$orderId'),
+    headers: {
+      'Authorization': 'Bearer $_token',
+    },
+  );
+}
 }
