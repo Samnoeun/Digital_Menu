@@ -213,7 +213,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                   borderRadius: BorderRadius.circular(8),
                                   child: item.imagePath != null
                                       ? Image.network(
-                                          'http://192.168.108.122:8000${item.imagePath!}',
+                                          'http://192.168.108.113:8000${item.imagePath!}',
                                           width: 60,
                                           height: 60,
                                           fit: BoxFit.cover,
