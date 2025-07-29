@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\OrderItemController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RestaurantController;
 
 // 🔓 Public Authentication Routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -23,10 +24,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', function (Request $request) {
         return $request->user();
     });
-    // Route::apiResource('settings', SettingController::class);
-
 });
-
+Route::apiResource('restaurants', RestaurantController::class);
 Route::apiResource('categories', CategoryController::class);
 Route::apiResource('items', ItemController::class);
 Route::apiResource('tables', TableController::class);

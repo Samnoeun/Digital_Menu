@@ -1,7 +1,8 @@
+import 'package:digital_menu/screens/menu_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
 import 'register_screen.dart';
-import 'profile_setup_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -86,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Login successful")),
         );
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileSetupScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuScreen()));
       }
     } catch (e) {
       setState(() {
