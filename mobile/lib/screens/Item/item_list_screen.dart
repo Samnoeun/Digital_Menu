@@ -12,18 +12,16 @@ class ItemListScreen extends StatefulWidget {
 }
 
 class _ItemListScreenState extends State<ItemListScreen> {
-  List<Category> _categories = [];
-  List<item.Item> _allItems = [];
+  List<item.Item> _items = [];
   List<item.Item> _filteredItems = [];
   bool _isLoading = true;
-  int? _selectedCategoryId;
-  String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _fetchItems();
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -33,52 +31,38 @@ class _ItemListScreenState extends State<ItemListScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchData() async {
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.trim().toLowerCase();
+      _filteredItems = _items.where((item) {
+        final nameMatch = item.name.toLowerCase().contains(_searchQuery);
+        final priceMatch = item.price.toStringAsFixed(2).contains(_searchQuery);
+        final descMatch = item.description?.toLowerCase().contains(_searchQuery) ?? false;
+        return nameMatch || priceMatch || descMatch;
+      }).toList();
+    });
+  }
+
+  Future<void> _fetchItems() async {
     setState(() => _isLoading = true);
     try {
-      final categories = await ApiService.getCategories();
       final items = await ApiService.getItems();
       setState(() {
-        _categories = categories;
-        _allItems = items;
+        _items = items;
         _filteredItems = items;
-        _isLoading = false;
       });
     } catch (e) {
-      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to load data: $e'),
+          content: Text('Error loading items: $e'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 3),
         ),
       );
+    } finally {
+      setState(() => _isLoading = false);
     }
-  }
-
-  void _onSearchChanged() {
-    setState(() {
-      _searchQuery = _searchController.text.trim().toLowerCase();
-      _applyFilters();
-    });
-  }
-
-  void _onCategorySelected(int? categoryId) {
-    setState(() {
-      _selectedCategoryId = categoryId;
-      _applyFilters();
-    });
-  }
-
-  void _applyFilters() {
-    _filteredItems = _allItems.where((item.Item item) {
-      final matchesCategory =
-          _selectedCategoryId == null || item.categoryId == _selectedCategoryId;
-      final matchesSearch = item.name.toLowerCase().contains(_searchQuery) ||
-          (item.description?.toLowerCase().contains(_searchQuery) ?? false);
-      return matchesCategory && matchesSearch;
-    }).toList();
   }
 
   Future<void> _deleteItem(int id, String itemName) async {
@@ -114,8 +98,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
           duration: const Duration(seconds: 2),
         ),
       );
-      await _fetchData();
-      _applyFilters();
+      _fetchItems();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -134,239 +117,220 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Items'),
-        backgroundColor: theme.primaryColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
-            onPressed: () async {
-              await _fetchData();
-              _applyFilters();
-            },
+          title: const Text(
+            'Items',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          elevation: 0,
+          backgroundColor: const Color(0xFFF3E5F5), // Updated background color
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _fetchItems,
+              tooltip: 'Refresh',
+            ),
+          ],
+        ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search here...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged();
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: theme.colorScheme.surfaceVariant,
+              ),
+              textInputAction: TextInputAction.search,
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredItems.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchQuery.isEmpty ? 'No items found' : 'No matching items',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _searchQuery.isEmpty
+                                  ? 'Tap the + button to add a new item'
+                                  : 'Try a different search term',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _fetchItems,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filteredItems.length,
+                          itemBuilder: (context, index) {
+                            final item = _filteredItems[index];
+                            return Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.all(16),
+                                leading: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: item.imagePath != null
+                                      ? Image.network(
+                                         ApiService.getImageUrl(item.imagePath),
+                                          width: 60,
+                                          height: 60,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return Container(
+                                              width: 60,
+                                              height: 60,
+                                              color: Colors.grey[200],
+                                              child: const Icon(
+                                                Icons.broken_image,
+                                                color: Colors.grey,
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      : Container(
+                                          width: 60,
+                                          height: 60,
+                                          color: Colors.grey[200],
+                                          child: const Icon(
+                                            Icons.image_not_supported,
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                ),
+                                title: Text(
+                                  item.name,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (item.description != null && item.description!.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          item.description!,
+                                          style: TextStyle(
+                                            color: Colors.grey[700],
+                                            fontSize: 14,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        '\$${item.price.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          color: theme.primaryColor,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                trailing: PopupMenuButton<String>(
+                                  onSelected: (value) async {
+                                    if (value == 'edit') {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => AddItemScreen(item: item),
+                                        ),
+                                      );
+                                      if (result == true) _fetchItems();
+                                    } else if (value == 'delete') {
+                                      _deleteItem(item.id, item.name);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text(
+                                        'Edit',
+                                        style: TextStyle(
+                                          color: Colors.blue[700],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text(
+                                        'Delete',
+                                        style: TextStyle(
+                                          color: Colors.red[700],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  icon: const Icon(Icons.more_vert),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Search items...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchQuery.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: () {
-                                _searchController.clear();
-                              },
-                            )
-                          : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      filled: true,
-                      fillColor: theme.colorScheme.surfaceVariant,
-                    ),
-                  ),
-                ),
-
-                // Category Chips (like menu_preview_screen)
-                SizedBox(
-                  height: 48,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    children: [
-                      ChoiceChip(
-                        label: const Text('All'),
-                        selected: _selectedCategoryId == null,
-                        onSelected: (_) => _onCategorySelected(null),
-                      ),
-                      const SizedBox(width: 8),
-                      ..._categories.map(
-                        (cat) => Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ChoiceChip(
-                            label: Text(cat.name),
-                            selected: _selectedCategoryId == cat.id,
-                            onSelected: (_) => _onCategorySelected(cat.id),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                // Item List grouped by category
-                Expanded(
-                  child: _filteredItems.isEmpty
-                      ? Center(
-                          child: Text(
-                            _searchQuery.isEmpty
-                                ? 'No items available.'
-                                : 'No items found matching "$_searchQuery".',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        )
-                      : ListView(
-                          padding: const EdgeInsets.all(12),
-                          children: [
-                            // Show items grouped by category
-                            for (var category in _categories)
-                              _buildCategoryGroup(category),
-                          ],
-                        ),
-                ),
-              ],
-            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AddItemScreen()),
           );
-          if (result == true) {
-            await _fetchData();
-            _applyFilters();
-          }
+          if (result == true) _fetchItems();
         },
         backgroundColor: theme.primaryColor,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, size: 28),
         tooltip: 'Add Item',
       ),
-    );
-  }
-
-  Widget _buildCategoryGroup(Category category) {
-    final itemsInCategory = _filteredItems
-        .where((item.Item item) => item.categoryId == category.id)
-        .toList();
-
-    if (itemsInCategory.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          category.name,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...itemsInCategory.map((item.Item item) {
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 2,
-            child: ListTile(
-              leading: item.imagePath != null
-                  ? Image.network(
-                      ApiService.getImageUrl(item.imagePath),
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        width: 60,
-                        height: 60,
-                        color: Colors.grey[200],
-                        child: const Icon(Icons.broken_image, color: Colors.grey),
-                      ),
-                    )
-                  : Container(
-                      width: 60,
-                      height: 60,
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                    ),
-              title: Text(
-                item.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (item.description != null && item.description!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        item.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '\$${item.price.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              trailing: PopupMenuButton<String>(
-                onSelected: (value) async {
-                  if (value == 'edit') {
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => AddItemScreen(item: item),
-                      ),
-                    );
-                    if (result == true) {
-                      await _fetchData();
-                      _applyFilters();
-                    }
-                  } else if (value == 'delete') {
-                    _deleteItem(item.id, item.name);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: Text(
-                      'Edit',
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Text(
-                      'Delete',
-                      style: TextStyle(
-                        color: Colors.red[700],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-                icon: const Icon(Icons.more_vert),
-              ),
-            ),
-          );
-        }).toList(),
-        const SizedBox(height: 16),
-      ],
     );
   }
 }

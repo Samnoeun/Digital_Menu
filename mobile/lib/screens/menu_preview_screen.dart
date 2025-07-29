@@ -252,4 +252,3 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
     );
   }
 }
-
