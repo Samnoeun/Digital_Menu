@@ -176,7 +176,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         elevation: 0,
-        backgroundColor: theme.primaryColor,
+        backgroundColor: const Color(0xFFF3E5F5),
         actions: [
           if (isEdit)
             IconButton(

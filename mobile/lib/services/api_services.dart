@@ -9,7 +9,7 @@ import '../models/order_model.dart';
 import '../models/setting_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.151:8000/api'; // Update with your preferred base URL
+  static const String baseUrl = 'http://192.168.108.113:8000/api'; // Update with your preferred base URL
 
   static String? _token;
 
