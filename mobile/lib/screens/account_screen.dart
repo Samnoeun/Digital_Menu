@@ -225,6 +225,7 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
+    
     if (picked != null) {
       setState(() {
         _profileImage = File(picked.path);
@@ -284,6 +285,7 @@ class _AccountScreenState extends State<AccountScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+
             GestureDetector(
               onTap: _pickImage,
               child: Stack(
@@ -327,6 +329,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 children: [
                   TextFormField(
                     controller: restaurantNameController,
+
                     decoration: InputDecoration(
                       labelText: 'Restaurant Name',
                       prefixIcon: const Icon(Icons.store),
@@ -339,6 +342,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
                   TextFormField(
                     controller: emailController,
+
                     decoration: InputDecoration(
                       labelText: 'Email Address',
                       prefixIcon: const Icon(Icons.email),
@@ -374,7 +378,9 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                   textStyle: const TextStyle(fontSize: 18),
                 ),
+
                 onPressed: _saveChanges,
+                
               ),
             ),
           ],

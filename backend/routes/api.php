@@ -33,3 +33,6 @@ Route::apiResource('orders', OrderController::class);
 Route::apiResource('order-items', OrderItemController::class);
 Route::apiResource('settings', SettingController::class);
 Route::apiResource('users', UserController::class);
+// Add this with your other routes
+Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus']);
+
