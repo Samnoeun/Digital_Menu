@@ -34,11 +34,7 @@ class _CartScreenState extends State<CartScreen> {
   void _calculateQuantities() {
     _itemQuantities = {};
     for (var item in widget.cart) {
-      _itemQuantities.update(
-        item,
-        (value) => value + 1,
-        ifAbsent: () => 1,
-      );
+      _itemQuantities.update(item, (value) => value + 1, ifAbsent: () => 1);
       _specialNotes.putIfAbsent(item, () => '');
     }
   }
@@ -76,7 +72,7 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<void> _submitOrder() async {
     if (_isSubmitting || widget.cart.isEmpty) return;
-    
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -132,16 +128,15 @@ class _CartScreenState extends State<CartScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.shopping_cart_outlined, 
-                            size: 64, 
-                            color: Colors.grey),
+                        Icon(
+                          Icons.shopping_cart_outlined,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
                         SizedBox(height: 16),
                         Text(
                           'Your cart is empty',
-                          style: TextStyle(
-                            fontSize: 18, 
-                            color: Colors.grey
-                          ),
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -171,10 +166,27 @@ class _CartScreenState extends State<CartScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    // Item image
+                                    if (item.imagePath != null &&
+                                        item.imagePath!.isNotEmpty)
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          ApiService.getImageUrl(
+                                            item.imagePath,
+                                          ),
+                                          width: 60,
+                                          height: 60,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             item.name,
@@ -202,13 +214,23 @@ class _CartScreenState extends State<CartScreen> {
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           IconButton(
-                                            icon: const Icon(Icons.remove, size: 20),
+                                            icon: const Icon(
+                                              Icons.remove,
+                                              size: 20,
+                                            ),
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
-                                            onPressed: () => _updateQuantity(item, quantity - 1),
+                                            color: Colors
+                                                .red, // Red color for minus
+                                            onPressed: () => _updateQuantity(
+                                              item,
+                                              quantity - 1,
+                                            ),
                                           ),
                                           Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                            ),
                                             child: Text(
                                               quantity.toString(),
                                               style: const TextStyle(
@@ -218,26 +240,41 @@ class _CartScreenState extends State<CartScreen> {
                                             ),
                                           ),
                                           IconButton(
-                                            icon: const Icon(Icons.add, size: 20),
+                                            icon: const Icon(
+                                              Icons.add,
+                                              size: 20,
+                                            ),
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
-                                            onPressed: () => _updateQuantity(item, quantity + 1),
+                                            color: Colors
+                                                .green, // Green color for plus
+                                            onPressed: () => _updateQuantity(
+                                              item,
+                                              quantity + 1,
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 8),
+                                // Special note with example
                                 TextField(
-                                  onChanged: (value) => _updateSpecialNote(item, value),
+                                  onChanged: (value) =>
+                                      _updateSpecialNote(item, value),
                                   decoration: InputDecoration(
-                                    hintText: 'Special note...',
+                                    hintText: 'Special note(e.g.No chilli...)',
+                                    hintStyle: TextStyle(
+                                      color: Colors
+                                          .grey[400], // Lighter grey color
+                                      fontSize: 14,
+                                    ),
                                     filled: true,
                                     fillColor: Colors.grey[50],
                                     contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
+                                      horizontal: 12,
+                                      vertical: 8,
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
@@ -251,7 +288,7 @@ class _CartScreenState extends State<CartScreen> {
                                       ),
                                     ),
                                   ),
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   style: const TextStyle(fontSize: 14),
                                 ),
                               ],
@@ -267,7 +304,9 @@ class _CartScreenState extends State<CartScreen> {
               padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPadding),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
