@@ -109,8 +109,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
     try {
       final uri = widget.item == null
-          ? Uri.parse('http://192.168.108.191:8000/api/items')
-          : Uri.parse('http://192.168.108.191:8000/api/items/${widget.item!.id}');
+          ? Uri.parse('${ApiService.baseUrl}/api/items')
+          : Uri.parse('${ApiService.baseUrl}/api/items/${widget.item!.id}');
 
       final request = http.MultipartRequest('POST', uri)
         ..fields['name'] = _nameController.text.trim()
@@ -186,16 +186,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   context: context,
                   builder: (_) => AlertDialog(
                     title: const Text('Delete Item'),
-                    content: Text('Are you sure you want to delete "${widget.item!.name}"?'),
+                    content: Text(
+                      'Are you sure you want to delete "${widget.item!.name}"?',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        style: TextButton.styleFrom(foregroundColor: Colors.grey),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.grey,
+                        ),
                         child: const Text('Cancel'),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
                         child: const Text('Delete'),
                       ),
                     ],
@@ -204,23 +210,32 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
                 if (confirm == true) {
                   try {
-                    final uri = Uri.parse('http://192.168.108.191:8000/api/items/${widget.item!.id}');
+                    final uri = Uri.parse(
+                      '${ApiService.baseUrl}/api/items/${widget.item!.id}',
+                    );
                     final request = http.MultipartRequest('POST', uri)
                       ..fields['_method'] = 'DELETE';
                     final streamedResponse = await request.send();
-                    final response = await http.Response.fromStream(streamedResponse);
+                    final response = await http.Response.fromStream(
+                      streamedResponse,
+                    );
 
-                    if (response.statusCode == 200 || response.statusCode == 204) {
+                    if (response.statusCode == 200 ||
+                        response.statusCode == 204) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${widget.item!.name} deleted successfully'),
+                          content: Text(
+                            '${widget.item!.name} deleted successfully',
+                          ),
                           backgroundColor: Colors.green,
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
                       Navigator.pop(context, true);
                     } else {
-                      throw Exception('Failed to delete item: ${response.body}');
+                      throw Exception(
+                        'Failed to delete item: ${response.body}',
+                      );
                     }
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -310,12 +325,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         fillColor: theme.colorScheme.surfaceVariant,
                         prefixIcon: const Icon(Icons.attach_money),
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
                           return 'Please enter a price';
                         }
-                        if (double.tryParse(value.trim()) == null || double.parse(value.trim()) <= 0) {
+                        if (double.tryParse(value.trim()) == null ||
+                            double.parse(value.trim()) <= 0) {
                           return 'Please enter a valid price';
                         }
                         return null;
@@ -339,7 +357,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                           : null,
                       decoration: InputDecoration(
                         labelText: 'Category',
-                        hintText: _categories.isEmpty ? 'No categories available' : 'Select a category',
+                        hintText: _categories.isEmpty
+                            ? 'No categories available'
+                            : 'Select a category',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -347,7 +367,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         fillColor: theme.colorScheme.surfaceVariant,
                         prefixIcon: const Icon(Icons.category),
                       ),
-                      validator: (value) => value == null ? 'Please select a category' : null,
+                      validator: (value) =>
+                          value == null ? 'Please select a category' : null,
                     ),
                     const SizedBox(height: 16),
                     // Image Picker
@@ -364,32 +385,43 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                   fit: BoxFit.cover,
                                 )
                               : _imagePath != null
-                                  ? Image.network(
-                                      'http://192.168.108.122:8000$_imagePath',
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          width: 80,
-                                          height: 80,
-                                          color: Colors.grey[200],
-                                          child: const Icon(Icons.broken_image, color: Colors.grey),
-                                        );
-                                      },
-                                    )
-                                  : Container(
+                              ? Image.network(
+                                  ApiService.getImageUrl(_imagePath),
+                                  width: 80,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
                                       width: 80,
                                       height: 80,
                                       color: Colors.grey[200],
-                                      child: const Icon(Icons.image, color: Colors.grey, size: 40),
-                                    ),
+                                      child: const Icon(
+                                        Icons.broken_image,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.image,
+                                    color: Colors.grey,
+                                    size: 40,
+                                  ),
+                                ),
                         ),
                         const SizedBox(width: 16),
                         OutlinedButton.icon(
                           onPressed: _pickImage,
                           icon: const Icon(Icons.image),
-                          label: Text(_imageFile != null || _imagePath != null ? 'Change Image' : 'Choose Image'),
+                          label: Text(
+                            _imageFile != null || _imagePath != null
+                                ? 'Change Image'
+                                : 'Choose Image',
+                          ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: theme.primaryColor,
                             side: BorderSide(color: theme.primaryColor),
@@ -431,13 +463,18 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                 width: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(isEdit ? Icons.update : Icons.add, size: 20),
+                                  Icon(
+                                    isEdit ? Icons.update : Icons.add,
+                                    size: 20,
+                                  ),
                                   const SizedBox(width: 8),
                                   Text(
                                     isEdit ? 'Update Item' : 'Create Item',

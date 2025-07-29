@@ -37,7 +37,8 @@ class _ItemListScreenState extends State<ItemListScreen> {
       _filteredItems = _items.where((item) {
         final nameMatch = item.name.toLowerCase().contains(_searchQuery);
         final priceMatch = item.price.toStringAsFixed(2).contains(_searchQuery);
-        final descMatch = item.description?.toLowerCase().contains(_searchQuery) ?? false;
+        final descMatch =
+            item.description?.toLowerCase().contains(_searchQuery) ?? false;
         return nameMatch || priceMatch || descMatch;
       }).toList();
     });
@@ -117,20 +118,20 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-          title: const Text(
-            'Items',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          elevation: 0,
-          backgroundColor: const Color(0xFFF3E5F5), // Updated background color
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _fetchItems,
-              tooltip: 'Refresh',
-            ),
-          ],
+        title: const Text(
+          'Items',
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
+        elevation: 0,
+        backgroundColor: const Color(0xFFF3E5F5), // Updated background color
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _fetchItems,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
@@ -162,60 +163,63 @@ class _ItemListScreenState extends State<ItemListScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredItems.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isEmpty ? 'No items found' : 'No matching items',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'Tap the + button to add a new item'
-                                  : 'Try a different search term',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _fetchItems,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredItems.length,
-                          itemBuilder: (context, index) {
-                            final item = _filteredItems[index];
-                            return Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(16),
-                                leading: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: item.imagePath != null
-                                      ? Image.network(
-                                          'http://192.168.108.191:8000${item.imagePath!}',
-                                          width: 60,
-                                          height: 60,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'No items found'
+                              : 'No matching items',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Tap the + button to add a new item'
+                              : 'Try a different search term',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _fetchItems,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = _filteredItems[index];
+                        return Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: item.imagePath != null
+                                  ? Image.network(
+                                      ApiService.getImageUrl(item.imagePath),
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
                                             return Container(
                                               width: 60,
                                               height: 60,
@@ -226,96 +230,97 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                               ),
                                             );
                                           },
-                                        )
-                                      : Container(
-                                          width: 60,
-                                          height: 60,
-                                          color: Colors.grey[200],
-                                          child: const Icon(
-                                            Icons.image_not_supported,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                ),
-                                title: Text(
-                                  item.name,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
+                                    )
+                                  : Container(
+                                      width: 60,
+                                      height: 60,
+                                      color: Colors.grey[200],
+                                      child: const Icon(
+                                        Icons.image_not_supported,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                            ),
+                            title: Text(
+                              item.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (item.description != null &&
+                                    item.description!.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      item.description!,
+                                      style: TextStyle(
+                                        color: Colors.grey[700],
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    '\$${item.price.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      color: theme.primaryColor,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                    ),
                                   ),
                                 ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (item.description != null && item.description!.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: Text(
-                                          item.description!,
-                                          style: TextStyle(
-                                            color: Colors.grey[700],
-                                            fontSize: 14,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        '\$${item.price.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          color: theme.primaryColor,
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                        ),
-                                      ),
+                              ],
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AddItemScreen(item: item),
                                     ),
-                                  ],
+                                  );
+                                  if (result == true) _fetchItems();
+                                } else if (value == 'delete') {
+                                  _deleteItem(item.id, item.name);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text(
+                                    'Edit',
+                                    style: TextStyle(
+                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (value) async {
-                                    if (value == 'edit') {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => AddItemScreen(item: item),
-                                        ),
-                                      );
-                                      if (result == true) _fetchItems();
-                                    } else if (value == 'delete') {
-                                      _deleteItem(item.id, item.name);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text(
-                                        'Edit',
-                                        style: TextStyle(
-                                          color: Colors.blue[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(
+                                    'Delete',
+                                    style: TextStyle(
+                                      color: Colors.red[700],
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                        'Delete',
-                                        style: TextStyle(
-                                          color: Colors.red[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                  icon: const Icon(Icons.more_vert),
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                              ],
+                              icon: const Icon(Icons.more_vert),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

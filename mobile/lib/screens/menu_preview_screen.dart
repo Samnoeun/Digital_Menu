@@ -209,7 +209,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                               child: ListTile(
                                 leading: item.imagePath != null
                                     ? Image.network(
-                                        'http://192.168.108.191:8000${item.imagePath!}',
+                                        ApiService.getImageUrl(item.imagePath),
                                         width: 50,
                                         height: 50,
                                         fit: BoxFit.cover,

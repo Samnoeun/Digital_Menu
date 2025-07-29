@@ -428,4 +428,11 @@ class ApiService {
       throw Exception('Failed to delete setting');
     }
   }
+
+  // Image Upload
+  // Reusable helper to construct full image URLs
+  static String getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    return baseUrl.replaceFirst('/api', '') + path;
+  }
 }
