@@ -116,10 +116,13 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Cart'),
+        centerTitle: true,
+        elevation: 0,
       ),
       body: Column(
         children: [
@@ -129,11 +132,16 @@ class _CartScreenState extends State<CartScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
+                        Icon(Icons.shopping_cart_outlined, 
+                            size: 64, 
+                            color: Colors.grey),
                         SizedBox(height: 16),
                         Text(
                           'Your cart is empty',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 18, 
+                            color: Colors.grey
+                          ),
                         ),
                       ],
                     ),
@@ -141,10 +149,9 @@ class _CartScreenState extends State<CartScreen> {
                 : ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      const Text(
+                      Text(
                         'Order Summary',
-                        style: TextStyle(
-                          fontSize: 20,
+                        style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -153,10 +160,15 @@ class _CartScreenState extends State<CartScreen> {
                         final item = entry.key;
                         final quantity = entry.value;
                         return Card(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          elevation: 1,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
@@ -172,41 +184,75 @@ class _CartScreenState extends State<CartScreen> {
                                             ),
                                           ),
                                           Text(
-                                            '${item.price.toStringAsFixed(2)} \$',
+                                            '\$${item.price.toStringAsFixed(2)}',
                                             style: const TextStyle(
                                               color: Colors.grey,
+                                              fontSize: 14,
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.remove),
-                                          onPressed: () => _updateQuantity(item, quantity - 1),
-                                        ),
-                                        Text(quantity.toString()),
-                                        IconButton(
-                                          icon: const Icon(Icons.add),
-                                          onPressed: () => _updateQuantity(item, quantity + 1),
-                                        ),
-                                      ],
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(Icons.remove, size: 20),
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            onPressed: () => _updateQuantity(item, quantity - 1),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            child: Text(
+                                              quantity.toString(),
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.add, size: 20),
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            onPressed: () => _updateQuantity(item, quantity + 1),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 12),
                                 TextField(
                                   onChanged: (value) => _updateSpecialNote(item, value),
-                                  decoration: const InputDecoration(
-                                    hintText: 'Special instructions (e.g., less sugar)',
-                                    border: OutlineInputBorder(),
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
+                                  decoration: InputDecoration(
+                                    hintText: 'Special note...',
+                                    filled: true,
+                                    fillColor: Colors.grey[50],
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Colors.deepPurple,
+                                        width: 1,
+                                      ),
                                     ),
                                   ),
                                   maxLines: 2,
+                                  style: const TextStyle(fontSize: 14),
                                 ),
                               ],
                             ),
@@ -220,26 +266,32 @@ class _CartScreenState extends State<CartScreen> {
             Container(
               padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPadding),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                color: Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Total:',
-                        style: TextStyle(
-                          fontSize: 18,
+                        style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        '${_total.toStringAsFixed(2)} \$',
-                        style: const TextStyle(
-                          fontSize: 18,
+                        '\$${_total.toStringAsFixed(2)}',
+                        style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
                         ),
                       ),
                     ],
@@ -251,14 +303,25 @@ class _CartScreenState extends State<CartScreen> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepPurple,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
                       ),
                       onPressed: _isSubmitting ? null : _submitOrder,
                       child: _isSubmitting
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
                           : const Text(
                               'SUBMIT ORDER',
                               style: TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
