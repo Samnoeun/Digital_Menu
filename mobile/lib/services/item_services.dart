@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/item_model.dart';
 
 class ItemService {
-  static const String baseUrl = 'http://192.168.108.122:8000/api';
+  static const String baseUrl = 'http://192.168.108.191:8000/api';
 
   static Future<List<Item>> getItems() async {
     final response = await http.get(Uri.parse('$baseUrl/items'));

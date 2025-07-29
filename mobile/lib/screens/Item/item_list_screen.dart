@@ -117,20 +117,20 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Items',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        elevation: 0,
-        backgroundColor: theme.primaryColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchItems,
-            tooltip: 'Refresh',
+          title: const Text(
+            'Items',
+            style: TextStyle(fontWeight: FontWeight.w600),
           ),
-        ],
-      ),
+          elevation: 0,
+          backgroundColor: const Color(0xFFF3E5F5), // Updated background color
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _fetchItems,
+              tooltip: 'Refresh',
+            ),
+          ],
+        ),
       body: Column(
         children: [
           Padding(

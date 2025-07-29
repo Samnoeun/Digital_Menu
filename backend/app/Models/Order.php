@@ -13,14 +13,11 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function table()
-    {
-        return $this->belongsTo(Table::class);
-    }
 
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
     }
-    protected $fillable = ['table_id', 'status'];
+    protected $fillable = ['table_number', 'status'];
+
 }

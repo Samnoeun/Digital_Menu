@@ -9,8 +9,4 @@ class Table extends Model
 {
     use HasFactory;
     protected $fillable= ['table_number','qr_code_url'];
-    public function orders()
-    {
-        return $this->hasMany(Order::class);
-    }
 }

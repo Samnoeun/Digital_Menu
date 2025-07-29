@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/category_model.dart';
 
 class CategoryService {
-  static const String baseUrl = 'http://192.168.108.122:8000/api';
+  static const String baseUrl = 'http://192.168.108.191:8000/api';
 
   static Future<List<Category>> getCategories() async {
     final response = await http.get(Uri.parse('$baseUrl/categories'));
