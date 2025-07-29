@@ -50,18 +50,23 @@ class _HomeScreenState extends State<HomeScreen> {
       // Filter orders based on selected date range
       final filteredOrders = _filterOrdersByDate(orders);
 
-      // Create a map of all items with their names
-      final itemMap = {for (var item in items) item.id.toString(): item.name};
+      // Create a map of all items with their full data
+      final itemMap = {for (var item in items) item.id.toString(): item};
 
       // Calculate item popularity
       final itemCounts = <String, int>{};
+      final itemData = <String, item.Item>{};
+      
       for (var order in filteredOrders) {
         if (order['order_items'] != null) {
           for (var orderItem in order['order_items']) {
             final itemId = orderItem['item_id'].toString();
-            final itemName = itemMap[itemId] ?? 'Unknown Item';
-            final quantity = (orderItem['quantity'] as num).toInt();
-            itemCounts[itemName] = (itemCounts[itemName] ?? 0) + quantity;
+            final item = itemMap[itemId];
+            if (item != null) {
+              final quantity = (orderItem['quantity'] as num).toInt();
+              itemCounts[item.name] = (itemCounts[item.name] ?? 0) + quantity;
+              itemData[item.name] = item; // Store the full item data
+            }
           }
         }
       }
@@ -77,7 +82,9 @@ class _HomeScreenState extends State<HomeScreen> {
         topItem = sortedItems.isNotEmpty ? sortedItems.first.key : "No orders";
         topItems = sortedItems.take(5).map((e) => {
           'name': e.key,
-          'count': e.value
+          'count': e.value,
+          'image': itemData[e.key]?.imagePath, // Get image from item data
+          'item': itemData[e.key], // Store the full item object
         }).toList();
         isLoading = false;
       });
@@ -328,6 +335,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: topItems.map((item) => TopItemTile(
                         name: item['name'],
                         count: item['count'],
+                        image: item['image'],
+                        itemData: item['item'],
                       )).toList(),
                     ),
                 ],
@@ -387,8 +396,16 @@ class SummaryCard extends StatelessWidget {
 class TopItemTile extends StatelessWidget {
   final String name;
   final int count;
+  final String? image;
+  final item.Item? itemData;
 
-  const TopItemTile({super.key, required this.name, required this.count});
+  const TopItemTile({
+    super.key, 
+    required this.name, 
+    required this.count,
+    this.image,
+    this.itemData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -396,15 +413,36 @@ class TopItemTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: const Icon(Icons.fastfood, color: Colors.deepPurple),
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
-        trailing: Text(
+        leading: image != null && image!.isNotEmpty
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  ApiService.getImageUrl(image),
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => 
+                      const Icon(Icons.fastfood, color: Colors.deepPurple),
+                ),
+              )
+            : const Icon(Icons.fastfood, color: Colors.deepPurple),
+        title: Text(
+          name,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Text(
           "$count orders",
           style: const TextStyle(
             color: Colors.deepPurple,
             fontWeight: FontWeight.w500,
           ),
         ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.deepPurple),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }
