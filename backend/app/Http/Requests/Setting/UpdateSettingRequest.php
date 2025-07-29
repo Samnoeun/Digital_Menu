@@ -14,20 +14,11 @@ class UpdateSettingRequest extends FormRequest
         return  true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'restaurant_name' => 'sometimes|required|string|max:255',
-            'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'address' => 'sometimes|nullable|string|max:255',
-            'currency' => 'sometimes|nullable|string|max:10',
-            'language' => 'sometimes|nullable|string|max:50',
-            'dark_mode' => 'sometimes|boolean',
+            'logo' => 'nullable|image|mimes:jpg,jpeg,png',
+            'dark_mode' => 'nullable|boolean',
         ];
     }
 }

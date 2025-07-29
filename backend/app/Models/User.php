@@ -26,10 +26,4 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
-    // Relationship with Setting model
-    public function settings()
-    {
-        return $this->hasOne(Setting::class);
-    }
 }
