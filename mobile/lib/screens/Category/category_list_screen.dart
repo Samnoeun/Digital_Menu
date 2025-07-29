@@ -206,18 +206,18 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 : RefreshIndicator(
                     onRefresh: _fetchCategories,
                     child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(14),
                       itemCount: _filteredCategories.length,
                       itemBuilder: (context, index) {
                         final category = _filteredCategories[index];
                         return Card(
-                          elevation: 6,
+                          elevation: 5,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
                           margin: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 16,
+                            vertical: 10,
+                            horizontal: 10,
                           ),
                           child: Container(
                             padding: const EdgeInsets.all(20),
