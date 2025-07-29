@@ -161,7 +161,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 filled: true,
-                fillColor: theme.colorScheme.surfaceVariant,
+                fillColor: Colors.white,
               ),
               textInputAction: TextInputAction.search,
             ),
