@@ -109,8 +109,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
     try {
       final uri = widget.item == null
-          ? Uri.parse('http://192.168.108.122:8000/api/items')
-          : Uri.parse('http://192.168.108.122:8000/api/items/${widget.item!.id}');
+          ? Uri.parse('http://192.168.108.191:8000/api/items')
+          : Uri.parse('http://192.168.108.191:8000/api/items/${widget.item!.id}');
 
       final request = http.MultipartRequest('POST', uri)
         ..fields['name'] = _nameController.text.trim()
@@ -204,7 +204,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
                 if (confirm == true) {
                   try {
-                    final uri = Uri.parse('http://192.168.108.122:8000/api/items/${widget.item!.id}');
+                    final uri = Uri.parse('http://192.168.108.191:8000/api/items/${widget.item!.id}');
                     final request = http.MultipartRequest('POST', uri)
                       ..fields['_method'] = 'DELETE';
                     final streamedResponse = await request.send();
