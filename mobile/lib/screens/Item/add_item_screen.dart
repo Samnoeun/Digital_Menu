@@ -55,113 +55,197 @@ class _AddItemScreenState extends State<AddItemScreen> {
     try {
       final cats = await ApiService.getCategories();
       setState(() {
-        if (cats.isNotEmpty) {
-          _categories = cats;
-          _selectedCategory = widget.item != null
-              ? cats.firstWhere(
-                  (c) => c.id == widget.item!.categoryId,
-                  orElse: () => cats.first,
-                )
-              : cats.first;
-        } else {
-          _categories = [];
-          _selectedCategory = null;
+        _categories = cats;
+        if (widget.item != null && cats.isNotEmpty) {
+          _selectedCategory = cats.firstWhere(
+            (c) => c.id == widget.item!.categoryId,
+            orElse: () => cats.first,
+          );
+        } else if (cats.isNotEmpty) {
+          _selectedCategory = cats.first;
         }
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load categories: $e'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      _showErrorSnackbar('Failed to load categories: $e');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        _imageFile = File(picked.path);
-        _imagePath = null; // Reset path for update
-      });
+    try {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (picked != null) {
+        setState(() {
+          _imageFile = File(picked.path);
+          _imagePath = null;
+        });
+      }
+    } catch (e) {
+      _showErrorSnackbar('Failed to pick image: $e');
     }
   }
 
   Future<void> _saveItem() async {
     if (!_formKey.currentState!.validate() || _selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please fill all required fields.'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 3),
-        ),
-      );
+      _showErrorSnackbar('Please fill all required fields');
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final uri = widget.item == null
-          ? Uri.parse('http://192.168.108.191:8000/api/items')
-          : Uri.parse('http://192.168.108.191:8000/api/items/${widget.item!.id}');
+      final name = _nameController.text.trim();
+      final description = _descController.text.trim();
+      final price = double.parse(_priceController.text.trim());
+      final categoryId = _selectedCategory!.id;
 
-      final request = http.MultipartRequest('POST', uri)
-        ..fields['name'] = _nameController.text.trim()
-        ..fields['description'] = _descController.text.trim()
-        ..fields['price'] = _priceController.text.trim()
-        ..fields['category_id'] = _selectedCategory!.id.toString();
-
-      if (_imageFile != null) {
-        request.files.add(
-          await http.MultipartFile.fromPath('image', _imageFile!.path),
+      if (widget.item == null) {
+        // Create new item
+        await _createItem(
+          name: name,
+          description: description,
+          price: price,
+          categoryId: categoryId,
         );
-      } else if (_imagePath != null && widget.item != null) {
-        request.fields['image_path'] = _imagePath!;
-      }
-
-      if (widget.item != null) {
-        request.fields['_method'] = 'PUT';
-      }
-
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.item == null
-                  ? '${_nameController.text.trim()} created successfully'
-                  : '${_nameController.text.trim()} updated successfully',
-            ),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        Navigator.pop(context, true);
       } else {
-        throw Exception('Failed: ${response.body}');
+        // Update existing item
+        await _updateItem(
+          id: widget.item!.id,
+          name: name,
+          description: description,
+          price: price,
+          categoryId: categoryId,
+        );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ),
+
+      _showSuccessSnackbar(
+        widget.item == null ? 'Item created successfully' : 'Item updated successfully',
       );
+      Navigator.pop(context, true);
+    } catch (e) {
+      _showErrorSnackbar('Failed to save item: $e');
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _createItem({
+    required String name,
+    required String description,
+    required double price,
+    required int categoryId,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiService.baseUrl}/items'),
+    );
+
+    request.headers['Accept'] = 'application/json';
+    request.fields['name'] = name;
+    request.fields['description'] = description;
+    request.fields['price'] = price.toString();
+    request.fields['category_id'] = categoryId.toString();
+
+    if (_imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('image', _imageFile!.path),
+      );
+    }
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create item: $responseBody');
+    }
+  }
+
+  Future<void> _updateItem({
+    required int id,
+    required String name,
+    required String description,
+    required double price,
+    required int categoryId,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('${ApiService.baseUrl}/items/$id?_method=PUT'),
+    );
+
+    request.headers['Accept'] = 'application/json';
+    request.fields['name'] = name;
+    request.fields['description'] = description;
+    request.fields['price'] = price.toString();
+    request.fields['category_id'] = categoryId.toString();
+
+    if (_imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('image', _imageFile!.path),
+      );
+    } else if (_imagePath != null) {
+      request.fields['image_path'] = _imagePath!;
+    }
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update item: $responseBody');
+    }
+  }
+
+  Future<void> _deleteItem() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Delete'),
+        content: Text('Delete ${widget.item!.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await ApiService.deleteItem(widget.item!.id);
+      _showSuccessSnackbar('Item deleted successfully');
+      Navigator.pop(context, true);
+    } catch (e) {
+      _showErrorSnackbar('Failed to delete item: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -171,69 +255,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          isEdit ? 'Edit Item' : 'Add Item',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        elevation: 0,
-        backgroundColor: theme.primaryColor,
+        title: Text(isEdit ? 'Edit Item' : 'Add Item'),
         actions: [
           if (isEdit)
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Delete Item'),
-                    content: Text('Are you sure you want to delete "${widget.item!.name}"?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        style: TextButton.styleFrom(foregroundColor: Colors.grey),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-
-                if (confirm == true) {
-                  try {
-                    final uri = Uri.parse('http://192.168.108.191:8000/api/items/${widget.item!.id}');
-                    final request = http.MultipartRequest('POST', uri)
-                      ..fields['_method'] = 'DELETE';
-                    final streamedResponse = await request.send();
-                    final response = await http.Response.fromStream(streamedResponse);
-
-                    if (response.statusCode == 200 || response.statusCode == 204) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('${widget.item!.name} deleted successfully'),
-                          backgroundColor: Colors.green,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                      Navigator.pop(context, true);
-                    } else {
-                      throw Exception('Failed to delete item: ${response.body}');
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error deleting item: $e'),
-                        backgroundColor: Colors.red,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                }
-              },
-              tooltip: 'Delete Item',
+              onPressed: _isLoading ? null : _deleteItem,
             ),
         ],
       ),
@@ -244,210 +271,135 @@ class _AddItemScreenState extends State<AddItemScreen> {
               child: Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      isEdit ? 'Edit item details' : 'Create a new item',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface,
+                    // Image Picker
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: theme.primaryColor),
+                        ),
+                        child: _imageFile != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  _imageFile!,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : _imagePath != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      ApiService.getImageUrl(_imagePath),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                                    ),
+                                  )
+                                : Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.add_photo_alternate, size: 40),
+                                        Text(
+                                          'Add Image',
+                                          style: TextStyle(color: theme.primaryColor),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // Name
+                    const SizedBox(height: 20),
+
+                    // Name Field
                     TextFormField(
                       controller: _nameController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Item Name',
-                        hintText: 'e.g., Apple, Laptop',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceVariant,
-                        prefixIcon: const Icon(Icons.inventory),
+                        border: OutlineInputBorder(),
                       ),
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter an item name';
-                        }
-                        if (value.trim().length < 2) {
-                          return 'Name must be at least 2 characters long';
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter item name';
                         }
                         return null;
                       },
-                      textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
-                    // Description
+
+                    // Description Field
                     TextFormField(
                       controller: _descController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Description (Optional)',
-                        hintText: 'e.g., Fresh red apples',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceVariant,
-                        prefixIcon: const Icon(Icons.description),
+                        border: OutlineInputBorder(),
                       ),
                       maxLines: 3,
-                      textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
-                    // Price
+
+                    // Price Field
                     TextFormField(
                       controller: _priceController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Price',
-                        hintText: 'e.g., 9.99',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceVariant,
-                        prefixIcon: const Icon(Icons.attach_money),
+                        border: OutlineInputBorder(),
+                        prefixText: '\$ ',
                       ),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
                       validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter a price';
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter price';
                         }
-                        if (double.tryParse(value.trim()) == null || double.parse(value.trim()) <= 0) {
-                          return 'Please enter a valid price';
+                        if (double.tryParse(value) == null) {
+                          return 'Please enter valid price';
                         }
                         return null;
                       },
-                      textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
+
                     // Category Dropdown
                     DropdownButtonFormField<Category>(
                       value: _selectedCategory,
-                      items: _categories
-                          .map(
-                            (cat) => DropdownMenuItem<Category>(
-                              value: cat,
-                              child: Text(cat.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: _categories.isNotEmpty
-                          ? (value) => setState(() => _selectedCategory = value)
-                          : null,
-                      decoration: InputDecoration(
+                      items: _categories.map((category) {
+                        return DropdownMenuItem<Category>(
+                          value: category,
+                          child: Text(category.name),
+                        );
+                      }).toList(),
+                      onChanged: (category) {
+                        setState(() {
+                          _selectedCategory = category;
+                        });
+                      },
+                      decoration: const InputDecoration(
                         labelText: 'Category',
-                        hintText: _categories.isEmpty ? 'No categories available' : 'Select a category',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceVariant,
-                        prefixIcon: const Icon(Icons.category),
+                        border: OutlineInputBorder(),
                       ),
-                      validator: (value) => value == null ? 'Please select a category' : null,
-                    ),
-                    const SizedBox(height: 16),
-                    // Image Picker
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: _imageFile != null
-                              ? Image.file(
-                                  _imageFile!,
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
-                                )
-                              : _imagePath != null
-                                  ? Image.network(
-                                       ApiService.getImageUrl(_imagePath),
-                                      width: 80,
-                                      height: 80,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          width: 80,
-                                          height: 80,
-                                          color: Colors.grey[200],
-                                          child: const Icon(Icons.broken_image, color: Colors.grey),
-                                        );
-                                      },
-                                    )
-                                  : Container(
-                                      width: 80,
-                                      height: 80,
-                                      color: Colors.grey[200],
-                                      child: const Icon(Icons.image, color: Colors.grey, size: 40),
-                                    ),
-                        ),
-                        const SizedBox(width: 16),
-                        OutlinedButton.icon(
-                          onPressed: _pickImage,
-                          icon: const Icon(Icons.image),
-                          label: Text(_imageFile != null || _imagePath != null ? 'Change Image' : 'Choose Image'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: theme.primaryColor,
-                            side: BorderSide(color: theme.primaryColor),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        if (_imageFile != null || _imagePath != null) ...[
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.clear, color: Colors.red),
-                            onPressed: () => setState(() {
-                              _imageFile = null;
-                              _imagePath = null;
-                            }),
-                            tooltip: 'Remove Image',
-                          ),
-                        ],
-                      ],
+                      validator: (value) {
+                        if (value == null) {
+                          return 'Please select category';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 24),
+
                     // Submit Button
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 50,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _saveItem,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
                         child: _isLoading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation(Colors.white),
-                                ),
-                              )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(isEdit ? Icons.update : Icons.add, size: 20),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    isEdit ? 'Update Item' : 'Create Item',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            ? const CircularProgressIndicator()
+                            : Text(isEdit ? 'Update Item' : 'Create Item'),
                       ),
                     ),
                   ],
