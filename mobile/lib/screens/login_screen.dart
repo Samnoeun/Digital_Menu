@@ -1,7 +1,7 @@
+import 'package:digital_menu/screens/menu_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
 import 'register_screen.dart';
-import 'menu_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -87,11 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Login successful")),
         );
-        // Redirect to home page (MenuScreen) after successful login
-        Navigator.pushReplacement(
-          context, 
-          MaterialPageRoute(builder: (_) => const MenuScreen())
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuScreen()));
       }
     } catch (e) {
       setState(() {

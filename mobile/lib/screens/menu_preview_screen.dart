@@ -78,20 +78,20 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
     });
   }
 
-void _goToCartPage() {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => CartScreen(
-        cart: _cart,
-        onDelete: _removeFromCart,
-        onClearCart: () {
-          setState(() => _cart.clear());
-        },
+  void _goToCartPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CartScreen(
+          cart: _cart,
+          onDelete: _removeFromCart,
+          onClearCart: () {
+            setState(() => _cart.clear());
+          },
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   void _removeFromCart(item.Item itemToRemove) {
     setState(() {
@@ -207,14 +207,26 @@ void _goToCartPage() {
                           ...itemsInCategory.map((item.Item item) {
                             return Card(
                               child: ListTile(
-                                leading: Image.network(
-                                  item.imagePath ?? '',
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(Icons.broken_image),
-                                ),
+                                leading: item.imagePath != null
+                                    ? Image.network(
+                                        'http://192.168.108.191:8000${item.imagePath!}',
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(Icons.broken_image),
+                                      )
+                                    : const Icon(Icons.image_not_supported),
+
+                                // leading: Image.network(
+                                //   item.imagePath ?? '',
+                                //   width: 50,
+                                //   height: 50,
+                                //   fit: BoxFit.cover,
+                                //   errorBuilder: (context, error, stackTrace) =>
+                                //       const Icon(Icons.broken_image),
+                                // ),
                                 title: Text(item.name),
                                 subtitle: Text(
                                   '${item.price.toStringAsFixed(2)} \$',
