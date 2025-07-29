@@ -166,7 +166,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   filled: true,
-                  fillColor: theme.colorScheme.surfaceVariant,
+                  fillColor:Colors.white,
                   prefixIcon: const Icon(Icons.category),
                 ),
                 validator: (value) {
@@ -188,7 +188,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveCategory,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primaryColor,
+                    backgroundColor: const Color.fromARGB(255, 164, 125, 228),
+
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
