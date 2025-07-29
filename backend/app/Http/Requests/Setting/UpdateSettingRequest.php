@@ -11,7 +11,7 @@ class UpdateSettingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return  true;
     }
 
     /**
@@ -22,7 +22,12 @@ class UpdateSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'restaurant_name' => 'sometimes|required|string|max:255',
+            'logo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'address' => 'sometimes|nullable|string|max:255',
+            'currency' => 'sometimes|nullable|string|max:10',
+            'language' => 'sometimes|nullable|string|max:50',
+            'dark_mode' => 'sometimes|boolean',
         ];
     }
 }
