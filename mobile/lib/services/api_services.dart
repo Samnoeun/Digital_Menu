@@ -7,7 +7,7 @@ import '../models/item_model.dart' as item;
 import '../models/setting_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.122:8000/api';
+  static const String baseUrl = 'http://192.168.146.1:8000/api';
 
   static String? _token;
 
