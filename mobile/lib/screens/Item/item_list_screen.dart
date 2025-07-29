@@ -212,7 +212,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
                                   child: item.imagePath != null
                                       ? Image.network(
                                           // 'http://192.168.146.1:8000${item.imagePath!}',
-                                          'http://192.168.108.113:8000${item.imagePath!}',
+                                          'http://192.168.108.191:8000${item.imagePath!}',
                                           width: 60,
                                           height: 60,
                                           fit: BoxFit.cover,

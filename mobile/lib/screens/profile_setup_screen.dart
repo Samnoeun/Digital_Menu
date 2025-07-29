@@ -163,7 +163,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   Future<void> _fetchSetting() async {
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.108.122:8000/api/settings/1'),
+        Uri.parse('http://192.168.108.191:8000/api/settings/1'),
       );
 
       if (response.statusCode == 200) {
@@ -177,7 +177,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
           _locationController.text = data['address'] ?? '';
           if (data['logo'] != null && data['logo'].toString().isNotEmpty) {
             _networkLogoUrl =
-                'http://192.168.108.122:8000/storage/${data['logo']}';
+                'http://192.168.108.191:8000/storage/${data['logo']}';
           }
         });
       } else {

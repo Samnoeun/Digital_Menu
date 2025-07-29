@@ -13,7 +13,7 @@ class CategoryListScreen extends StatefulWidget {
 
 class _CategoryListScreenState extends State<CategoryListScreen> {
   List<Category> _categories = [];
-  List<Category> _filteredCategories = []; // List for filtered categories
+  List<Category> _filteredCategories = [];
   bool _isLoading = true;
   bool _isInit = true;
   final TextEditingController _searchController = TextEditingController();
@@ -55,8 +55,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       final categories = await ApiService.getCategories();
       setState(() {
         _categories = categories;
-        _filteredCategories =
-            categories; // Initialize filtered list with all categories
+        _filteredCategories = categories;
         _isLoading = false;
       });
     } catch (e) {
@@ -129,7 +128,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         elevation: 0,
-        backgroundColor: const Color(0xFFF3E5F5), // Light purple from image
+        backgroundColor: const Color(0xFFF3E5F5),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -140,7 +139,6 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       ),
       body: Column(
         children: [
-          // Search Bar
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -166,7 +164,6 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
               textInputAction: TextInputAction.search,
             ),
           ),
-          // Category List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -206,84 +203,88 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 : RefreshIndicator(
                     onRefresh: _fetchCategories,
                     child: ListView.builder(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(16),
                       itemCount: _filteredCategories.length,
                       itemBuilder: (context, index) {
                         final category = _filteredCategories[index];
                         return Card(
                           elevation: 5,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          margin: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 10,
-                          ),
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            height: 100, // Adjust height as you want
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.category,
-                                  size: 40,
-                                  color: Colors.deepPurple,
-                                ), // Optional icon
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Text(
-                                    category.name,
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: SizedBox(
+                            height: 100, // bigger card height
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 24, // increased vertical padding
+                              ),
+                              title: Text(
+                                category.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              trailing: PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert),
+                                onSelected: (value) async {
+                                  if (value == 'edit') {
+                                    final result = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AddCategoryScreen(
+                                          category: category,
+                                        ),
+                                      ),
+                                    );
+                                    if (result == true) _fetchCategories();
+                                  } else if (value == 'delete') {
+                                    _deleteCategory(category.id, category.name);
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  PopupMenuItem<String>(
+                                    value: 'edit',
+                                    child: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.edit,
+                                          size: 20,
+                                          color: Colors.blue,
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text('Edit'),
+                                      ],
                                     ),
                                   ),
-                                ),
-                                PopupMenuButton<String>(
-                                  icon: const Icon(Icons.more_vert, size: 28),
-                                  onSelected: (value) async {
-                                    if (value == 'edit') {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => AddCategoryScreen(
-                                            category: category,
-                                          ),
+                                  PopupMenuItem<String>(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: const [
+                                        Icon(
+                                          Icons.delete,
+                                          size: 20,
+                                          color: Colors.red,
                                         ),
-                                      );
-                                      if (result == true) _fetchCategories();
-                                    } else if (value == 'delete') {
-                                      _deleteCategory(
-                                        category.id,
-                                        category.name,
-                                      );
-                                    }
-                                  },
-                                  itemBuilder: (BuildContext context) => [
-                                    const PopupMenuItem<String>(
-                                      value: 'edit',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.edit, color: Colors.blue),
-                                          SizedBox(width: 8),
-                                          Text('Edit'),
-                                        ],
-                                      ),
+                                        SizedBox(width: 8),
+                                        Text('Delete'),
+                                      ],
                                     ),
-                                    const PopupMenuItem<String>(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Delete'),
-                                        ],
-                                      ),
+                                  ),
+                                ],
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => CategoryDetailScreen(
+                                      category: category,
                                     ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                );
+                              },
                             ),
                           ),
                         );
