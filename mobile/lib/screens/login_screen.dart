@@ -14,7 +14,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
-  
+
   // Error message variables
   String? emailError;
   String? passwordError;
@@ -84,17 +84,20 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login successful")),
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Login successful")));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MenuScreen()),
         );
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const MenuScreen()));
       }
     } catch (e) {
       setState(() {
         generalError = e.toString();
       });
     }
-    
+
     setState(() {
       isLoading = false;
     });
@@ -155,7 +158,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 60),
                     // App title with better styling
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(25),
@@ -179,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    
+
                     // Login form container
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -213,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // General error message
                           if (generalError != null)
                             Container(
@@ -234,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
-                          
+
                           // Email field
                           _buildStyledTextField(
                             controller: emailController,
@@ -244,7 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             errorText: emailError,
                           ),
                           const SizedBox(height: 16),
-                          
+
                           // Password field
                           _buildStyledTextField(
                             controller: passwordController,
@@ -253,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             isPassword: true,
                             errorText: passwordError,
                           ),
-                          
+
                           // Forgot password link
                           Align(
                             alignment: Alignment.centerRight,
@@ -270,9 +276,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 16),
-                          
+
                           // Login button
                           Container(
                             width: double.infinity,
@@ -303,7 +309,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               child: isLoading
-                                  ? const CircularProgressIndicator(color: Colors.white)
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
                                   : const Text(
                                       'Sign In',
                                       style: TextStyle(
@@ -314,15 +322,19 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Divider
                           Row(
                             children: [
-                              Expanded(child: Divider(color: Colors.grey.shade300)),
+                              Expanded(
+                                child: Divider(color: Colors.grey.shade300),
+                              ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 child: Text(
                                   'Or continue with',
                                   style: TextStyle(
@@ -331,12 +343,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ),
-                              Expanded(child: Divider(color: Colors.grey.shade300)),
+                              Expanded(
+                                child: Divider(color: Colors.grey.shade300),
+                              ),
                             ],
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Social login buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -362,25 +376,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Register link
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          'Don\'t have an account? ',
+                          'Don\'t have an account?',
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 16,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                         TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterScreen(),
+                              ),
                             );
                           },
                           child: const Text(
@@ -390,6 +407,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
                       ],
@@ -420,7 +438,9 @@ class _LoginScreenState extends State<LoginScreen> {
             color: Colors.grey.shade50,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: errorText != null ? Colors.red.shade300 : Colors.grey.shade200,
+              color: errorText != null
+                  ? Colors.red.shade300
+                  : Colors.grey.shade200,
               width: errorText != null ? 2 : 1,
             ),
           ),
@@ -444,12 +464,19 @@ class _LoginScreenState extends State<LoginScreen> {
               labelText: label,
               prefixIcon: Icon(
                 icon,
-                 color: errorText != null ? Colors.red.shade400 : Colors.deepPurple.shade400,
+                color: errorText != null
+                    ? Colors.red.shade400
+                    : Colors.deepPurple.shade400,
               ),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
               labelStyle: TextStyle(
-                color: errorText != null ? Colors.red.shade600 : Colors.grey.shade600,
+                color: errorText != null
+                    ? Colors.red.shade600
+                    : Colors.grey.shade600,
               ),
             ),
           ),
@@ -523,7 +550,7 @@ class TopWaveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     var path = Path();
     path.lineTo(0, size.height - 50);
-    
+
     var firstControlPoint = Offset(size.width / 4, size.height);
     var firstEndPoint = Offset(size.width / 2, size.height - 30);
     path.quadraticBezierTo(
@@ -532,7 +559,7 @@ class TopWaveClipper extends CustomClipper<Path> {
       firstEndPoint.dx,
       firstEndPoint.dy,
     );
-    
+
     var secondControlPoint = Offset(size.width * 3 / 4, size.height - 60);
     var secondEndPoint = Offset(size.width, size.height - 20);
     path.quadraticBezierTo(
@@ -541,7 +568,7 @@ class TopWaveClipper extends CustomClipper<Path> {
       secondEndPoint.dx,
       secondEndPoint.dy,
     );
-    
+
     path.lineTo(size.width, 0);
     path.close();
     return path;
@@ -557,7 +584,7 @@ class BottomLeftWaveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     var path = Path();
     path.moveTo(size.width, 30);
-    
+
     var firstControlPoint = Offset(size.width * 2 / 3, 0);
     var firstEndPoint = Offset(size.width / 2, 20);
     path.quadraticBezierTo(
@@ -566,7 +593,7 @@ class BottomLeftWaveClipper extends CustomClipper<Path> {
       firstEndPoint.dx,
       firstEndPoint.dy,
     );
-    
+
     var secondControlPoint = Offset(size.width / 4, 40);
     var secondEndPoint = Offset(0, 10);
     path.quadraticBezierTo(
@@ -575,7 +602,7 @@ class BottomLeftWaveClipper extends CustomClipper<Path> {
       secondEndPoint.dx,
       secondEndPoint.dy,
     );
-    
+
     path.lineTo(0, size.height);
     path.lineTo(size.width, size.height);
     path.close();

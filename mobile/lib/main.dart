@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'screens/login_screen.dart';
+import 'screens/web_menu_screen.dart';
+import 'screens/menu_preview_screen.dart';
 
 void main() => runApp(const DigitalMenuApp());
 
@@ -32,7 +35,13 @@ class DigitalMenuApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(), // Start at login screen
+      // If running on web, show the web menu directly
+      // If running on mobile, show the login screen
+      home: kIsWeb ? const WebMenuScreen() : const LoginScreen(),
+      // Add routing for web
+      routes: {
+        '/menu': (context) => const WebMenuScreen(),
+      },
     );
   }
 }
