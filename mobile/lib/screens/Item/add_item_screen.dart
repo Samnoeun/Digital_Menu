@@ -120,7 +120,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
       }
 
       _showSuccessSnackbar(
-        widget.item == null ? 'Item created successfully' : 'Item updated successfully',
+        widget.item == null
+            ? 'Item created successfully'
+            : 'Item updated successfully',
       );
       Navigator.pop(context, true);
     } catch (e) {
@@ -179,12 +181,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
     request.fields['price'] = price.toString();
     request.fields['category_id'] = categoryId.toString();
 
+    // Only add image if a new one was selected
     if (_imageFile != null) {
       request.files.add(
         await http.MultipartFile.fromPath('image', _imageFile!.path),
       );
-    } else if (_imagePath != null) {
-      request.fields['image_path'] = _imagePath!;
     }
 
     final response = await request.send();
@@ -292,26 +293,32 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                 ),
                               )
                             : _imagePath != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      ApiService.getImageUrl(_imagePath),
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  ApiService.getImageUrl(_imagePath),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      const Icon(Icons.broken_image),
+                                ),
+                              )
+                            : Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.add_photo_alternate,
+                                      size: 40,
                                     ),
-                                  )
-                                : Center(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(Icons.add_photo_alternate, size: 40),
-                                        Text(
-                                          'Add Image',
-                                          style: TextStyle(color: theme.primaryColor),
-                                        ),
-                                      ],
+                                    Text(
+                                      'Add Image',
+                                      style: TextStyle(
+                                        color: theme.primaryColor,
+                                      ),
                                     ),
-                                  ),
+                                  ],
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -351,7 +358,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         border: OutlineInputBorder(),
                         prefixText: '\$ ',
                       ),
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter price';
