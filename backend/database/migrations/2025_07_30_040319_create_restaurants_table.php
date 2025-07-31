@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('restaurant_name');
             $table->string('address');
-            $table->string('profile')->nullable(); // path to image
+            $table->string('profile')->nullable(); // Profile image path
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // ✅ Add this line
             $table->timestamps();
         });
     }

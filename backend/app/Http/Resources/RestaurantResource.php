@@ -7,13 +7,19 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class RestaurantResource extends JsonResource
 {
-    public function toArray($request): array
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
+            'user_id' => $this->user_id,
             'restaurant_name' => $this->restaurant_name,
             'address' => $this->address,
-            'profile' => $this->profile ? asset('storage/' . $this->profile) : null,
+            'profile' => $this->profile,
         ];
     }
 }

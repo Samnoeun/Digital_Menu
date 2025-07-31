@@ -7,12 +7,35 @@ import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
 import '../models/order_model.dart';
 import '../models/setting_model.dart';
+import '../models/restaurant_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // static const String baseUrl = 'http://192.168.146.1:8000/api';
-  static const String baseUrl = 'http://192.168.108.191:8000/api'; // Update with your preferred base URL
+  static const String baseUrl =
+      'http://192.168.108.176:8000/api'; // Update with your preferred base URL
 
   static String? _token;
+
+  // Get stored auth token from SharedPreferences
+  static Future<String?> getAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    _token = prefs.getString('auth_token');
+    return _token;
+  }
+
+  // Save auth token to SharedPreferences and _token variable
+  static Future<void> saveAuthToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    _token = token;
+  }
+
+  // Clear token on logout
+  static Future<void> clearAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    _token = null;
+  }
 
   // User Authentication
   static Future<UserModel?> register(
@@ -36,7 +59,8 @@ class ApiService {
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        _token = data['token'];
+        final token = data['token'];
+        if (token != null) await saveAuthToken(token);
         return UserModel.fromJson(data['user']);
       } else {
         throw data['message'] ?? 'Registration failed';
@@ -57,7 +81,8 @@ class ApiService {
       final data = json.decode(response.body);
 
       if (response.statusCode == 200) {
-        _token = data['token'];
+        final token = data['token'];
+        if (token != null) await saveAuthToken(token);
         return UserModel.fromJson(data['user']);
       } else {
         throw data['message'] ?? 'Login failed';
@@ -69,16 +94,17 @@ class ApiService {
 
   static Future<void> logout() async {
     try {
+      final token = await getAuthToken();
       final response = await http.post(
         Uri.parse('$baseUrl/logout'),
         headers: {
           'Accept': 'application/json',
-          'Authorization': 'Bearer $_token',
+          if (token != null) 'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
-        _token = null;
+        await clearAuthToken();
       } else {
         throw Exception('Logout failed');
       }
@@ -87,25 +113,47 @@ class ApiService {
     }
   }
 
+  // static Future<UserModel?> getUser() async {
+  //   try {
+  //     final token = await getAuthToken();
+  //     final response = await http.get(
+  //       Uri.parse('$baseUrl/me'),
+  //       headers: {
+  //         'Accept': 'application/json',
+  //         if (token != null) 'Authorization': 'Bearer $token',
+  //       },
+  //     );
+
+  //     final data = json.decode(response.body);
+
+  //     if (response.statusCode == 200) {
+  //       return UserModel.fromJson(data);
+  //     } else {
+  //       throw Exception('Unauthorized');
+  //     }
+  //   } catch (e) {
+  //     throw Exception('Error: $e');
+  //   }
+  // }
   static Future<UserModel?> getUser() async {
     try {
+      final token = await getAuthToken();
       final response = await http.get(
         Uri.parse('$baseUrl/me'),
         headers: {
           'Accept': 'application/json',
-          'Authorization': 'Bearer $_token',
+          if (token != null) 'Authorization': 'Bearer $token',
         },
       );
 
-      final data = json.decode(response.body);
-
       if (response.statusCode == 200) {
+        final data = json.decode(response.body);
         return UserModel.fromJson(data);
       } else {
         throw Exception('Unauthorized');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      throw Exception('Error getting user: $e');
     }
   }
 
@@ -224,11 +272,12 @@ class ApiService {
   // Order Services
   static Future<List<dynamic>> getOrders() async {
     try {
+      final token = await getAuthToken();
       final response = await http.get(
         Uri.parse('$baseUrl/orders'),
         headers: {
           'Accept': 'application/json',
-          'Authorization': 'Bearer $_token',
+          if (token != null) 'Authorization': 'Bearer $token',
         },
       );
 
@@ -247,16 +296,20 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateOrderStatus(int orderId, String newStatus) async {
+  static Future<Map<String, dynamic>> updateOrderStatus(
+    int orderId,
+    String newStatus,
+  ) async {
+    final token = await getAuthToken();
     final response = await http.put(
       Uri.parse('$baseUrl/orders/$orderId/status'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $_token',
+        if (token != null) 'Authorization': 'Bearer $token',
       },
       body: json.encode({'status': newStatus}),
     );
-    
+
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
@@ -269,25 +322,30 @@ class ApiService {
     required List<Map<String, dynamic>> items,
   }) async {
     try {
+      final token = await getAuthToken();
       final response = await http.post(
         Uri.parse('$baseUrl/orders'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'Authorization': 'Bearer $_token',
+          if (token != null) 'Authorization': 'Bearer $token',
         },
         body: json.encode({
           'table_number': tableNumber,
-          'items': items.map((item) => {
-            'item_id': item['item_id'] ?? item['id'],
-            'quantity': item['quantity'],
-            'special_note': item['special_note'] ?? '',
-          }).toList(),
+          'items': items
+              .map(
+                (item) => {
+                  'item_id': item['item_id'] ?? item['id'],
+                  'quantity': item['quantity'],
+                  'special_note': item['special_note'] ?? '',
+                },
+              )
+              .toList(),
         }),
       );
 
       final responseBody = json.decode(response.body);
-      
+
       if (response.statusCode == 201) {
         return responseBody;
       } else if (response.statusCode == 422) {
@@ -300,12 +358,16 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> updateOrder(int orderId, Map<String, dynamic> data) async {
+  static Future<Map<String, dynamic>> updateOrder(
+    int orderId,
+    Map<String, dynamic> data,
+  ) async {
+    final token = await getAuthToken();
     final response = await http.put(
       Uri.parse('$baseUrl/orders/$orderId'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $_token',
+        if (token != null) 'Authorization': 'Bearer $token',
       },
       body: json.encode(data),
     );
@@ -313,21 +375,25 @@ class ApiService {
   }
 
   static Future<void> deleteOrder(int orderId) async {
-    await http.delete(
+    final token = await getAuthToken();
+    final response = await http.delete(
       Uri.parse('$baseUrl/orders/$orderId'),
-      headers: {
-        'Authorization': 'Bearer $_token',
-      },
+      headers: {if (token != null) 'Authorization': 'Bearer $token'},
     );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete order');
+    }
   }
 
   // Setting Services
   static Future<Map<String, dynamic>?> getSetting(int id) async {
+    final token = await getAuthToken();
     final response = await http.get(
       Uri.parse('$baseUrl/settings/$id'),
       headers: {
         'Accept': 'application/json',
-        if (_token != null) 'Authorization': 'Bearer $_token',
+        if (token != null) 'Authorization': 'Bearer $token',
       },
     );
 
@@ -347,11 +413,13 @@ class ApiService {
     String? language,
     bool? darkMode,
   }) async {
+    final token = await getAuthToken();
+
     var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/settings'));
 
     request.headers.addAll({
       'Accept': 'application/json',
-      if (_token != null) 'Authorization': 'Bearer $_token',
+      if (token != null) 'Authorization': 'Bearer $token',
     });
 
     request.fields['restaurant_name'] = restaurantName;
@@ -384,6 +452,8 @@ class ApiService {
     String? language,
     bool? darkMode,
   }) async {
+    final token = await getAuthToken();
+
     var request = http.MultipartRequest(
       'POST',
       Uri.parse('$baseUrl/settings/$id?_method=PUT'),
@@ -391,7 +461,7 @@ class ApiService {
 
     request.headers.addAll({
       'Accept': 'application/json',
-      if (_token != null) 'Authorization': 'Bearer $_token',
+      if (token != null) 'Authorization': 'Bearer $token',
     });
 
     request.fields['restaurant_name'] = restaurantName;
@@ -416,16 +486,100 @@ class ApiService {
   }
 
   static Future<void> deleteSetting(int id) async {
+    final token = await getAuthToken();
     final response = await http.delete(
       Uri.parse('$baseUrl/settings/$id'),
       headers: {
         'Accept': 'application/json',
-        if (_token != null) 'Authorization': 'Bearer $_token',
+        if (token != null) 'Authorization': 'Bearer $token',
       },
     );
 
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete setting');
+    }
+  }
+
+  // Restaurant Services
+  static Future<void> createRestaurant({
+    required String restaurantName,
+    required String address,
+    File? profileImage,
+  }) async {
+    final token = await getAuthToken();
+
+    var uri = Uri.parse('$baseUrl/restaurants');
+    var request = http.MultipartRequest('POST', uri);
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    });
+    request.fields['restaurant_name'] = restaurantName;
+    request.fields['address'] = address;
+    if (profileImage != null)
+      request.files.add(
+        await http.MultipartFile.fromPath('profile', profileImage.path),
+      );
+    final response = await request.send();
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception(await response.stream.bytesToString());
+    }
+  }
+
+  static Future<Map<String, dynamic>> getRestaurantByUserId(int userId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/restaurants/user/$userId'),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      return jsonData['restaurant'];
+    } else {
+      throw Exception('Failed to load restaurant');
+    }
+  }
+
+  static Future<void> updateRestaurant({
+    required int id,
+    required String restaurantName,
+    required String address,
+    File? profileImage,
+  }) async {
+    final token = await getAuthToken();
+
+    var uri = Uri.parse('$baseUrl/restaurants/$id');
+    var request = http.MultipartRequest('POST', uri);
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    });
+    request.fields['_method'] = 'PUT';
+    request.fields['restaurant_name'] = restaurantName;
+    request.fields['address'] = address;
+    if (profileImage != null)
+      request.files.add(
+        await http.MultipartFile.fromPath('profile', profileImage.path),
+      );
+    final response = await request.send();
+    if (response.statusCode != 200) {
+      throw Exception(await response.stream.bytesToString());
+    }
+  }
+
+  static Future<Restaurant> getRestaurant(int id) async {
+    final token = await getAuthToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/restaurants/$id'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      // Assume your API returns a structure like { "data": {...} }
+      final restaurantJson = jsonData['data'] ?? jsonData;
+      return Restaurant.fromJson(restaurantJson);
+    } else {
+      throw Exception('Failed to load restaurant: ${response.statusCode}');
     }
   }
 

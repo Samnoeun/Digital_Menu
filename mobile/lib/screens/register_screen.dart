@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
-import 'profile_setup_screen.dart';
+import 'restaurant_screen.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -36,7 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const ProfileSetupScreen()),
+          MaterialPageRoute(builder: (_) => const RestaurantScreen()),
         );
       }
     } catch (e) {
