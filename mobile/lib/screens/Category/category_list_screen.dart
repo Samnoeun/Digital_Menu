@@ -55,7 +55,8 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       final categories = await ApiService.getCategories();
       setState(() {
         _categories = categories;
-        _filteredCategories = categories; // Initialize filtered list with all categories
+        _filteredCategories =
+            categories; // Initialize filtered list with all categories
         _isLoading = false;
       });
     } catch (e) {
@@ -170,96 +171,116 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredCategories.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.category_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'No categories found'
-                                  : 'No matching categories',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'Tap the + button to add a new category'
-                                  : 'Try a different search term',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.category_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _fetchCategories,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredCategories.length,
-                          itemBuilder: (context, index) {
-                            final category = _filteredCategories[index];
-                            return Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'No categories found'
+                              : 'No matching categories',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Tap the + button to add a new category'
+                              : 'Try a different search term',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _fetchCategories,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredCategories.length,
+                      itemBuilder: (context, index) {
+                        final category = _filteredCategories[index];
+                        return Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            title: Text(
+                              category.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
                               ),
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                title: Text(
-                                  category.name,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => AddCategoryScreen(category: category),
-                                          ),
-                                        );
-                                        if (result == true) _fetchCategories();
-                                      },
-                                      tooltip: 'Edit Category',
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deleteCategory(category.id, category.name),
-                                      tooltip: 'Delete Category',
-                                    ),
-                                  ],
-                                ),
-                                onTap: () {
-                                  Navigator.push(
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  final result = await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => CategoryDetailScreen(category: category),
+                                      builder: (_) =>
+                                          AddCategoryScreen(category: category),
                                     ),
                                   );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                                  if (result == true) _fetchCategories();
+                                } else if (value == 'delete') {
+                                  _deleteCategory(category.id, category.name);
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text(
+                                    'Edit',
+                                    style: TextStyle(
+                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(
+                                    'Delete',
+                                    style: TextStyle(
+                                      color: Colors.red[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      CategoryDetailScreen(category: category),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
