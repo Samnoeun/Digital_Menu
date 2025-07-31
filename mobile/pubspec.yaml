@@ -15,6 +15,7 @@ dependencies:
   permission_handler: ^11.3.1
   qr_flutter: ^4.1.0
   http: ^1.4.0
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +34,8 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/logo/app_logo.png"
+
+
+  flutter:
+    sdk: flutter
+  mobile_scanner: ^3.5.5

@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('orders', function (Blueprint $table) {
+        Schema::create('settings', function (Blueprint $table) {
             $table->id();
-            $table->integer('table_number')->unique();
-            $table->string('status')->default('pending');
+            $table->foreignId('restaurant_id')->constrained()->onDelete('cascade'); // Link to restaurant
+            $table->boolean('dark_mode')->default(false);
             $table->timestamps();
         });
     }
@@ -24,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('orders');
+        Schema::dropIfExists('settings');
     }
 };

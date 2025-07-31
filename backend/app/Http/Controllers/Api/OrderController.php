@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Order\StoreOrderRequest;
-use App\Http\Requests\Order\UpdateOrderRequest;
 use App\Models\Order;
 use Illuminate\Http\Request;
 
@@ -12,32 +10,53 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with('orderItems')->get();
-        return response()->json($orders);
+        return Order::with(['OrderItems.item'])->latest()->get();
     }
 
-    public function store(StoreOrderRequest $request)
+    public function store(Request $request)
     {
-        $order = Order::create($request->validated());
-        return response()->json(['message' => 'Order created', 'order' => $order], 201);
+        $validated = $request->validate([
+            'table_number' => 'required|integer',
+            'items' => 'required|array',
+            'items.*.item_id' => 'required|exists:items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.special_note' => 'nullable|string',
+        ]);
+
+        $order = Order::create([
+            'table_number' => $validated['table_number'],
+            'status' => 'pending',
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            $order->orderItems()->create([
+                'item_id' => $item['item_id'],
+                'quantity' => $item['quantity'],
+                'special_note' => $item['special_note'] ?? null,
+            ]);
+        }
+
+        return response()->json($order->load('orderItems.item'), 201);
     }
 
-    public function show($id)
+    public function updateStatus(Order $order, Request $request)
     {
-        $order = Order::with('orderItems')->findOrFail($id);
-        return response()->json($order);
+        $request->validate([
+            'status' => 'required|in:pending,preparing,ready,completed',
+        ]);
+
+        $order->update(['status' => $request->status]);
+
+        if ($request->status === 'completed') {
+            $order->delete();
+            return response()->json(['message' => 'Order completed and deleted']);
+        }
+
+        return response()->json($order->load('orderItems.item'));
     }
 
-    public function update(UpdateOrderRequest $request, $id)
+    public function destroy(Order $order)
     {
-        $order = Order::findOrFail($id);
-        $order->update($request->validated());
-        return response()->json(['message' => 'Order updated', 'order' => $order]);
-    }
-
-    public function destroy($id)
-    {
-        $order = Order::findOrFail($id);
         $order->delete();
         return response()->json(['message' => 'Order deleted']);
     }

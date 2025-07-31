@@ -23,15 +23,9 @@ class StoreSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'id' => $this->id,
-            'user' => new UserResource($this->user),
-            'restaurant_name' => $this->restaurant_name,
-            'logo' => $this->logo ? url('storage/' . $this->logo) : null,
-            'address' => $this->address,
-            'currency' => $this->currency,
-            'language' => $this->language,
-            'dark_mode' => $this->dark_mode,
-            'created_at' => $this->created_at,
+            'restaurant_id' => 'required|exists:restaurants,id',
+            'logo' => 'nullable|image|mimes:jpg,jpeg,png',
+            'dark_mode' => 'nullable|boolean',
         ];
     }
 }
