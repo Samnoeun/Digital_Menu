@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../services/api_services.dart';
 import '../models/item_model.dart' as item;
 import '../models/category_model.dart' as category;
+import '../models/restaurant_model.dart';
 import 'item_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,6 +22,10 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = true;
   String selectedFilter = 'Today';
   DateTime? customDate;
+  String? restaurantName;
+  Restaurant? restaurant;
+  String? restaurantProfile;
+
   final List<String> filterOptions = [
     'Today',
     'This Week',
@@ -31,7 +36,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadRestaurantInfo();
     _loadData();
+  }
+
+  Future<void> _loadRestaurantInfo() async {
+    try {
+      print('Loading restaurant info...');
+      final fetchedRestaurant = await ApiService.getRestaurant();
+      print('Fetched restaurant: ${fetchedRestaurant?.restaurantName}');
+      print('Profile image: ${fetchedRestaurant?.profile}');
+
+      if (mounted) {
+        setState(() {
+          restaurant = fetchedRestaurant;
+        });
+      }
+    } catch (e) {
+      print('Error loading restaurant: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
+    }
   }
 
   Future<void> _loadData() async {
@@ -55,11 +83,13 @@ class _HomeScreenState extends State<HomeScreen> {
       final filteredOrders = _filterOrdersByDate(orders);
 
       // Create a map of all items with their full data including categories
-      final itemMap = {for (var item in items) item.id.toString(): item.copyWith(
-        category: categoryMap[item.categoryId]
-      )};
+      final itemMap = {
+        for (var item in items)
+          item.id.toString(): item.copyWith(
+            category: categoryMap[item.categoryId],
+          ),
+      };
 
-      // Calculate item popularity
       final itemCounts = <String, int>{};
       final itemData = <String, item.Item>{};
 
@@ -77,7 +107,6 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
 
-      // Sort items by popularity
       final sortedItems = itemCounts.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
 
@@ -172,17 +201,44 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF3E5F5),
       appBar: AppBar(
-        title: const Text('Home'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
-        ],
-      ),
+  backgroundColor: Colors.deepPurple,
+  automaticallyImplyLeading: false,
+  title: restaurant == null
+      ? const Text('Loading...', style: TextStyle(fontSize: 18, color: Colors.white))
+      : Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: Colors.white,
+              backgroundImage: restaurant!.profile != null
+                  ? NetworkImage(ApiService.getImageUrl(restaurant!.profile!))
+                  : null,
+              child: restaurant!.profile == null
+                  ? const Icon(Icons.restaurant, size: 20, color: Colors.deepPurple)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                restaurant!.restaurantName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh, color: Colors.white),
+      onPressed: _loadRestaurantInfo,
+    ),
+  ],
+),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -190,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Banner section
+                  // Banner
                   Container(
                     width: double.infinity,
                     height: 160,
@@ -234,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  // Date filter dropdown
+                  // Date Filter
                   Row(
                     children: [
                       Expanded(
@@ -316,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 30),
 
-                  // Top 5 Items
+                  // Top Items List
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -464,17 +520,11 @@ class TopItemTile extends StatelessWidget {
           children: [
             Text(
               name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             Text(
               categoryName,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),
