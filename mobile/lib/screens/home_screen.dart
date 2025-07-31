@@ -4,6 +4,7 @@ import '../services/api_services.dart';
 import '../models/item_model.dart' as item;
 import '../models/category_model.dart' as category;
 import '../models/restaurant_model.dart';
+import 'item_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -64,9 +65,16 @@ class _HomeScreenState extends State<HomeScreen> {
       final categories = results[1] as List<category.Category>;
       final orders = results[2] as List<dynamic>;
 
+      // Create category map for lookup
+      final categoryMap = {for (var cat in categories) cat.id: cat};
+
+      // Filter orders based on selected date range
       final filteredOrders = _filterOrdersByDate(orders);
 
-      final itemMap = {for (var item in items) item.id.toString(): item};
+      // Create a map of all items with their full data including categories
+      final itemMap = {for (var item in items) item.id.toString(): item.copyWith(
+        category: categoryMap[item.categoryId]
+      )};
 
       final itemCounts = <String, int>{};
       final itemData = <String, item.Item>{};
@@ -93,17 +101,16 @@ class _HomeScreenState extends State<HomeScreen> {
         totalCategories = categories.length;
         totalOrders = filteredOrders.length;
         topItem = sortedItems.isNotEmpty ? sortedItems.first.key : "No orders";
-        topItems = sortedItems
-            .take(5)
-            .map(
-              (e) => {
-                'name': e.key,
-                'count': e.value,
-                'image': itemData[e.key]?.imagePath,
-                'item': itemData[e.key],
-              },
-            )
-            .toList();
+        topItems = sortedItems.take(5).map((e) {
+          final item = itemData[e.key]!;
+          return {
+            'name': item.name,
+            'count': e.value,
+            'image': item.imagePath,
+            'item': item,
+            'category': item.category?.name ?? 'No category',
+          };
+        }).toList();
         isLoading = false;
       });
     } catch (e) {
@@ -368,16 +375,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   else
                     Column(
-                      children: topItems
-                          .map(
-                            (item) => TopItemTile(
-                              name: item['name'],
-                              count: item['count'],
-                              image: item['image'],
-                              itemData: item['item'],
-                            ),
-                          )
-                          .toList(),
+                      children: topItems.map((item) {
+                        return TopItemTile(
+                          name: item['name'],
+                          count: item['count'],
+                          image: item['image'],
+                          itemData: item['item'],
+                          categoryName: item['category'],
+                        );
+                      }).toList(),
                     ),
                 ],
               ),
@@ -438,11 +444,13 @@ class TopItemTile extends StatelessWidget {
   final int count;
   final String? image;
   final item.Item? itemData;
+  final String categoryName;
 
   const TopItemTile({
     super.key,
     required this.name,
     required this.count,
+    required this.categoryName,
     this.image,
     this.itemData,
   });
@@ -453,6 +461,18 @@ class TopItemTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
+        onTap: () {
+          if (itemData != null) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              builder: (_) => ItemDetailBottomSheet(item: itemData!),
+            );
+          }
+        },
         leading: image != null && image!.isNotEmpty
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(8),
@@ -466,18 +486,32 @@ class TopItemTile extends StatelessWidget {
                 ),
               )
             : const Icon(Icons.fastfood, color: Colors.deepPurple),
-        title: Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              name,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              categoryName,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
         ),
-        subtitle: Text(
-          "$count orders",
+        trailing: Text(
+          '$count orders',
           style: const TextStyle(
             color: Colors.deepPurple,
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.deepPurple),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         visualDensity: VisualDensity.compact,
       ),
