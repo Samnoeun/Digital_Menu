@@ -42,12 +42,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadRestaurantInfo() async {
     try {
-      final fetchedRestaurant = await ApiService.getRestaurant(1);
-      setState(() {
-        restaurant = fetchedRestaurant;
-      });
+      print('Loading restaurant info...');
+      final fetchedRestaurant = await ApiService.getRestaurant();
+      print('Fetched restaurant: ${fetchedRestaurant?.restaurantName}');
+      print('Profile image: ${fetchedRestaurant?.profile}');
+
+      if (mounted) {
+        setState(() {
+          restaurant = fetchedRestaurant;
+        });
+      }
     } catch (e) {
-      debugPrint('Error loading restaurant info: $e');
+      print('Error loading restaurant: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
     }
   }
 
@@ -72,9 +83,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final filteredOrders = _filterOrdersByDate(orders);
 
       // Create a map of all items with their full data including categories
-      final itemMap = {for (var item in items) item.id.toString(): item.copyWith(
-        category: categoryMap[item.categoryId]
-      )};
+      final itemMap = {
+        for (var item in items)
+          item.id.toString(): item.copyWith(
+            category: categoryMap[item.categoryId],
+          ),
+      };
 
       final itemCounts = <String, int>{};
       final itemData = <String, item.Item>{};
@@ -187,29 +201,44 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF3E5F5),
       appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
-        automaticallyImplyLeading: false,
-        title: Row(
+  backgroundColor: Colors.deepPurple,
+  automaticallyImplyLeading: false,
+  title: restaurant == null
+      ? const Text('Loading...', style: TextStyle(fontSize: 18, color: Colors.white))
+      : Row(
           children: [
-            if (restaurant?.profile != null && restaurant!.profile!.isNotEmpty)
-              CircleAvatar(
-                backgroundImage: NetworkImage(
-                  ApiService.getImageUrl(restaurant!.profile!),
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: Colors.white,
+              backgroundImage: restaurant!.profile != null
+                  ? NetworkImage(ApiService.getImageUrl(restaurant!.profile!))
+                  : null,
+              child: restaurant!.profile == null
+                  ? const Icon(Icons.restaurant, size: 20, color: Colors.deepPurple)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                restaurant!.restaurantName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                radius: 18,
+                maxLines: 1,
               ),
-            const SizedBox(width: 10),
-            Text(
-              restaurant?.restaurantName ?? 'Home',
-              style: const TextStyle(fontSize: 20),
             ),
           ],
         ),
-
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadData),
-        ],
-      ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh, color: Colors.white),
+      onPressed: _loadRestaurantInfo,
+    ),
+  ],
+),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -491,17 +520,11 @@ class TopItemTile extends StatelessWidget {
           children: [
             Text(
               name,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             Text(
               categoryName,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
             ),
           ],
         ),

@@ -12,7 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   // static const String baseUrl = 'http://192.168.146.1:8000/api';
-  static const String baseUrl = 'http://192.168.108.93:8000/api'; // Update with your preferred base URL
+  static const String baseUrl =
+      'http://192.168.108.93:8000/api'; // Update with your preferred base URL
 
   static String? _token;
 
@@ -539,54 +540,93 @@ class ApiService {
     }
   }
 
-  static Future<void> updateRestaurant({
-    required int id,
-    required String restaurantName,
-    required String address,
-    File? profileImage,
-  }) async {
-    final token = await getAuthToken();
+static Future<void> updateRestaurant({
+  required int id,
+  required String restaurantName,
+  required String address,
+  File? profileImage,
+}) async {
+  final token = await getAuthToken();
+  
+  // Create multipart request
+  var request = http.MultipartRequest(
+    'POST', 
+    Uri.parse('$baseUrl/restaurants/$id?_method=PUT')
+  );
 
-    var uri = Uri.parse('$baseUrl/restaurants/$id');
-    var request = http.MultipartRequest('POST', uri);
-    request.headers.addAll({
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    });
-    request.fields['_method'] = 'PUT';
-    request.fields['restaurant_name'] = restaurantName;
-    request.fields['address'] = address;
-    if (profileImage != null)
-      request.files.add(
-        await http.MultipartFile.fromPath('profile', profileImage.path),
-      );
-    final response = await request.send();
-    if (response.statusCode != 200) {
-      throw Exception(await response.stream.bytesToString());
-    }
+  // Add headers
+  request.headers.addAll({
+    'Authorization': 'Bearer $token',
+    'Accept': 'application/json',
+  });
+
+  // Add fields
+  request.fields['restaurant_name'] = restaurantName;
+  request.fields['address'] = address;
+
+  // Add image if exists
+  if (profileImage != null) {
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'profile', 
+        profileImage.path,
+        filename: 'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      ),
+    );
   }
 
-  static Future<Restaurant> getRestaurant(int id) async {
-    final token = await getAuthToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/restaurants/$id'),
-      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
-    );
+  // Send request
+  final response = await request.send();
+  final responseString = await response.stream.bytesToString();
 
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-      // Assume your API returns a structure like { "data": {...} }
-      final restaurantJson = jsonData['data'] ?? jsonData;
-      return Restaurant.fromJson(restaurantJson);
-    } else {
-      throw Exception('Failed to load restaurant: ${response.statusCode}');
+  if (response.statusCode != 200) {
+    throw Exception('Failed to update restaurant: $responseString');
+  }
+}
+  static Future<Restaurant> getRestaurant() async {
+    try {
+      final token = await getAuthToken();
+      if (token == null) throw Exception('Not authenticated');
+
+      // First get current user
+      final user = await getUser();
+      if (user == null) throw Exception('User not found');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/restaurants/user/${user.id}'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['restaurant'] == null) {
+          throw Exception('No restaurant found for this user');
+        }
+        return Restaurant.fromJson(jsonData['restaurant']);
+      } else {
+        throw Exception('Failed to load restaurant: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error in getRestaurant: $e');
+      rethrow;
     }
   }
 
   // Image Upload
   // Reusable helper to construct full image URLs
-  static String getImageUrl(String? path) {
-    if (path == null || path.isEmpty) return '';
-    return baseUrl.replaceFirst('/api', '') + path;
+static String getImageUrl(String? path) {
+  if (path == null || path.isEmpty) return '';
+  
+  // Case 1: Return with '/storage/profiles/' prefix
+  if (!path.startsWith('http') && !path.contains('/')) {
+    return '${baseUrl.replaceFirst('/api', '')}/storage/profiles/$path';
   }
+  
+  // Case 2: Return with direct path concatenation
+  return baseUrl.replaceFirst('/api', '') + path;
+}
+  
 }

@@ -8,6 +8,7 @@ use App\Http\Requests\StoreRestaurantRequest;
 use App\Http\Requests\UpdateRestaurantRequest;
 use App\Http\Resources\RestaurantResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class RestaurantController extends Controller
 {
@@ -45,14 +46,25 @@ class RestaurantController extends Controller
         $restaurant = Restaurant::where('user_id', $userId)->first();
 
         if (!$restaurant) {
-            return response()->json(['message' => 'Restaurant not found'], 404);
+            return response()->json([
+                'message' => 'Restaurant not found',
+                'restaurant' => null
+            ], 404);
         }
 
+        // Return full public URL for the image
         return response()->json([
-            'restaurant' => $restaurant
+            'restaurant' => [
+                'id' => $restaurant->id,
+                'restaurant_name' => $restaurant->restaurant_name,
+                'profile' => $restaurant->profile
+                    ? url('storage/profiles/' . $restaurant->profile)
+                    : null,
+                'address' => $restaurant->address,
+                'user_id' => $restaurant->user_id,
+            ]
         ]);
     }
-
     public function getByUserId($id)
     {
         $restaurant = Restaurant::where('user_id', $id)->first();
@@ -76,14 +88,34 @@ class RestaurantController extends Controller
         return new RestaurantResource($restaurant);
     }
 
-    public function update(UpdateRestaurantRequest $request, $id)
-    {
-        $restaurant = Restaurant::findOrFail($id);
-        $restaurant->update($request->validated());
+    public function update(Request $request, Restaurant $restaurant)
+{
+    $validated = $request->validate([
+        'restaurant_name' => 'required|string|max:255',
+        'address' => 'required|string',
+    ]);
 
-        return new RestaurantResource($restaurant);
+    // Handle image upload
+    if ($request->hasFile('profile')) {
+        // Delete old image if exists
+        if ($restaurant->profile) {
+            Storage::delete('public/profiles/'.$restaurant->profile);
+        }
+        
+        // Store new image (consistent with store() method)
+        $file = $request->file('profile');
+        $filename = time().'.'.$file->getClientOriginalExtension();
+        $file->storeAs('public/profiles', $filename);
+        $validated['profile'] = $filename;
     }
 
+    $restaurant->update($validated);
+
+    return response()->json([
+        'message' => 'Restaurant updated successfully',
+        'data' => $restaurant
+    ]);
+}
     public function destroy($id)
     {
         $restaurant = Restaurant::findOrFail($id);
