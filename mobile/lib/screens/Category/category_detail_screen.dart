@@ -1,10 +1,52 @@
 import 'package:flutter/material.dart';
 import '../../models/category_model.dart';
+import '../../services/api_services.dart';
+import '../Item/add_item_screen.dart'; // Import your add/edit item screen
 
 class CategoryDetailScreen extends StatelessWidget {
   final Category category;
 
   const CategoryDetailScreen({Key? key, required this.category}) : super(key: key);
+
+  Future<void> _deleteItem(BuildContext context, int itemId, String itemName) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Item'),
+        content: Text('Are you sure you want to delete "$itemName"?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await ApiService.deleteItem(itemId);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$itemName deleted successfully')),
+        );
+        Navigator.pop(context, true); // Close this screen or signal parent to refresh
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting item: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _editItem(BuildContext context, dynamic item) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddItemScreen(item: item),
+      ),
+    );
+    if (result == true) {
+      Navigator.pop(context, true); // Signal parent to refresh after edit
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,8 +96,9 @@ class CategoryDetailScreen extends StatelessWidget {
               itemCount: category.items.length,
               itemBuilder: (context, index) {
                 final item = category.items[index];
-                // Parse price to double, default to 0.0 if invalid
                 final price = double.tryParse(item.price.toString()) ?? 0.0;
+                final hasImage = item.imagePath != null && item.imagePath!.isNotEmpty;
+
                 return Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -66,9 +109,9 @@ class CategoryDetailScreen extends StatelessWidget {
                     contentPadding: const EdgeInsets.all(16),
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: item.imagePath != null
+                      child: hasImage
                           ? Image.network(
-                              'http://192.168.108.191:8000${item.imagePath!}',
+                              ApiService.getImageUrl(item.imagePath),
                               width: 60,
                               height: 60,
                               fit: BoxFit.cover,
@@ -125,6 +168,37 @@ class CategoryDetailScreen extends StatelessWidget {
                               color: theme.primaryColor,
                               fontWeight: FontWeight.w500,
                               fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          _editItem(context, item);
+                        } else if (value == 'delete') {
+                          _deleteItem(context, item.id, item.name);
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: Text(
+                            'Edit',
+                            style: TextStyle(
+                              color: Colors.blue[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(
+                            'Delete',
+                            style: TextStyle(
+                              color: Colors.red[700],
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
