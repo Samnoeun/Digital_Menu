@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 import '../../models/category_model.dart';
 import '../../services/api_services.dart';
 
@@ -87,7 +87,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         elevation: 0,
-        backgroundColor: theme.primaryColor,
+        backgroundColor: const Color(0xFFF3E5F5),
+        iconTheme: IconThemeData(color: Colors.deepPurple.shade700),
+        actionsIconTheme: IconThemeData(color: Colors.deepPurple.shade700),
         actions: [
           if (isEdit)
             IconButton(
@@ -141,85 +143,92 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
             ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isEdit ? 'Edit your category' : 'Create a new category',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Category Name',
-                  hintText: 'e.g., Groceries, Electronics',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: theme.colorScheme.surfaceVariant,
-                  prefixIcon: const Icon(Icons.category),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a category name';
-                  }
-                  if (value.trim().length < 2) {
-                    return 'Name must be at least 2 characters long';
-                  }
-                  return null;
-                },
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _saveCategory(),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveCategory,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+      backgroundColor: const Color(0xFFF3E5F5),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Card(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            elevation: 6,
+            shadowColor: Colors.deepPurple.shade100,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isEdit ? 'Edit your category' : 'Create a new category',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
-                    elevation: 2,
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
-                          ),
-                        )
-                      : Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(isEdit ? Icons.update : Icons.add, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              isEdit ? 'Update Category' : 'Create Category',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Category Name',
+                        hintText: 'e.g., Groceries, Electronics',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
+                        filled: true,
+                        fillColor: theme.colorScheme.surfaceVariant,
+                        prefixIcon: const Icon(Icons.category_outlined),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Please enter a category name';
+                        }
+                        if (value.trim().length < 2) {
+                          return 'Name must be at least 2 characters long';
+                        }
+                        return null;
+                      },
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _saveCategory(),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _saveCategory,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 3,
+                                  valueColor:
+                                      AlwaysStoppedAnimation(Colors.white),
+                                ),
+                              )
+                            : Icon(isEdit ? Icons.update : Icons.add),
+                        label: Text(
+                          isEdit ? 'Update Category' : 'Create Category',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

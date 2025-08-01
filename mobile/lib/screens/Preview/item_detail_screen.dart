@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/item_model.dart';
-import '../services/api_services.dart';
+import '../../models/item_model.dart';
+import '../../services/api_services.dart';
 
 class ItemDetailBottomSheet extends StatelessWidget {
   final Item item;

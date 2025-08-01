@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
-import '../models/menu_item.dart';
+import '../../models/menu_item.dart';
 
 class QRMenuViewScreen extends StatelessWidget {
   final List<MenuItem> menuItems;

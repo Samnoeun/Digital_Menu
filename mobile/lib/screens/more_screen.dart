@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'qr_screen.dart';
-import 'settings_screen.dart';
+import 'QR/qr_screen.dart';
+import 'Setting/settings_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});

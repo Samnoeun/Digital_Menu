@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/api_services.dart';
-import '../models/order_model.dart';
+import '../../services/api_services.dart';
+import '../../models/order_model.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);

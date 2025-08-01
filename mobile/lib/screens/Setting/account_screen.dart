@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/api_services.dart';
-import '../models/restaurant_model.dart';
+import '../../services/api_services.dart';
+import '../../models/restaurant_model.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
