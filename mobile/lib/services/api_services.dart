@@ -485,10 +485,6 @@ class ApiService {
       rethrow;
     }
   }
-<<<<<<< HEAD
-  
-}
-=======
 
   // Image Upload
   // Reusable helper to construct full image URLs
@@ -504,4 +500,3 @@ class ApiService {
     return baseUrl.replaceFirst('/api', '') + path;
   }
 }
->>>>>>> c3d1b29e3dfe32603f33f68d5742c7b14bfcf624
