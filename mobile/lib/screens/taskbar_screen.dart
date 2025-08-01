@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
-import 'order_screen.dart';
+import 'Order/order_screen.dart';
 import 'item/item_list_screen.dart';
 import 'category/category_list_screen.dart';
-import 'qr_screen.dart';
-import 'settings_screen.dart';
-import 'menu_preview_screen.dart';
+import 'QR/qr_screen.dart';
+import 'Setting/settings_screen.dart';
+import 'Preview/menu_preview_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});

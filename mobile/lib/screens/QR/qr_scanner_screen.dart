@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'qr_menu_view_screen.dart';
-import '../models/menu_item.dart';
+import '../../models/menu_item.dart';
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});

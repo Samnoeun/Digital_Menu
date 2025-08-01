@@ -30,29 +30,47 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
     super.dispose();
   }
 
-Future<void> _submit() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  try {
-    setState(() => _isLoading = true);
-    await ApiService.createCategory(_nameController.text);
-    Navigator.pop(context, true);
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(e.toString()),
-        action: e.toString().contains('restaurant') 
-          ? SnackBarAction(
-              label: 'Create Restaurant',
-              onPressed: () => Navigator.pushNamed(context, '/create-restaurant'),
-            )
-          : null,
-      ),
-    );
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
+    try {
+      setState(() => _isLoading = true);
+
+      if (widget.category == null) {
+        // ✅ CREATE new category
+        await ApiService.createCategory(_nameController.text);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Category added successfully')));
+      } else {
+        // ✅ UPDATE existing category
+        await ApiService.updateCategory(
+          widget.category!.id,
+          _nameController.text,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Category updated successfully')),
+        );
+      }
+
+      Navigator.pop(context, true); // Signal success
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          action: e.toString().contains('restaurant')
+              ? SnackBarAction(
+                  label: 'Create Restaurant',
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/create-restaurant'),
+                )
+              : null,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +105,11 @@ Future<void> _submit() async {
                   onPressed: _isLoading ? null : _submit,
                   child: _isLoading
                       ? const CircularProgressIndicator()
-                      : Text(widget.category == null ? 'Add Category' : 'Update Category'),
+                      : Text(
+                          widget.category == null
+                              ? 'Add Category'
+                              : 'Update Category',
+                        ),
                 ),
               ),
             ],

@@ -125,10 +125,17 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Categories'),
+        title: const Text(
+          'Categories',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        elevation: 0,
+        backgroundColor: const Color(0xFFF3E5F5), // Light lavender background
+        iconTheme: IconThemeData(color: Colors.deepPurple.shade700),
+        actionsIconTheme: IconThemeData(color: Colors.deepPurple.shade700),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, color: Colors.deepPurple.shade700),
             onPressed: _fetchCategories,
           ),
         ],
@@ -162,16 +169,31 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.category, size: 64, color: Colors.grey),
+                            Icon(
+                              Icons.category_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               _searchQuery.isEmpty
                                   ? 'No categories found'
                                   : 'No matching categories',
-                              style: const TextStyle(fontSize: 18),
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                              ),
                             ),
-                            if (_searchQuery.isEmpty)
-                              const Text('Tap + to add a new category'),
+                            const SizedBox(height: 8),
+                            Text(
+                              _searchQuery.isEmpty
+                                  ? 'Tap the + button to add a new category'
+                                  : 'Try a different search term',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                            ),
                           ],
                         ),
                       )

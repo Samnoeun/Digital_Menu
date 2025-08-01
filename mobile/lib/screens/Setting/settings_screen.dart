@@ -1,7 +1,7 @@
 // settings_screen.dart
 import 'package:flutter/material.dart';
 import 'account_screen.dart';
-import 'login_screen.dart';
+import '../Login/login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(bool) onThemeChanged;

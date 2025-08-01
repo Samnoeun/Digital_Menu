@@ -61,6 +61,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
           ),
         ],
@@ -107,11 +108,19 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
       appBar: AppBar(
         title: Text(
           widget.category.name,
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.white, // Make title text white
+          ),
         ),
-        // You may need to define 'theme' or use Theme.of(context)
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(
+          context,
+        ).primaryColor, // Dark color background
         elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white), // Back icon white
+        actionsIconTheme: const IconThemeData(
+          color: Colors.white,
+        ), // Action icons white
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -120,6 +129,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
           ),
         ],
       ),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty

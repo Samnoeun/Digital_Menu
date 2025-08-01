@@ -137,215 +137,250 @@ class ApiService {
 
   // Category Services
   static Future<List<category.Category>> getCategories() async {
-  final token = await getAuthToken();
-  final response = await http.get(
-    Uri.parse('$baseUrl/categories'),
-    headers: {
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    },
-  );
+    final token = await getAuthToken();
+    final response = await http.get(
+      Uri.parse('$baseUrl/categories'),
+      headers: {
+        'Accept': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
 
-  if (response.statusCode == 200) {
-    final jsonData = json.decode(response.body);
-    if (jsonData['data'] == null) return [];
-    return (jsonData['data'] as List).map((json) => category.Category.fromJson(json)).toList();
-  } else if (response.statusCode == 401) {
-    throw Exception('Please login again');
-  } else {
-    throw Exception('Failed to load categories: ${response.body}');
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      if (jsonData['data'] == null) return [];
+      return (jsonData['data'] as List)
+          .map((json) => category.Category.fromJson(json))
+          .toList();
+    } else if (response.statusCode == 401) {
+      throw Exception('Please login again');
+    } else {
+      throw Exception('Failed to load categories: ${response.body}');
+    }
   }
-}
 
-static Future<void> createCategory(String name) async {
-  final token = await getAuthToken();
-  if (token == null) throw Exception('Please login first');
+  static Future<void> createCategory(String name) async {
+    final token = await getAuthToken();
+    if (token == null) throw Exception('Please login first');
 
-  final response = await http.post(
-    Uri.parse('$baseUrl/categories'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-    body: jsonEncode({'name': name}),
-  );
-
-  if (response.statusCode == 422) {
-    final error = json.decode(response.body);
-    throw Exception(error['message'] ?? 'Validation failed');
-  } else if (response.statusCode != 201) {
-    throw Exception('Failed to create category: ${response.body}');
-  }
-}
-
-  static Future<void> updateCategory(int id, String name) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/categories/$id'),
-      headers: {'Content-Type': 'application/json'},
+    final response = await http.post(
+      Uri.parse('$baseUrl/categories'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({'name': name}),
     );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update category');
+
+    if (response.statusCode == 422) {
+      final error = json.decode(response.body);
+      throw Exception(error['message'] ?? 'Validation failed');
+    } else if (response.statusCode != 201) {
+      throw Exception('Failed to create category: ${response.body}');
+    }
+  }
+
+  static Future<void> updateCategory(int id, String name) async {
+    final token = await getAuthToken();
+    if (token == null) throw Exception('Please login first');
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/categories/$id'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'name': name}),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      // Sometimes Laravel returns 201 on successful PUT
+      throw Exception(
+        'Failed to update category: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
   static Future<void> deleteCategory(int id) async {
-    final response = await http.delete(Uri.parse('$baseUrl/categories/$id'));
+    final token = await getAuthToken();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/categories/$id'),
+      headers: {
+        'Accept': 'application/json',
+        if (token != null) 'Authorization': 'Bearer $token',
+      },
+    );
+
     if (response.statusCode != 204 && response.statusCode != 200) {
-      throw Exception('Failed to delete category');
+      throw Exception('Failed to delete category: ${response.body}');
     }
   }
 
   // Item Services
-// Item Services
-static Future<List<item.Item>> getItems() async {
-  final token = await getAuthToken();
-  if (token == null) {
-    throw Exception('Please login first');
+  static Future<List<item.Item>> getItems() async {
+    final token = await getAuthToken();
+    if (token == null) {
+      throw Exception('Please login first');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/items'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = jsonDecode(response.body);
+      return (jsonData['data'] as List)
+          .map((itemJson) => item.Item.fromJson(itemJson))
+          .toList();
+    } else if (response.statusCode == 401) {
+      await clearAuthToken();
+      throw Exception('Session expired. Please login again');
+    } else {
+      throw Exception('Failed to load items: ${response.body}');
+    }
   }
 
-  final response = await http.get(
-    Uri.parse('$baseUrl/items'),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-  );
+  static Future<void> createItem({
+    required String name,
+    String? description,
+    required double price,
+    required int categoryId,
+    File? imageFile,
+  }) async {
+    final token = await getAuthToken();
+    if (token == null) {
+      throw Exception('Please login first');
+    }
 
-  if (response.statusCode == 200) {
-    final jsonData = jsonDecode(response.body);
-    return (jsonData['data'] as List)
-        .map((itemJson) => item.Item.fromJson(itemJson))
-        .toList();
-  } else if (response.statusCode == 401) {
-    await clearAuthToken();
-    throw Exception('Session expired. Please login again');
-  } else {
-    throw Exception('Failed to load items: ${response.body}');
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/items'));
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
+
+    request.fields['name'] = name;
+    request.fields['description'] = description ?? '';
+    request.fields['price'] = price.toString();
+    request.fields['category_id'] = categoryId.toString();
+
+    if (imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('image', imageFile.path),
+      );
+    }
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create item: $responseBody');
+    }
   }
-}
-
-static Future<void> createItem({
-  required String name,
-  String? description,
-  required double price,
-  required int categoryId,
-  File? imageFile,
-}) async {
-  final token = await getAuthToken();
-  if (token == null) {
-    throw Exception('Please login first');
-  }
-
-  var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/items'));
-  request.headers['Authorization'] = 'Bearer $token';
-  request.headers['Accept'] = 'application/json';
-
-  request.fields['name'] = name;
-  request.fields['description'] = description ?? '';
-  request.fields['price'] = price.toString();
-  request.fields['category_id'] = categoryId.toString();
-
-  if (imageFile != null) {
-    request.files.add(await http.MultipartFile.fromPath(
-      'image',
-      imageFile.path,
-    ));
-  }
-
-  final response = await request.send();
-  final responseBody = await response.stream.bytesToString();
-
-  if (response.statusCode != 201) {
-    throw Exception('Failed to create item: $responseBody');
-  }
-}
 
   static Future<void> updateItem(
     int id, {
     required String name,
     String? description,
     required double price,
-    int? categoryId,
-    String? imagePath,
+    required int categoryId,
+    File? imageFile,
   }) async {
-    final response = await http.put(
-      Uri.parse('$baseUrl/items/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'name': name,
-        'description': description,
-        'price': price,
-        if (categoryId != null) 'category_id': categoryId,
-        if (imagePath != null) 'image_path': imagePath,
-      }),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update item');
+    final token = await getAuthToken();
+    if (token == null) throw Exception('Please login first');
+
+    final uri = Uri.parse('$baseUrl/items/$id?_method=PUT');
+
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..headers['Accept'] = 'application/json'
+      ..fields['name'] = name
+      ..fields['description'] = description ?? ''
+      ..fields['price'] = price.toString()
+      ..fields['category_id'] = categoryId.toString();
+
+    if (imageFile != null) {
+      final fileName = imageFile.path.split('/').last;
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          imageFile.path,
+          filename: fileName,
+        ),
+      );
+    }
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception(
+        'Failed to update item: ${response.statusCode} $responseBody',
+      );
     }
   }
 
-  // static Future<void> deleteItem(int id) async {
-  //   final response = await http.delete(Uri.parse('$baseUrl/items/$id'));
-  //   if (response.statusCode != 200) {
-  //     throw Exception('Failed to delete item');
-  //   }
-  // }
   static Future<void> deleteItem(int id) async {
-    final response = await http.delete(Uri.parse('$baseUrl/items/$id'));
+    final token = await getAuthToken();
+    if (token == null) throw Exception('Please login first');
+
+    final response = await http.delete(
+      Uri.parse('$baseUrl/items/$id'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token', // ✅ FIXED HERE
+      },
+    );
+
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete item');
+      throw Exception('Failed to delete item: ${response.body}');
     }
   }
 
   // Order Services
   static Future<List<dynamic>> getOrders() async {
-  final token = await getAuthToken();
-  if (token == null) throw Exception('Please login first');
+    final token = await getAuthToken();
+    if (token == null) throw Exception('Please login first');
 
-  final response = await http.get(
-    Uri.parse('$baseUrl/orders'),
-    headers: {
-      'Accept': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-  );
+    final response = await http.get(
+      Uri.parse('$baseUrl/orders'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
 
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  } else if (response.statusCode == 401) {
-    await clearAuthToken();
-    throw Exception('Session expired. Please login again');
-  } else {
-    throw Exception('Failed to load orders: ${response.body}');
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      await clearAuthToken();
+      throw Exception('Session expired. Please login again');
+    } else {
+      throw Exception('Failed to load orders: ${response.body}');
+    }
   }
-}
 
-static Future<Map<String, dynamic>> updateOrderStatus(
-  int orderId, 
-  String newStatus,
-) async {
-  final token = await getAuthToken();
-  if (token == null) throw Exception('Please login first');
+  static Future<Map<String, dynamic>> updateOrderStatus(
+    int orderId,
+    String newStatus,
+  ) async {
+    final token = await getAuthToken();
+    if (token == null) throw Exception('Please login first');
 
-  final response = await http.put(
-    Uri.parse('$baseUrl/orders/$orderId/status'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-    body: json.encode({'status': newStatus}),
-  );
+    final response = await http.put(
+      Uri.parse('$baseUrl/orders/$orderId/status'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode({'status': newStatus}),
+    );
 
-  if (response.statusCode == 200) {
-    return json.decode(response.body);
-  } else if (response.statusCode == 401) {
-    await clearAuthToken();
-    throw Exception('Session expired. Please login again');
-  } else {
-    throw Exception('Failed to update order status: ${response.body}');
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else if (response.statusCode == 401) {
+      await clearAuthToken();
+      throw Exception('Session expired. Please login again');
+    } else {
+      throw Exception('Failed to update order status: ${response.body}');
+    }
   }
-}
 
   static Future<Map<String, dynamic>> submitOrder({
     required int tableNumber,
