@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../services/api_services.dart';
 import '../models/item_model.dart' as item;
 import '../models/category_model.dart' as category;
+import '../models/restaurant_model.dart';
+import 'item_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,22 +22,49 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isLoading = true;
   String selectedFilter = 'Today';
   DateTime? customDate;
+  String? restaurantName;
+  Restaurant? restaurant;
+  String? restaurantProfile;
+
   final List<String> filterOptions = [
     'Today',
     'This Week',
     'This Month',
-    'Custom Date'
+    'Custom Date',
   ];
 
   @override
   void initState() {
     super.initState();
+    _loadRestaurantInfo();
     _loadData();
+  }
+
+  Future<void> _loadRestaurantInfo() async {
+    try {
+      print('Loading restaurant info...');
+      final fetchedRestaurant = await ApiService.getRestaurant();
+      print('Fetched restaurant: ${fetchedRestaurant.restaurantName}');
+      print('Profile image: ${fetchedRestaurant.profile}');
+
+      if (mounted) {
+        setState(() {
+          restaurant = fetchedRestaurant;
+        });
+      }
+    } catch (e) {
+      print('Error loading restaurant: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
+    }
   }
 
   Future<void> _loadData() async {
     setState(() => isLoading = true);
-    
+
     try {
       final results = await Future.wait([
         ApiService.getItems(),
@@ -47,26 +76,37 @@ class _HomeScreenState extends State<HomeScreen> {
       final categories = results[1] as List<category.Category>;
       final orders = results[2] as List<dynamic>;
 
+      // Create category map for lookup
+      final categoryMap = {for (var cat in categories) cat.id: cat};
+
       // Filter orders based on selected date range
       final filteredOrders = _filterOrdersByDate(orders);
 
-      // Create a map of all items with their names
-      final itemMap = {for (var item in items) item.id.toString(): item.name};
+      // Create a map of all items with their full data including categories
+      final itemMap = {
+        for (var item in items)
+          item.id.toString(): item.copyWith(
+            category: categoryMap[item.categoryId],
+          ),
+      };
 
-      // Calculate item popularity
       final itemCounts = <String, int>{};
+      final itemData = <String, item.Item>{};
+
       for (var order in filteredOrders) {
         if (order['order_items'] != null) {
           for (var orderItem in order['order_items']) {
             final itemId = orderItem['item_id'].toString();
-            final itemName = itemMap[itemId] ?? 'Unknown Item';
-            final quantity = (orderItem['quantity'] as num).toInt();
-            itemCounts[itemName] = (itemCounts[itemName] ?? 0) + quantity;
+            final item = itemMap[itemId];
+            if (item != null) {
+              final quantity = (orderItem['quantity'] as num).toInt();
+              itemCounts[item.name] = (itemCounts[item.name] ?? 0) + quantity;
+              itemData[item.name] = item;
+            }
           }
         }
       }
 
-      // Sort items by popularity
       final sortedItems = itemCounts.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
 
@@ -75,9 +115,15 @@ class _HomeScreenState extends State<HomeScreen> {
         totalCategories = categories.length;
         totalOrders = filteredOrders.length;
         topItem = sortedItems.isNotEmpty ? sortedItems.first.key : "No orders";
-        topItems = sortedItems.take(5).map((e) => {
-          'name': e.key,
-          'count': e.value
+        topItems = sortedItems.take(5).map((e) {
+          final item = itemData[e.key]!;
+          return {
+            'name': item.name,
+            'count': e.value,
+            'image': item.imagePath,
+            'item': item,
+            'category': item.category?.name ?? 'No category',
+          };
         }).toList();
         isLoading = false;
       });
@@ -93,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> _filterOrdersByDate(List<dynamic> orders) {
     final now = DateTime.now();
-    
+
     switch (selectedFilter) {
       case 'Today':
         return orders.where((order) {
@@ -102,21 +148,22 @@ class _HomeScreenState extends State<HomeScreen> {
               orderDate.month == now.month &&
               orderDate.day == now.day;
         }).toList();
-        
+
       case 'This Week':
         final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
         return orders.where((order) {
           final orderDate = DateTime.parse(order['created_at']).toLocal();
-          return orderDate.isAfter(startOfWeek.subtract(const Duration(days: 1)));
+          return orderDate.isAfter(
+            startOfWeek.subtract(const Duration(days: 1)),
+          );
         }).toList();
-        
+
       case 'This Month':
         return orders.where((order) {
           final orderDate = DateTime.parse(order['created_at']).toLocal();
-          return orderDate.year == now.year &&
-              orderDate.month == now.month;
+          return orderDate.year == now.year && orderDate.month == now.month;
         }).toList();
-        
+
       case 'Custom Date':
         if (customDate != null) {
           return orders.where((order) {
@@ -127,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }).toList();
         }
         return orders;
-        
+
       default:
         return orders;
     }
@@ -154,17 +201,44 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF3E5F5),
       appBar: AppBar(
-        title: const Text('Home'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadData,
-          ),
-        ],
-      ),
+  backgroundColor: Colors.deepPurple,
+  automaticallyImplyLeading: false,
+  title: restaurant == null
+      ? const Text('Loading...', style: TextStyle(fontSize: 18, color: Colors.white))
+      : Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: Colors.white,
+              backgroundImage: restaurant!.profile != null
+                  ? NetworkImage(ApiService.getImageUrl(restaurant!.profile!))
+                  : null,
+              child: restaurant!.profile == null
+                  ? const Icon(Icons.restaurant, size: 20, color: Colors.deepPurple)
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                restaurant!.restaurantName,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                maxLines: 1,
+              ),
+            ),
+          ],
+        ),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.refresh, color: Colors.white),
+      onPressed: _loadRestaurantInfo,
+    ),
+  ],
+),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -172,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Banner section
+                  // Banner
                   Container(
                     width: double.infinity,
                     height: 160,
@@ -206,14 +280,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           SizedBox(height: 6),
                           Text(
                             "Here's an overview of today's activity",
-                            style: TextStyle(fontSize: 16, color: Colors.white70),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white70,
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
 
-                  // Date filter dropdown
+                  // Date Filter
                   Row(
                     children: [
                       Expanded(
@@ -248,7 +325,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         Padding(
                           padding: const EdgeInsets.only(left: 8),
                           child: Chip(
-                            label: Text(DateFormat('MMM d, yyyy').format(customDate!)),
+                            label: Text(
+                              DateFormat('MMM d, yyyy').format(customDate!),
+                            ),
                             onDeleted: () {
                               setState(() {
                                 selectedFilter = 'Today';
@@ -293,7 +372,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 30),
 
-                  // Top 5 Items
+                  // Top Items List
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -325,10 +404,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   else
                     Column(
-                      children: topItems.map((item) => TopItemTile(
-                        name: item['name'],
-                        count: item['count'],
-                      )).toList(),
+                      children: topItems.map((item) {
+                        return TopItemTile(
+                          name: item['name'],
+                          count: item['count'],
+                          image: item['image'],
+                          itemData: item['item'],
+                          categoryName: item['category'],
+                        );
+                      }).toList(),
                     ),
                 ],
               ),
@@ -387,8 +471,18 @@ class SummaryCard extends StatelessWidget {
 class TopItemTile extends StatelessWidget {
   final String name;
   final int count;
+  final String? image;
+  final item.Item? itemData;
+  final String categoryName;
 
-  const TopItemTile({super.key, required this.name, required this.count});
+  const TopItemTile({
+    super.key,
+    required this.name,
+    required this.count,
+    required this.categoryName,
+    this.image,
+    this.itemData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -396,15 +490,53 @@ class TopItemTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: const Icon(Icons.fastfood, color: Colors.deepPurple),
-        title: Text(name, style: const TextStyle(fontWeight: FontWeight.w600)),
+        onTap: () {
+          if (itemData != null) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              builder: (_) => ItemDetailBottomSheet(item: itemData!),
+            );
+          }
+        },
+        leading: image != null && image!.isNotEmpty
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  ApiService.getImageUrl(image),
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.fastfood, color: Colors.deepPurple),
+                ),
+              )
+            : const Icon(Icons.fastfood, color: Colors.deepPurple),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              name,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            Text(
+              categoryName,
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
         trailing: Text(
-          "$count orders",
+          '$count orders',
           style: const TextStyle(
             color: Colors.deepPurple,
             fontWeight: FontWeight.w500,
           ),
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }

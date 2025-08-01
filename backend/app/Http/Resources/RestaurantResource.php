@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class SettingResource extends JsonResource
+class RestaurantResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,14 +16,10 @@ class SettingResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user' => new UserResource($this->whenLoaded('user')),
+            'user_id' => $this->user_id,
             'restaurant_name' => $this->restaurant_name,
-            'logo' => $this->logo,
             'address' => $this->address,
-            'currency' => $this->currency,
-            'language' => $this->language,
-            'dark_mode' => $this->dark_mode,
-            'created_at' => $this->created_at->toDateTimeString(),
+            'profile' => $this->profile,
         ];
     }
 }

@@ -55,7 +55,8 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
       final categories = await ApiService.getCategories();
       setState(() {
         _categories = categories;
-        _filteredCategories = categories;
+        _filteredCategories =
+            categories; // Initialize filtered list with all categories
         _isLoading = false;
       });
     } catch (e) {
@@ -208,84 +209,71 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                       itemBuilder: (context, index) {
                         final category = _filteredCategories[index];
                         return Card(
-                          elevation: 5,
+                          elevation: 2,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           margin: const EdgeInsets.only(bottom: 12),
-                          child: SizedBox(
-                            height: 100, // bigger card height
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 24, // increased vertical padding
-                              ),
-                              title: Text(
-                                category.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              trailing: PopupMenuButton<String>(
-                                icon: const Icon(Icons.more_vert),
-                                onSelected: (value) async {
-                                  if (value == 'edit') {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => AddCategoryScreen(
-                                          category: category,
-                                        ),
-                                      ),
-                                    );
-                                    if (result == true) _fetchCategories();
-                                  } else if (value == 'delete') {
-                                    _deleteCategory(category.id, category.name);
-                                  }
-                                },
-                                itemBuilder: (BuildContext context) => [
-                                  PopupMenuItem<String>(
-                                    value: 'edit',
-                                    child: Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.edit,
-                                          size: 20,
-                                          color: Colors.blue,
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text('Edit'),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem<String>(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: const [
-                                        Icon(
-                                          Icons.delete,
-                                          size: 20,
-                                          color: Colors.red,
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text('Delete'),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => CategoryDetailScreen(
-                                      category: category,
-                                    ),
-                                  ),
-                                );
-                              },
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
                             ),
+                            title: Text(
+                              category.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          AddCategoryScreen(category: category),
+                                    ),
+                                  );
+                                  if (result == true) _fetchCategories();
+                                } else if (value == 'delete') {
+                                  _deleteCategory(category.id, category.name);
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text(
+                                    'Edit',
+                                    style: TextStyle(
+                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(
+                                    'Delete',
+                                    style: TextStyle(
+                                      color: Colors.red[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      CategoryDetailScreen(category: category),
+                                ),
+                              );
+                            },
                           ),
                         );
                       },

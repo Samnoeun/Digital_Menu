@@ -27,9 +27,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    // Relationship with Setting model
-    public function settings()
+    public function restaurant()
     {
-        return $this->hasOne(Setting::class);
+        return $this->hasOne(Restaurant::class);
     }
 }
