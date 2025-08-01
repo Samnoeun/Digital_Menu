@@ -34,28 +34,41 @@ class _ItemListScreenState extends State<ItemListScreen> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    try {
-      final categories = await ApiService.getCategories();
-      final items = await ApiService.getItems();
-      setState(() {
-        _categories = categories;
-        _allItems = items;
-        _filterItems();
-      });
-    } catch (e) {
+Future<void> _loadData() async {
+  setState(() => _isLoading = true);
+  try {
+    final token = await ApiService.getAuthToken();
+    if (token == null) {
+      // Redirect to login if not authenticated
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    final categories = await ApiService.getCategories();
+    final items = await ApiService.getItems();
+    
+    setState(() {
+      _categories = categories;
+      _allItems = items;
+      _filterItems();
+    });
+  } catch (e) {
+    if (e.toString().contains('Unauthenticated')) {
+      // Handle expired token
+      await ApiService.clearAuthToken();
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading data: $e'),
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
         ),
       );
-    } finally {
-      setState(() => _isLoading = false);
     }
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
 
   void _onSearchChanged() {
     setState(() {

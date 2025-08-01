@@ -43,19 +43,30 @@
 //   }
 // }
 
-
 class Category {
   final int id;
   final String name;
+  final int restaurantId;
   final List<Item> items;
 
-  Category({required this.id, required this.name, required this.items});
+  Category({
+    required this.id,
+    required this.name,
+    required this.restaurantId,
+    required this.items,
+  });
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
       id: json['id'] as int? ?? 0, // Default to 0 if null
-      name: json['name'] as String? ?? 'Unnamed', // Default to 'Unnamed' if null
-      items: (json['items'] as List<dynamic>?)?.map((itemJson) => Item.fromJson(itemJson)).toList() ?? [],
+      name:
+          json['name'] as String? ?? 'Unnamed', // Default to 'Unnamed' if null
+      restaurantId: json['restaurant_id'] as int? ?? 0,
+      items:
+          (json['items'] as List<dynamic>?)
+              ?.map((itemJson) => Item.fromJson(itemJson))
+              .toList() ??
+          [],
     );
   }
 }
