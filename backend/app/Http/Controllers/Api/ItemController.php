@@ -58,16 +58,7 @@ class ItemController extends Controller
 
         $data = $request->only(['name', 'description', 'price', 'category_id']);
 
-        // if ($request->hasFile('image')) {
-        //     \Log::info('Image uploaded:', [
-        //         'original_name' => $request->file('image')->getClientOriginalName(),
-        //         'size' => $request->file('image')->getSize(),
-        //     ]);
-        //     $path = $request->file('image')->store('items', 'public');
-        //     $data['image_path'] = $path;
-        // } else {
-        //     \Log::warning('No image file found in request.');
-        // }
+
         if ($request->hasFile('image')) {
             Log::info('Image uploaded:', [ // ✅ no backslash needed
                 'original_name' => $request->file('image')->getClientOriginalName(),

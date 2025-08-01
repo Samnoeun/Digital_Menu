@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
+import 'restaurant_screen.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -13,7 +14,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   bool isLoading = false;
 
   void registerUser() async {
@@ -31,12 +33,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Registered successfully")),
         );
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        // Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const RestaurantScreen()),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
     setState(() {
       isLoading = false;
@@ -53,14 +59,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
             clipper: TopWaveClipper(),
             child: Container(
               height: 300,
-              decoration: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF6A5ACD),
-                  Color(0xFF9370DB),
-                ],
-              ).createShader(const Rect.fromLTWH(0, 0, 400, 300)) != null
+              decoration:
+                  const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF6A5ACD), Color(0xFF9370DB)],
+                      ).createShader(const Rect.fromLTWH(0, 0, 400, 300)) !=
+                      null
                   ? BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -107,7 +112,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 60),
                     // App title with better styling
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(25),
@@ -131,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 40),
-                    
+
                     // Registration form container
                     Container(
                       padding: const EdgeInsets.all(24),
@@ -157,7 +165,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Custom styled text fields
                           _buildStyledTextField(
                             controller: nameController,
@@ -165,7 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             icon: Icons.person_outline,
                           ),
                           const SizedBox(height: 16),
-                          
+
                           _buildStyledTextField(
                             controller: emailController,
                             label: 'Email',
@@ -173,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             keyboardType: TextInputType.emailAddress,
                           ),
                           const SizedBox(height: 16),
-                          
+
                           _buildStyledTextField(
                             controller: passwordController,
                             label: 'Password',
@@ -181,7 +189,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             isPassword: true,
                           ),
                           const SizedBox(height: 16),
-                          
+
                           _buildStyledTextField(
                             controller: confirmPasswordController,
                             label: 'Confirm Password',
@@ -189,7 +197,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             isPassword: true,
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Continue button
                           Container(
                             width: double.infinity,
@@ -220,7 +228,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 ),
                               ),
                               child: isLoading
-                                  ? const CircularProgressIndicator(color: Colors.white)
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
                                   : const Text(
                                       'Continue',
                                       style: TextStyle(
@@ -231,15 +241,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Divider
                           Row(
                             children: [
-                              Expanded(child: Divider(color: Colors.grey.shade300)),
+                              Expanded(
+                                child: Divider(color: Colors.grey.shade300),
+                              ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
                                 child: Text(
                                   'Or continue with',
                                   style: TextStyle(
@@ -248,12 +262,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                 ),
                               ),
-                              Expanded(child: Divider(color: Colors.grey.shade300)),
+                              Expanded(
+                                child: Divider(color: Colors.grey.shade300),
+                              ),
                             ],
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // Social login buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -279,9 +295,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Login link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -297,7 +313,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const LoginScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
                             );
                           },
                           child: const Text(
@@ -342,7 +360,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
           labelText: label,
           prefixIcon: Icon(icon, color: Colors.deepPurple.shade400),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
           labelStyle: TextStyle(color: Colors.grey.shade600),
         ),
       ),
@@ -401,7 +422,7 @@ class TopWaveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     var path = Path();
     path.lineTo(0, size.height - 50);
-    
+
     var firstControlPoint = Offset(size.width / 4, size.height);
     var firstEndPoint = Offset(size.width / 2, size.height - 30);
     path.quadraticBezierTo(
@@ -410,7 +431,7 @@ class TopWaveClipper extends CustomClipper<Path> {
       firstEndPoint.dx,
       firstEndPoint.dy,
     );
-    
+
     var secondControlPoint = Offset(size.width * 3 / 4, size.height - 60);
     var secondEndPoint = Offset(size.width, size.height - 20);
     path.quadraticBezierTo(
@@ -419,7 +440,7 @@ class TopWaveClipper extends CustomClipper<Path> {
       secondEndPoint.dx,
       secondEndPoint.dy,
     );
-    
+
     path.lineTo(size.width, 0);
     path.close();
     return path;
@@ -435,7 +456,7 @@ class BottomWaveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     var path = Path();
     path.moveTo(0, 50);
-    
+
     var firstControlPoint = Offset(size.width / 3, 0);
     var firstEndPoint = Offset(size.width / 2, 30);
     path.quadraticBezierTo(
@@ -444,7 +465,7 @@ class BottomWaveClipper extends CustomClipper<Path> {
       firstEndPoint.dx,
       firstEndPoint.dy,
     );
-    
+
     var secondControlPoint = Offset(size.width * 2 / 3, 60);
     var secondEndPoint = Offset(size.width, 20);
     path.quadraticBezierTo(
@@ -453,7 +474,7 @@ class BottomWaveClipper extends CustomClipper<Path> {
       secondEndPoint.dx,
       secondEndPoint.dy,
     );
-    
+
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
     path.close();

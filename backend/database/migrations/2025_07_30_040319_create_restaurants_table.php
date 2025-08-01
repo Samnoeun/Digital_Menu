@@ -11,19 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('settings', function (Blueprint $table) {
+        Schema::create('restaurants', function (Blueprint $table) {
             $table->id();
-
-            // Foreign key to users table
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-
             $table->string('restaurant_name');
-            $table->string('logo')->nullable(); // Can be null if no logo is uploaded
             $table->string('address');
-            $table->string('currency');
-            $table->string('language');
-            $table->boolean('dark_mode')->default(false);
-
+            $table->string('profile')->nullable(); // Profile image path
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // ✅ Add this line
             $table->timestamps();
         });
     }
@@ -33,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('settings');
+        Schema::dropIfExists('restaurants');
     }
 };

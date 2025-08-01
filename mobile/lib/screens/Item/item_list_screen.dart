@@ -12,16 +12,19 @@ class ItemListScreen extends StatefulWidget {
 }
 
 class _ItemListScreenState extends State<ItemListScreen> {
-  List<item.Item> _items = [];
+  List<Category> _categories = [];
+  List<item.Item> _allItems = [];
   List<item.Item> _filteredItems = [];
+
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+  int? _selectedCategoryId;
 
   @override
   void initState() {
     super.initState();
-    _fetchItems();
+    _loadData();
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -31,38 +34,56 @@ class _ItemListScreenState extends State<ItemListScreen> {
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    setState(() {
-      _searchQuery = _searchController.text.trim().toLowerCase();
-      _filteredItems = _items.where((item) {
-        final nameMatch = item.name.toLowerCase().contains(_searchQuery);
-        final priceMatch = item.price.toStringAsFixed(2).contains(_searchQuery);
-        final descMatch = item.description?.toLowerCase().contains(_searchQuery) ?? false;
-        return nameMatch || priceMatch || descMatch;
-      }).toList();
-    });
-  }
-
-  Future<void> _fetchItems() async {
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
+      final categories = await ApiService.getCategories();
       final items = await ApiService.getItems();
       setState(() {
-        _items = items;
-        _filteredItems = items;
+        _categories = categories;
+        _allItems = items;
+        _filterItems();
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading items: $e'),
+          content: Text('Error loading data: $e'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
         ),
       );
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.trim().toLowerCase();
+      _filterItems();
+    });
+  }
+
+  void _onCategorySelected(int? categoryId) {
+    setState(() {
+      _selectedCategoryId = categoryId;
+      _filterItems();
+    });
+  }
+
+  void _filterItems() {
+    setState(() {
+      _filteredItems = _allItems.where((item.Item item) {
+        final matchesCategory =
+            _selectedCategoryId == null ||
+            item.categoryId == _selectedCategoryId;
+        final matchesSearch =
+            item.name.toLowerCase().contains(_searchQuery) ||
+            item.price.toStringAsFixed(2).contains(_searchQuery) ||
+            (item.description?.toLowerCase().contains(_searchQuery) ?? false);
+        return matchesCategory && matchesSearch;
+      }).toList();
+    });
   }
 
   Future<void> _deleteItem(int id, String itemName) async {
@@ -74,7 +95,6 @@ class _ItemListScreenState extends State<ItemListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey),
             child: const Text('Cancel'),
           ),
           TextButton(
@@ -94,18 +114,14 @@ class _ItemListScreenState extends State<ItemListScreen> {
         SnackBar(
           content: Text('$itemName deleted successfully'),
           backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
         ),
       );
-      _fetchItems();
+      _loadData();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error deleting item: $e'),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
         ),
       );
     }
@@ -117,24 +133,24 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-          title: const Text(
-            'Items',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          elevation: 0,
-          backgroundColor: const Color(0xFFF3E5F5), // Updated background color
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _fetchItems,
-              tooltip: 'Refresh',
-            ),
-          ],
+        title: const Text(
+          'Items',
+          style: TextStyle(fontWeight: FontWeight.w600),
         ),
+        elevation: 0,
+        backgroundColor: const Color(0xFFF3E5F5),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -155,167 +171,152 @@ class _ItemListScreenState extends State<ItemListScreen> {
                 filled: true,
                 fillColor: theme.colorScheme.surfaceVariant,
               ),
-              textInputAction: TextInputAction.search,
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text('All'),
+                    selected: _selectedCategoryId == null,
+                    onSelected: (_) => _onCategorySelected(null),
+                  ),
+                  const SizedBox(width: 8),
+                  ..._categories.map(
+                    (Category cat) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        label: Text(cat.name),
+                        selected: _selectedCategoryId == cat.id,
+                        onSelected: (_) => _onCategorySelected(cat.id),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredItems.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.inventory_2_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
+                ? Center(
+                    child: Text(
+                      _searchQuery.isEmpty
+                          ? 'No items found.'
+                          : 'No matching items found.',
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = _filteredItems[index];
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          elevation: 2,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: item.imagePath != null
+                                  ? Image.network(
+                                      ApiService.getImageUrl(item.imagePath),
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.broken_image),
+                                    )
+                                  : const Icon(
+                                      Icons.image_not_supported,
+                                      size: 40,
+                                    ),
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isEmpty ? 'No items found' : 'No matching items',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
+                            title: Text(
+                              item.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'Tap the + button to add a new item'
-                                  : 'Try a different search term',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _fetchItems,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredItems.length,
-                          itemBuilder: (context, index) {
-                            final item = _filteredItems[index];
-                            return Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(16),
-                                leading: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: item.imagePath != null
-                                      ? Image.network(
-                                          'http://192.168.108.113:8000${item.imagePath!}',
-                                          width: 60,
-                                          height: 60,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return Container(
-                                              width: 60,
-                                              height: 60,
-                                              color: Colors.grey[200],
-                                              child: const Icon(
-                                                Icons.broken_image,
-                                                color: Colors.grey,
-                                              ),
-                                            );
-                                          },
-                                        )
-                                      : Container(
-                                          width: 60,
-                                          height: 60,
-                                          color: Colors.grey[200],
-                                          child: const Icon(
-                                            Icons.image_not_supported,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                ),
-                                title: Text(
-                                  item.name,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (item.description?.isNotEmpty == true)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      item.description!,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    '\$${item.price.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      color: theme.primaryColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (item.description != null && item.description!.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: Text(
-                                          item.description!,
-                                          style: TextStyle(
-                                            color: Colors.grey[700],
-                                            fontSize: 14,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        '\$${item.price.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          color: theme.primaryColor,
-                                          fontWeight: FontWeight.w500,
-                                          fontSize: 14,
-                                        ),
-                                      ),
+                              ],
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AddItemScreen(item: item),
                                     ),
-                                  ],
+                                  );
+                                  if (result == true) _loadData();
+                                } else if (value == 'delete') {
+                                  _deleteItem(item.id, item.name);
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text(
+                                    'Edit',
+                                    style: TextStyle(
+                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
                                 ),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (value) async {
-                                    if (value == 'edit') {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => AddItemScreen(item: item),
-                                        ),
-                                      );
-                                      if (result == true) _fetchItems();
-                                    } else if (value == 'delete') {
-                                      _deleteItem(item.id, item.name);
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text(
-                                        'Edit',
-                                        style: TextStyle(
-                                          color: Colors.blue[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(
+                                    'Delete',
+                                    style: TextStyle(
+                                      color: Colors.red[700],
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                        'Delete',
-                                        style: TextStyle(
-                                          color: Colors.red[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                  icon: const Icon(Icons.more_vert),
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -325,11 +326,10 @@ class _ItemListScreenState extends State<ItemListScreen> {
             context,
             MaterialPageRoute(builder: (_) => const AddItemScreen()),
           );
-          if (result == true) _fetchItems();
+          if (result == true) _loadData();
         },
         backgroundColor: theme.primaryColor,
         child: const Icon(Icons.add, size: 28),
-        tooltip: 'Add Item',
       ),
     );
   }
