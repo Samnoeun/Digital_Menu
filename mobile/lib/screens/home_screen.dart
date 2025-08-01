@@ -44,8 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       print('Loading restaurant info...');
       final fetchedRestaurant = await ApiService.getRestaurant();
-      print('Fetched restaurant: ${fetchedRestaurant?.restaurantName}');
-      print('Profile image: ${fetchedRestaurant?.profile}');
+      print('Fetched restaurant: ${fetchedRestaurant.restaurantName}');
+      print('Profile image: ${fetchedRestaurant.profile}');
 
       if (mounted) {
         setState(() {

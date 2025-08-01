@@ -1,4 +1,4 @@
-import 'package:digital_menu/screens/menu_screen.dart';
+import 'package:digital_menu/screens/taskbar_screen.dart';
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
 import 'register_screen.dart';
@@ -485,7 +485,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 8, left: 16),
             child: Text(
-              errorText!,
+              errorText,
               style: TextStyle(
                 color: Colors.red.shade600,
                 fontSize: 12,

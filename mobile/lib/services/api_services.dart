@@ -5,14 +5,12 @@ import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
 import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
-import '../models/order_model.dart';
-import '../models/setting_model.dart';
 import '../models/restaurant_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.196:8000/api'; // Update with your preferred base URL
-
+  static const String baseUrl =
+      'http://192.168.108.70:8000/api'; // Update with your preferred base URL or ip
   static String? _token;
 
   // Get stored auth token from SharedPreferences
@@ -69,6 +67,7 @@ class ApiService {
     }
   }
 
+  // User Login
   static Future<UserModel?> login(String email, String password) async {
     try {
       final response = await http.post(
@@ -91,6 +90,7 @@ class ApiService {
     }
   }
 
+  // User Logout
   static Future<void> logout() async {
     try {
       final token = await getAuthToken();
@@ -112,28 +112,7 @@ class ApiService {
     }
   }
 
-  // static Future<UserModel?> getUser() async {
-  //   try {
-  //     final token = await getAuthToken();
-  //     final response = await http.get(
-  //       Uri.parse('$baseUrl/me'),
-  //       headers: {
-  //         'Accept': 'application/json',
-  //         if (token != null) 'Authorization': 'Bearer $token',
-  //       },
-  //     );
-
-  //     final data = json.decode(response.body);
-
-  //     if (response.statusCode == 200) {
-  //       return UserModel.fromJson(data);
-  //     } else {
-  //       throw Exception('Unauthorized');
-  //     }
-  //   } catch (e) {
-  //     throw Exception('Error: $e');
-  //   }
-  // }
+  // User Services
   static Future<UserModel?> getUser() async {
     try {
       final token = await getAuthToken();
@@ -261,9 +240,15 @@ class ApiService {
     }
   }
 
+  // static Future<void> deleteItem(int id) async {
+  //   final response = await http.delete(Uri.parse('$baseUrl/items/$id'));
+  //   if (response.statusCode != 200) {
+  //     throw Exception('Failed to delete item');
+  //   }
+  // }
   static Future<void> deleteItem(int id) async {
     final response = await http.delete(Uri.parse('$baseUrl/items/$id'));
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete item');
     }
   }
@@ -385,120 +370,6 @@ class ApiService {
     }
   }
 
-  // Setting Services
-  static Future<Map<String, dynamic>?> getSetting(int id) async {
-    final token = await getAuthToken();
-    final response = await http.get(
-      Uri.parse('$baseUrl/settings/$id'),
-      headers: {
-        'Accept': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-      return jsonData['data'] ?? jsonData;
-    } else {
-      throw Exception('Failed to load setting');
-    }
-  }
-
-  static Future<void> createSetting({
-    required String restaurantName,
-    required String address,
-    File? logoFile,
-    String? currency,
-    String? language,
-    bool? darkMode,
-  }) async {
-    final token = await getAuthToken();
-
-    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/settings'));
-
-    request.headers.addAll({
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    });
-
-    request.fields['restaurant_name'] = restaurantName;
-    request.fields['address'] = address;
-
-    if (currency != null) request.fields['currency'] = currency;
-    if (language != null) request.fields['language'] = language;
-    if (darkMode != null) request.fields['dark_mode'] = darkMode ? '1' : '0';
-
-    if (logoFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('logo', logoFile.path),
-      );
-    }
-
-    final response = await request.send();
-
-    if (response.statusCode != 201 && response.statusCode != 200) {
-      final respStr = await response.stream.bytesToString();
-      throw Exception('Failed to create setting: $respStr');
-    }
-  }
-
-  static Future<void> updateSetting({
-    required int id,
-    required String restaurantName,
-    required String address,
-    File? logoFile,
-    String? currency,
-    String? language,
-    bool? darkMode,
-  }) async {
-    final token = await getAuthToken();
-
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/settings/$id?_method=PUT'),
-    );
-
-    request.headers.addAll({
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    });
-
-    request.fields['restaurant_name'] = restaurantName;
-    request.fields['address'] = address;
-
-    if (currency != null) request.fields['currency'] = currency;
-    if (language != null) request.fields['language'] = language;
-    if (darkMode != null) request.fields['dark_mode'] = darkMode ? '1' : '0';
-
-    if (logoFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('logo', logoFile.path),
-      );
-    }
-
-    final response = await request.send();
-
-    if (response.statusCode != 200) {
-      final respStr = await response.stream.bytesToString();
-      throw Exception('Failed to update setting: $respStr');
-    }
-  }
-
-  static Future<void> deleteSetting(int id) async {
-    final token = await getAuthToken();
-    final response = await http.delete(
-      Uri.parse('$baseUrl/settings/$id'),
-      headers: {
-        'Accept': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete setting');
-    }
-  }
-
   // Restaurant Services
   static Future<void> createRestaurant({
     required String restaurantName,
@@ -538,49 +409,51 @@ class ApiService {
     }
   }
 
-static Future<void> updateRestaurant({
-  required int id,
-  required String restaurantName,
-  required String address,
-  File? profileImage,
-}) async {
-  final token = await getAuthToken();
-  
-  // Create multipart request
-  var request = http.MultipartRequest(
-    'POST', 
-    Uri.parse('$baseUrl/restaurants/$id?_method=PUT')
-  );
+  static Future<void> updateRestaurant({
+    required int id,
+    required String restaurantName,
+    required String address,
+    File? profileImage,
+  }) async {
+    final token = await getAuthToken();
 
-  // Add headers
-  request.headers.addAll({
-    'Authorization': 'Bearer $token',
-    'Accept': 'application/json',
-  });
-
-  // Add fields
-  request.fields['restaurant_name'] = restaurantName;
-  request.fields['address'] = address;
-
-  // Add image if exists
-  if (profileImage != null) {
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        'profile', 
-        profileImage.path,
-        filename: 'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
-      ),
+    // Create multipart request
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/restaurants/$id?_method=PUT'),
     );
+
+    // Add headers
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+    });
+
+    // Add fields
+    request.fields['restaurant_name'] = restaurantName;
+    request.fields['address'] = address;
+
+    // Add image if exists
+    if (profileImage != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'profile',
+          profileImage.path,
+          filename:
+              'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        ),
+      );
+    }
+
+    // Send request
+    final response = await request.send();
+    final responseString = await response.stream.bytesToString();
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update restaurant: $responseString');
+    }
   }
 
-  // Send request
-  final response = await request.send();
-  final responseString = await response.stream.bytesToString();
-
-  if (response.statusCode != 200) {
-    throw Exception('Failed to update restaurant: $responseString');
-  }
-}
   static Future<Restaurant> getRestaurant() async {
     try {
       final token = await getAuthToken();
@@ -615,16 +488,15 @@ static Future<void> updateRestaurant({
 
   // Image Upload
   // Reusable helper to construct full image URLs
-static String getImageUrl(String? path) {
-  if (path == null || path.isEmpty) return '';
-  
-  // Case 1: Return with '/storage/profiles/' prefix
-  if (!path.startsWith('http') && !path.contains('/')) {
-    return '${baseUrl.replaceFirst('/api', '')}/storage/profiles/$path';
+  static String getImageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+
+    // Case 1: Return with '/storage/profiles/' prefix
+    if (!path.startsWith('http') && !path.contains('/')) {
+      return '${baseUrl.replaceFirst('/api', '')}/storage/profiles/$path';
+    }
+
+    // Case 2: Return with direct path concatenation
+    return baseUrl.replaceFirst('/api', '') + path;
   }
-  
-  // Case 2: Return with direct path concatenation
-  return baseUrl.replaceFirst('/api', '') + path;
-}
-  
 }
