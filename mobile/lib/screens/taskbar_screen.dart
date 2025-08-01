@@ -67,11 +67,11 @@ class _MenuScreenState extends State<MenuScreen> {
                 leading: const Icon(Icons.settings),
                 title: const Text('Settings'),
                 onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                  );
+                  // Navigator.pop(context);
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  // );
                 },
               ),
             ],
