@@ -86,51 +86,59 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
- Future<void> _saveItem() async {
-  if (!_formKey.currentState!.validate() || _selectedCategory == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Please fill all required fields')),
-    );
-    return;
-  }
-
-  setState(() => _isLoading = true);
-
-  try {
-    final name = _nameController.text.trim();
-    final description = _descController.text.trim();
-    final price = double.parse(_priceController.text.trim());
-    final categoryId = _selectedCategory!.id;
-
-    if (widget.item == null) {
-      await ApiService.createItem(
-        name: name,
-        description: description,
-        price: price,
-        categoryId: categoryId,
-        imageFile: _imageFile,
+  Future<void> _saveItem() async {
+    if (!_formKey.currentState!.validate() || _selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill all required fields')),
       );
-    } else {
-      // Handle update case
+      return;
     }
 
-    Navigator.pop(context, true);
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error: ${e.toString()}'),
-        action: e.toString().contains('Unauthenticated')
-            ? SnackBarAction(
-                label: 'Login',
-                onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-              )
-            : null,
-      ),
-    );
-  } finally {
-    setState(() => _isLoading = false);
+    setState(() => _isLoading = true);
+
+    try {
+      final name = _nameController.text.trim();
+      final description = _descController.text.trim();
+      final price = double.parse(_priceController.text.trim());
+      final categoryId = _selectedCategory!.id;
+
+      if (widget.item == null) {
+        await ApiService.createItem(
+          name: name,
+          description: description,
+          price: price,
+          categoryId: categoryId,
+          imageFile: _imageFile,
+        );
+      } else {
+        await ApiService.updateItem(
+          widget.item!.id,
+          name: name,
+          description: description,
+          price: price,
+          categoryId: categoryId,
+          imageFile: _imageFile,
+        );
+      }
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          action: e.toString().contains('Unauthenticated')
+              ? SnackBarAction(
+                  label: 'Login',
+                  onPressed: () =>
+                      Navigator.pushReplacementNamed(context, '/login'),
+                )
+              : null,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
-}
 
   Future<void> _createItem({
     required String name,

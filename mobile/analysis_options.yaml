@@ -20,6 +20,7 @@ analyzer:
     unnecessary_type_check: ignore
     prefer_final_fields: ignore
     unused_local_variable: ignore
+    library_private_types_in_public_api: ignore
 include: package:flutter_lints/flutter.yaml
 
 linter:
