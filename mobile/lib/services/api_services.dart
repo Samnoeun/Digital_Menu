@@ -10,7 +10,7 @@ import '../models/setting_model.dart';
 
 class ApiService {
   // static const String baseUrl = 'http://192.168.146.1:8000/api';
-  static const String baseUrl = 'http://192.168.108.176:8000/api'; // Update with your preferred base URL
+  static const String baseUrl = 'http://192.168.108.70:8000/api'; // Update with your preferred base URL
 
   static String? _token;
 
@@ -105,7 +105,6 @@ class ApiService {
       throw Exception('Error: $e');
     }
   }
-
   // Category Services
   static Future<List<category.Category>> getCategories() async {
     final response = await http.get(Uri.parse('$baseUrl/categories'));
