@@ -5,16 +5,29 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
-    public function index()
+     public function index()
     {
-        return Order::with(['OrderItems.item'])->latest()->get();
-    }
+        $user = Auth::user();
+        
+        if (!$user->restaurant) {
+            return response()->json(['data' => []]);
+        }
 
-    public function store(Request $request)
-    {
+        return Order::with(['orderItems.item'])
+            ->where('restaurant_id', $user->restaurant->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+    public function store(Request $request){
+        $user = Auth::user();
+        
+        if (!$user->restaurant) {
+            return response()->json(['message' => 'Restaurant not found'], 422);
+        }
         $validated = $request->validate([
             'table_number' => 'required|integer',
             'items' => 'required|array',
@@ -24,6 +37,7 @@ class OrderController extends Controller
         ]);
 
         $order = Order::create([
+            'restaurant_id' => $user->restaurant->id,
             'table_number' => $validated['table_number'],
             'status' => 'pending',
         ]);
@@ -41,6 +55,7 @@ class OrderController extends Controller
 
     public function updateStatus(Order $order, Request $request)
     {
+        $this->authorizeOrderAccess($order);
         $request->validate([
             'status' => 'required|in:pending,preparing,ready,completed',
         ]);
@@ -59,5 +74,13 @@ class OrderController extends Controller
     {
         $order->delete();
         return response()->json(['message' => 'Order deleted']);
+    }
+        protected function authorizeOrderAccess(Order $order)
+    {
+        $user = Auth::user();
+        
+        if (!$user->restaurant || $order->restaurant_id !== $user->restaurant->id) {
+            abort(403, 'Unauthorized action.');
+        }
     }
 }
