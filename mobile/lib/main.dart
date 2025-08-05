@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
+import 'screens/Login/login_screen.dart';
 
 void main() => runApp(const DigitalMenuApp());
 
@@ -32,7 +32,7 @@ class DigitalMenuApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const LoginScreen(), // Start at login screen
+      home: const LoginScreen(),
     );
   }
 }
