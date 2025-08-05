@@ -25,4 +25,8 @@ class Item extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+    public function restaurant()
+    {
+        return $this->belongsTo(Restaurant::class, 'restaurant_id', 'id', 'category');
+    }
 }

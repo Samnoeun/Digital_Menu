@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->integer('table_number')->unique();
+            $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');
+            $table->integer('table_number');
             $table->string('status')->default('pending');
             $table->timestamps();
+
+            $table->unique(['restaurant_id', 'table_number']);
         });
     }
 
