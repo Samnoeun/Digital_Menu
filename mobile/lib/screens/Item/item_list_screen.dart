@@ -34,28 +34,41 @@ class _ItemListScreenState extends State<ItemListScreen> {
     super.dispose();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    try {
-      final categories = await ApiService.getCategories();
-      final items = await ApiService.getItems();
-      setState(() {
-        _categories = categories;
-        _allItems = items;
-        _filterItems();
-      });
-    } catch (e) {
+Future<void> _loadData() async {
+  setState(() => _isLoading = true);
+  try {
+    final token = await ApiService.getAuthToken();
+    if (token == null) {
+      // Redirect to login if not authenticated
+      Navigator.pushReplacementNamed(context, '/login');
+      return;
+    }
+
+    final categories = await ApiService.getCategories();
+    final items = await ApiService.getItems();
+    
+    setState(() {
+      _categories = categories;
+      _allItems = items;
+      _filterItems();
+    });
+  } catch (e) {
+    if (e.toString().contains('Unauthenticated')) {
+      // Handle expired token
+      await ApiService.clearAuthToken();
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error loading data: $e'),
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
         ),
       );
-    } finally {
-      setState(() => _isLoading = false);
     }
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
 
   void _onSearchChanged() {
     setState(() {
@@ -75,8 +88,10 @@ class _ItemListScreenState extends State<ItemListScreen> {
     setState(() {
       _filteredItems = _allItems.where((item.Item item) {
         final matchesCategory =
-            _selectedCategoryId == null || item.categoryId == _selectedCategoryId;
-        final matchesSearch = item.name.toLowerCase().contains(_searchQuery) ||
+            _selectedCategoryId == null ||
+            item.categoryId == _selectedCategoryId;
+        final matchesSearch =
+            item.name.toLowerCase().contains(_searchQuery) ||
             item.price.toStringAsFixed(2).contains(_searchQuery) ||
             (item.description?.toLowerCase().contains(_searchQuery) ?? false);
         return matchesCategory && matchesSearch;
@@ -131,7 +146,10 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Items', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Items',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         elevation: 0,
         backgroundColor: const Color(0xFFF3E5F5),
         actions: [
@@ -160,7 +178,9 @@ class _ItemListScreenState extends State<ItemListScreen> {
                         },
                       )
                     : null,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 filled: true,
                 fillColor: theme.colorScheme.surfaceVariant,
               ),
@@ -197,110 +217,119 @@ class _ItemListScreenState extends State<ItemListScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredItems.isEmpty
-                    ? Center(
-                        child: Text(
-                          _searchQuery.isEmpty
-                              ? 'No items found.'
-                              : 'No matching items found.',
-                          style: const TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadData,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredItems.length,
-                          itemBuilder: (context, index) {
-                            final item = _filteredItems[index];
-                            return Card(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                ? Center(
+                    child: Text(
+                      _searchQuery.isEmpty
+                          ? 'No items found.'
+                          : 'No matching items found.',
+                      style: const TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredItems.length,
+                      itemBuilder: (context, index) {
+                        final item = _filteredItems[index];
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          elevation: 2,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(16),
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: item.imagePath != null
+                                  ? Image.network(
+                                      ApiService.getImageUrl(item.imagePath),
+                                      width: 60,
+                                      height: 60,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.broken_image),
+                                    )
+                                  : const Icon(
+                                      Icons.image_not_supported,
+                                      size: 40,
+                                    ),
+                            ),
+                            title: Text(
+                              item.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
                               ),
-                              margin: const EdgeInsets.only(bottom: 12),
-                              elevation: 2,
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(16),
-                                leading: ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: item.imagePath != null
-                                      ? Image.network(
-                                          ApiService.getImageUrl(item.imagePath),
-                                          width: 60,
-                                          height: 60,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
-                                        )
-                                      : const Icon(Icons.image_not_supported, size: 40),
-                                ),
-                                title: Text(
-                                  item.name,
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (item.description?.isNotEmpty == true)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: Text(
-                                          item.description!,
-                                          style: const TextStyle(fontSize: 14, color: Colors.grey),
-                                        ),
-                                      ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        '\$${item.price.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          color: theme.primaryColor,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (item.description?.isNotEmpty == true)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      item.description!,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
                                       ),
                                     ),
-                                  ],
-                                ),
-                                trailing: PopupMenuButton<String>(
-                                  onSelected: (value) async {
-                                    if (value == 'edit') {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => AddItemScreen(item: item),
-                                        ),
-                                      );
-                                      if (result == true) _loadData();
-                                    } else if (value == 'delete') {
-                                      _deleteItem(item.id, item.name);
-                                    }
-                                  },
-                                  itemBuilder: (_) => [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text(
-                                        'Edit',
-                                        style: TextStyle(
-                                          color: Colors.blue[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    '\$${item.price.toStringAsFixed(2)}',
+                                    style: TextStyle(
+                                      color: theme.primaryColor,
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                        'Delete',
-                                        style: TextStyle(
-                                          color: Colors.red[700],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                              ],
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AddItemScreen(item: item),
+                                    ),
+                                  );
+                                  if (result == true) _loadData();
+                                } else if (value == 'delete') {
+                                  _deleteItem(item.id, item.name);
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text(
+                                    'Edit',
+                                    style: TextStyle(
+                                      color: Colors.blue[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(
+                                    'Delete',
+                                    style: TextStyle(
+                                      color: Colors.red[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

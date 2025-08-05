@@ -4,7 +4,7 @@ import '../services/api_services.dart';
 import '../models/item_model.dart' as item;
 import '../models/category_model.dart' as category;
 import '../models/restaurant_model.dart';
-import 'item_detail_screen.dart';
+import 'Preview/item_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,8 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       print('Loading restaurant info...');
       final fetchedRestaurant = await ApiService.getRestaurant();
-      print('Fetched restaurant: ${fetchedRestaurant?.restaurantName}');
-      print('Profile image: ${fetchedRestaurant?.profile}');
+      print('Fetched restaurant: ${fetchedRestaurant.restaurantName}');
+      print('Profile image: ${fetchedRestaurant.profile}');
 
       if (mounted) {
         setState(() {
@@ -76,13 +76,10 @@ class _HomeScreenState extends State<HomeScreen> {
       final categories = results[1] as List<category.Category>;
       final orders = results[2] as List<dynamic>;
 
-      // Create category map for lookup
       final categoryMap = {for (var cat in categories) cat.id: cat};
 
-      // Filter orders based on selected date range
       final filteredOrders = _filterOrdersByDate(orders);
 
-      // Create a map of all items with their full data including categories
       final itemMap = {
         for (var item in items)
           item.id.toString(): item.copyWith(
@@ -198,47 +195,51 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF3E5F5),
+      // Removed backgroundColor to default like item_list_screen.dart
       appBar: AppBar(
-  backgroundColor: Colors.deepPurple,
-  automaticallyImplyLeading: false,
-  title: restaurant == null
-      ? const Text('Loading...', style: TextStyle(fontSize: 18, color: Colors.white))
-      : Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.white,
-              backgroundImage: restaurant!.profile != null
-                  ? NetworkImage(ApiService.getImageUrl(restaurant!.profile!))
-                  : null,
-              child: restaurant!.profile == null
-                  ? const Icon(Icons.restaurant, size: 20, color: Colors.deepPurple)
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                restaurant!.restaurantName,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                maxLines: 1,
+        automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xFFF3E5F5), // match item_list_screen
+        title: restaurant == null
+            ? const Text(
+                'Loading...',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              )
+            : Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: restaurant!.profile != null
+                        ? NetworkImage(ApiService.getImageUrl(restaurant!.profile!))
+                        : null,
+                    child: restaurant!.profile == null
+                        ? const Icon(Icons.restaurant, size: 20)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      restaurant!.restaurantName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.refresh, color: Colors.white),
-      onPressed: _loadRestaurantInfo,
-    ),
-  ],
-),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadRestaurantInfo,
+          ),
+        ],
+        elevation: 0,
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -351,21 +352,29 @@ class _HomeScreenState extends State<HomeScreen> {
                         title: "Total Menu Items",
                         value: totalItems.toString(),
                         icon: Icons.restaurant_menu,
+                        iconColor: theme.primaryColor,
+                        backgroundColor: theme.colorScheme.surfaceVariant,
                       ),
                       SummaryCard(
                         title: "Total Categories",
                         value: totalCategories.toString(),
                         icon: Icons.category,
+                        iconColor: theme.primaryColor,
+                        backgroundColor: theme.colorScheme.surfaceVariant,
                       ),
                       SummaryCard(
                         title: "Orders (${selectedFilter.toLowerCase()})",
                         value: totalOrders.toString(),
                         icon: Icons.receipt_long,
+                        iconColor: theme.primaryColor,
+                        backgroundColor: theme.colorScheme.surfaceVariant,
                       ),
                       SummaryCard(
                         title: "Top Item",
                         value: topItem.isNotEmpty ? topItem : "No data",
                         icon: Icons.star,
+                        iconColor: theme.primaryColor,
+                        backgroundColor: theme.colorScheme.surfaceVariant,
                       ),
                     ],
                   ),
@@ -425,32 +434,37 @@ class SummaryCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
+  final Color? iconColor;
+  final Color? backgroundColor;
 
   const SummaryCard({
     super.key,
     required this.title,
     required this.value,
     required this.icon,
+    this.iconColor,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return SizedBox(
       width: MediaQuery.of(context).size.width / 2 - 24,
       child: Card(
         elevation: 4,
-        color: Colors.white,
+        color: backgroundColor ?? Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 30, color: Colors.deepPurple),
+              Icon(icon, size: 30, color: iconColor ?? Colors.deepPurple),
               const SizedBox(height: 10),
               Text(
                 title,
-                style: const TextStyle(fontSize: 14, color: Colors.black54),
+                style: TextStyle(fontSize: 14, color: Colors.black54),
               ),
               const SizedBox(height: 4),
               Text(

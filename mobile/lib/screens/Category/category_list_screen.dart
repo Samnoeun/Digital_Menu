@@ -13,9 +13,8 @@ class CategoryListScreen extends StatefulWidget {
 
 class _CategoryListScreenState extends State<CategoryListScreen> {
   List<Category> _categories = [];
-  List<Category> _filteredCategories = []; // List for filtered categories
+  List<Category> _filteredCategories = [];
   bool _isLoading = true;
-  bool _isInit = true;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -23,16 +22,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_isInit) {
-      setState(() => _isLoading = true);
-      _fetchCategories();
-      _isInit = false;
-    }
+    _fetchCategories();
   }
 
   @override
@@ -51,70 +41,82 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   }
 
   Future<void> _fetchCategories() async {
-    try {
-      final categories = await ApiService.getCategories();
+  try {
+    setState(() => _isLoading = true);
+    final categories = await ApiService.getCategories();
+    
+    if (mounted) {
       setState(() {
         _categories = categories;
-        _filteredCategories = categories; // Initialize filtered list with all categories
+        _filteredCategories = categories;
         _isLoading = false;
       });
-    } catch (e) {
+    }
+  } catch (e) {
+    if (mounted) {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error fetching categories: $e'),
+          content: Text(e.toString()),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
+          duration: Duration(seconds: 3),
         ),
       );
     }
+    debugPrint('Error fetching categories: $e');
   }
+}
 
-  Future<void> _deleteCategory(int id, String categoryName) async {
-    final confirm = await showDialog<bool>(
+  Future<void> _deleteCategory(int id, String name) async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Confirm Delete'),
-        content: Text('Are you sure you want to delete "$categoryName"?'),
+        content: Text('Delete category "$name"? This will also delete all items in it.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
 
-    if (confirm == true) {
+    if (confirmed == true) {
       try {
+        setState(() => _isLoading = true);
         await ApiService.deleteCategory(id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$categoryName deleted successfully'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        _fetchCategories();
+        _fetchCategories(); // Refresh the list
+        _showSuccessSnackbar('Category deleted successfully');
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting category: $e'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        setState(() => _isLoading = false);
+        _showErrorSnackbar('Failed to delete category: ${e.toString()}');
       }
     }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -128,44 +130,37 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         elevation: 0,
-        backgroundColor: theme.primaryColor,
+        backgroundColor: const Color(0xFFF3E5F5), // Light lavender background
+        iconTheme: IconThemeData(color: Colors.deepPurple.shade700),
+        actionsIconTheme: IconThemeData(color: Colors.deepPurple.shade700),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: Icon(Icons.refresh, color: Colors.deepPurple.shade700),
             onPressed: _fetchCategories,
-            tooltip: 'Refresh',
           ),
         ],
       ),
       body: Column(
         children: [
-          // Search Bar
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search here...',
+                hintText: 'Search categories...',
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged();
-                        },
+                        onPressed: () => _searchController.clear(),
                       )
                     : null,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceVariant,
               ),
-              textInputAction: TextInputAction.search,
             ),
           ),
-          // Category List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -205,53 +200,48 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                     : RefreshIndicator(
                         onRefresh: _fetchCategories,
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemCount: _filteredCategories.length,
                           itemBuilder: (context, index) {
                             final category = _filteredCategories[index];
                             return Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                               margin: const EdgeInsets.only(bottom: 12),
                               child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                title: Text(
-                                  category.name,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                title: Text(category.name),
+                                subtitle: Text(
+                                  '${category.items.length} items',
+                                  style: const TextStyle(color: Colors.grey),
                                 ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      onPressed: () async {
-                                        final result = await Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => AddCategoryScreen(category: category),
-                                          ),
-                                        );
-                                        if (result == true) _fetchCategories();
-                                      },
-                                      tooltip: 'Edit Category',
+                                trailing: PopupMenuButton(
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text('Edit'),
                                     ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () => _deleteCategory(category.id, category.name),
-                                      tooltip: 'Delete Category',
+                                    const PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Delete', style: TextStyle(color: Colors.red)),
                                     ),
                                   ],
+                                  onSelected: (value) async {
+                                    if (value == 'edit') {
+                                      final result = await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => AddCategoryScreen(category: category),
+                                        ),
+                                      );
+                                      if (result == true) _fetchCategories();
+                                    } else if (value == 'delete') {
+                                      _deleteCategory(category.id, category.name);
+                                    }
+                                  },
                                 ),
                                 onTap: () {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => CategoryDetailScreen(category: category),
+                                      builder: (context) => CategoryDetailScreen(category: category),
                                     ),
                                   );
                                 },
@@ -267,13 +257,13 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const AddCategoryScreen()),
+            MaterialPageRoute(
+              builder: (context) => const AddCategoryScreen(),
+            ),
           );
           if (result == true) _fetchCategories();
         },
-        backgroundColor: theme.primaryColor,
-        child: const Icon(Icons.add, size: 28),
-        tooltip: 'Add Category',
+        child: const Icon(Icons.add),
       ),
     );
   }
