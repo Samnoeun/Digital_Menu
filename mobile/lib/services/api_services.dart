@@ -7,6 +7,7 @@ import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
 import '../models/restaurant_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';  // Add this import
 
 class ApiService {
   static const String baseUrl =
@@ -581,4 +582,31 @@ class ApiService {
     // Case 2: Return with direct path concatenation
     return baseUrl.replaceFirst('/api', '') + path;
   }
+
+static Future<dynamic> getOrderStatistics(String period, {DateTime? customDate}) async {
+  final token = await getAuthToken();
+  final params = {
+    'period': period,
+    if (customDate != null) 'date': DateFormat('yyyy-MM-dd').format(customDate),
+  };
+  
+  debugPrint('Making stats request with params: $params');
+  
+  final response = await http.get(
+    Uri.parse('$baseUrl/statistics').replace(queryParameters: params),
+    headers: {
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    },
+  );
+
+  debugPrint('Stats response status: ${response.statusCode}');
+  debugPrint('Stats response body: ${response.body}');
+
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body);
+  } else {
+    throw Exception('Failed to load stats: ${response.statusCode}');
+  }
+}
 }
