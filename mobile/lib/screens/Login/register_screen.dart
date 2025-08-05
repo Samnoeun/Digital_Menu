@@ -131,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ],
                       ),
                       child: const Text(
-                        'Digital Menu',
+                        'QR Menu App',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
