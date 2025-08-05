@@ -22,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() {
       isLoading = true;
     });
+
     try {
       await ApiService.register(
         nameController.text.trim(),
@@ -29,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         passwordController.text.trim(),
         confirmPasswordController.text.trim(),
       );
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Registered successfully")),
@@ -44,6 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
+
     setState(() {
       isLoading = false;
     });
@@ -128,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ],
                       ),
                       child: const Text(
-                        'Digital Menu',
+                        'QR Menu App',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,

@@ -82,6 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
         emailController.text.trim(),
         passwordController.text.trim(),
       );
+
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
@@ -173,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       child: const Text(
-                        'Digital Menu',
+                        'QR Menu App',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
