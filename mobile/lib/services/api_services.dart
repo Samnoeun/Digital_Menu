@@ -54,7 +54,6 @@ class ApiService {
       );
 
       final data = json.decode(response.body);
-
       if (response.statusCode == 200) {
         final token = data['token'];
         if (token != null) await saveAuthToken(token);
@@ -77,7 +76,6 @@ class ApiService {
       );
 
       final data = json.decode(response.body);
-
       if (response.statusCode == 200) {
         final token = data['token'];
         if (token != null) await saveAuthToken(token);
@@ -134,7 +132,6 @@ class ApiService {
       throw Exception('Error getting user: $e');
     }
   }
-
   // Category Services
   static Future<List<category.Category>> getCategories() async {
     final token = await getAuthToken();
