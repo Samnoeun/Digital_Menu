@@ -1,6 +1,3 @@
-// models/order_model.dart
-import 'package:intl/intl.dart';
-
 class Order {
   final dynamic id;
   final int tableNumber;

@@ -42,18 +42,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadRestaurantInfo() async {
     try {
-      print('Loading restaurant info...');
       final fetchedRestaurant = await ApiService.getRestaurant();
-      print('Fetched restaurant: ${fetchedRestaurant.restaurantName}');
-      print('Profile image: ${fetchedRestaurant.profile}');
-
       if (mounted) {
         setState(() {
           restaurant = fetchedRestaurant;
         });
       }
     } catch (e) {
-      print('Error loading restaurant: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
