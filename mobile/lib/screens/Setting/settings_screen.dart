@@ -1,19 +1,24 @@
-// settings_screen.dart
 import 'package:flutter/material.dart';
 import 'account_screen.dart';
 import '../Login/login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
-  final Function(bool) onThemeChanged;
-
-  const SettingsScreen({super.key, required this.onThemeChanged});
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  bool isDarkMode = false;
   String selectedLanguage = 'English';
+
+  void _toggleDarkMode(bool value) {
+    setState(() {
+      isDarkMode = value;
+    });
+    // TODO: Apply theme switching
+  }
 
   void _showLanguagePicker() {
     showModalBottomSheet(
@@ -72,7 +77,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           selectedLanguage = tempSelected;
                         });
                         Navigator.pop(context);
-                        // TODO: Implement localization logic
+                        // TODO: Trigger localization logic
                       },
                       child: const Text('Apply'),
                     ),
@@ -87,19 +92,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _logout(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(
+    Navigator.pushAndRemoveUntil(
       context,
-      '/login',
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
       (route) => false,
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: true,
+        automaticallyImplyLeading: false,
         title: Row(
           children: const [
             Icon(Icons.settings),
@@ -108,15 +112,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+
+
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 10),
         children: [
           SwitchListTile(
             title: const Text('Dark Mode'),
-            value: Theme.of(context).brightness == Brightness.dark,
-            onChanged: (bool value) {
-              widget.onThemeChanged(value);
-            },
+            value: isDarkMode,
+            onChanged: _toggleDarkMode,
             secondary: const Icon(Icons.dark_mode),
           ),
           ListTile(
@@ -129,7 +133,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.account_circle),
             title: const Text('Account'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () => Navigator.pushNamed(context, '/account'),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AccountScreen()),
+            ),
           ),
           const Divider(),
           ListTile(
