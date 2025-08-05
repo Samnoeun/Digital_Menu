@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl =
-      'http://192.168.108.89:8000/api'; // Update with your preferred base URL
+      'http://192.168.108.93:8000/api'; // Update with your preferred base URL
 
   static String? _token;
 
