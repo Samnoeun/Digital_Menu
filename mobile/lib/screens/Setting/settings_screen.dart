@@ -13,11 +13,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool isDarkMode = false;
   String selectedLanguage = 'English';
 
+  // Localization Map
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'settings': 'Settings',
+      'dark_mode': 'Dark Mode',
+      'language': 'Language',
+      'choose_language': 'Choose Language',
+      'apply': 'Apply',
+      'account': 'Account',
+      'logout': 'Log Out',
+    },
+    'Khmer': {
+      'settings': 'ការកំណត់',
+      'dark_mode': 'របៀបងងឹត',
+      'language': 'ភាសា',
+      'choose_language': 'ជ្រើសរើសភាសា',
+      'apply': 'អនុវត្ត',
+      'account': 'គណនី',
+      'logout': 'ចាកចេញ',
+    },
+  };
+
   void _toggleDarkMode(bool value) {
     setState(() {
       isDarkMode = value;
     });
-    // TODO: Apply theme switching
+    
   }
 
   void _showLanguagePicker() {
@@ -37,10 +59,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Center(
+                  Center(
                     child: Text(
-                      'Choose Language',
-                      style: TextStyle(
+                      // Always display current selectedLanguage until Apply is clicked
+                      localization[selectedLanguage]!['choose_language']!,
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -56,7 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           setModalState(() => tempSelected = value!);
                         },
                       ),
-                      const Text('English'),
+                      Text(localization['English']!['language']!),
                       const SizedBox(width: 20),
                       Radio<String>(
                         value: 'Khmer',
@@ -65,7 +88,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           setModalState(() => tempSelected = value!);
                         },
                       ),
-                      const Text('ខ្មែរ'),
+                      Text(localization['Khmer']!['language']!),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -77,9 +100,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           selectedLanguage = tempSelected;
                         });
                         Navigator.pop(context);
-                        // TODO: Trigger localization logic
+
                       },
-                      child: const Text('Apply'),
+                      // Always display Apply button text in current selectedLanguage
+                      child: Text(localization[selectedLanguage]!['apply']!),
                     ),
                   ),
                 ],
@@ -101,14 +125,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = localization[selectedLanguage]!;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Row(
-          children: const [
-            Icon(Icons.settings),
-            SizedBox(width: 8),
-            Text('Settings'),
+          children: [
+            const Icon(Icons.settings),
+            const SizedBox(width: 8),
+            Text(lang['settings']!),
           ],
         ),
       ),
@@ -117,20 +143,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 10),
         children: [
           SwitchListTile(
-            title: const Text('Dark Mode'),
+            title: Text(lang['dark_mode']!),
             value: isDarkMode,
             onChanged: _toggleDarkMode,
             secondary: const Icon(Icons.dark_mode),
           ),
           ListTile(
             leading: const Icon(Icons.language),
-            title: const Text('Language'),
+            title: Text(lang['language']!),
             subtitle: Text(selectedLanguage),
             onTap: _showLanguagePicker,
           ),
           ListTile(
             leading: const Icon(Icons.account_circle),
-            title: const Text('Account'),
+            title: Text(lang['account']!),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => Navigator.push(
               context,
@@ -140,7 +166,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Log Out', style: TextStyle(color: Colors.red)),
+            title: Text(
+              lang['logout']!,
+              style: const TextStyle(color: Colors.red),
+            ),
             onTap: () => _logout(context),
           ),
         ],
