@@ -14,7 +14,7 @@ analyzer:
     unnecessary_null_comparison: ignore
     curly_braces_in_flow_control_structures: ignore
     deprecated_member_use: ignore
-    avoid_print: ignore ignore ignore ignore ignore ignore ignore ignore
+    avoid_print: ignore
     unnecessary_cast: ignore
     prefer_const_constructors: ignore
     unnecessary_type_check: ignore
