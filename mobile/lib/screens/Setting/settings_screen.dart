@@ -61,11 +61,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Center(
                     child: Text(
-                      // Always display current selectedLanguage until Apply is clicked
+
                       localization[selectedLanguage]!['choose_language']!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ),
@@ -100,10 +101,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           selectedLanguage = tempSelected;
                         });
                         Navigator.pop(context);
-
                       },
-                      // Always display Apply button text in current selectedLanguage
-                      child: Text(localization[selectedLanguage]!['apply']!),
+                      child: Text(
+                        localization[selectedLanguage]!['apply']!,
+                        style: TextStyle(
+                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -127,6 +131,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = localization[selectedLanguage]!;
 
+    TextStyle getTextStyle() {
+      return TextStyle(
+        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -134,7 +144,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             const Icon(Icons.settings),
             const SizedBox(width: 8),
-            Text(lang['settings']!),
+            Text(
+              lang['settings']!,
+              style: getTextStyle(),
+            ),
           ],
         ),
       ),
@@ -143,20 +156,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 10),
         children: [
           SwitchListTile(
-            title: Text(lang['dark_mode']!),
+            title: Text(
+              lang['dark_mode']!,
+              style: getTextStyle(),
+            ),
             value: isDarkMode,
             onChanged: _toggleDarkMode,
             secondary: const Icon(Icons.dark_mode),
           ),
           ListTile(
             leading: const Icon(Icons.language),
-            title: Text(lang['language']!),
+            title: Text(
+              lang['language']!,
+              style: getTextStyle(),
+            ),
             subtitle: Text(selectedLanguage),
             onTap: _showLanguagePicker,
           ),
           ListTile(
             leading: const Icon(Icons.account_circle),
-            title: Text(lang['account']!),
+            title: Text(
+              lang['account']!,
+              style: getTextStyle(),
+            ),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () => Navigator.push(
               context,
@@ -168,7 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.logout, color: Colors.red),
             title: Text(
               lang['logout']!,
-              style: const TextStyle(color: Colors.red),
+              style: getTextStyle().copyWith(color: Colors.red),
             ),
             onTap: () => _logout(context),
           ),
