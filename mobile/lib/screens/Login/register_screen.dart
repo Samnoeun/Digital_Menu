@@ -19,38 +19,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isLoading = false;
 
   void registerUser() async {
-    setState(() {
-      isLoading = true;
-    });
+  setState(() {
+    isLoading = true;
+  });
 
-    try {
-      await ApiService.register(
-        nameController.text.trim(),
-        emailController.text.trim(),
-        passwordController.text.trim(),
-        confirmPasswordController.text.trim(),
+  try {
+    final user = await ApiService.register(
+      nameController.text.trim(),
+      emailController.text.trim(),
+      passwordController.text.trim(),
+      confirmPasswordController.text.trim(),
+    );
+
+    if (user != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registered successfully")),
       );
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registered successfully")),
-        );
-        // Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const RestaurantScreen()),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
+      Navigator.pushReplacement(
         context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+        MaterialPageRoute(builder: (_) => const RestaurantScreen()),
+      );
     }
-
-    setState(() {
-      isLoading = false;
-    });
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+  } finally {
+    if (context.mounted) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
+}
 
   @override
   Widget build(BuildContext context) {
