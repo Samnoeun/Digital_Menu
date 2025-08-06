@@ -102,16 +102,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: const [
-            Icon(Icons.settings),
-            SizedBox(width: 8),
-            Text('Settings'),
-          ],
-        ),
+appBar: AppBar(
+  automaticallyImplyLeading: false,
+  title: Row(
+    mainAxisSize: MainAxisSize.min, // Shrinks Row to only needed width
+    children: [
+      IconButton(
+        icon: const Icon(Icons.arrow_forward_ios, size: 16),
+        onPressed: () => Navigator.pop(context),
+        padding: EdgeInsets.zero, // Remove default padding for tighter layout
+        constraints: const BoxConstraints(), // Remove min size constraints
       ),
+      const SizedBox(width: 4), // Small space between icon and text
+      const Text('Settings'),
+    ],
+  ),
+),
+
+
+
 
 
       body: ListView(

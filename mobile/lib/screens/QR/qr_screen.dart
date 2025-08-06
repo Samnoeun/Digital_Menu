@@ -48,28 +48,51 @@ class _QrScreenState extends State<QrScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Generate QR'),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const QRScannerScreen()),
-              );
-            },
-            tooltip: 'QR Scanner Demo',
-          ),
-          if (showQR)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: _clearQR,
-              tooltip: 'Clear QR Code',
-            ),
-        ],
+     appBar: AppBar(
+  title: const Text(
+    'Generate QR',
+    style: TextStyle(
+      fontWeight: FontWeight.w600,
+      color: Color(0xFF6A1B9A), // Purple text color
+    ),
+  ),
+  backgroundColor: const Color(0xFFF3E5F5), // Light purple background
+  elevation: 0,
+  automaticallyImplyLeading: false, // Disable default back arrow
+  leading: IconButton(
+    icon: const Icon(
+      Icons.arrow_forward_ios,
+      size: 16,
+      color: Color(0xFF6A1B9A), // Purple color for icon
+    ),
+    onPressed: () {
+      Navigator.of(context).pop();
+    },
+  ),
+  iconTheme: const IconThemeData(
+    color: Color(0xFF6A1B9A),
+  ), // Purple icon theme for other icons
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.qr_code_scanner),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const QRScannerScreen()),
+        );
+      },
+      tooltip: 'QR Scanner Demo',
+    ),
+    if (showQR)
+      IconButton(
+        icon: const Icon(Icons.clear),
+        onPressed: _clearQR,
+        tooltip: 'Clear QR Code',
       ),
+  ],
+),
+
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -133,7 +156,8 @@ class _QrScreenState extends State<QrScreen> {
                   foregroundColor: Colors.black,
                   errorCorrectionLevel: QrErrorCorrectLevel.M,
                   // Add logo in the center (optional)
-                  embeddedImage: null, // You can add AssetImage('assets/logo.png') here
+                  embeddedImage:
+                      null, // You can add AssetImage('assets/logo.png') here
                   embeddedImageStyle: const QrEmbeddedImageStyle(
                     size: Size(40, 40),
                   ),
