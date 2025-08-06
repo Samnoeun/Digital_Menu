@@ -11,17 +11,45 @@ use App\Http\Resources\CategoryResource;
 
 class CategoryController extends Controller
 {
-    public function index()
-    {
-        return CategoryResource::collection(Category::with('items')->get());
+public function index()
+{
+    $user = auth()->user();
+    
+    if (!$user || !$user->restaurant) {
+        return response()->json([
+            'data' => [],
+            'message' => 'No restaurant found for this user'
+        ]);
     }
 
+    $categories = Category::where('restaurant_id', $user->restaurant->id)
+        ->with('items')
+        ->get();
 
-    public function store(StoreCategoryRequest $request)
-    {
-        $category = Category::create($request->validated());
-        return new CategoryResource($category);
+    return CategoryResource::collection($categories);
+}
+
+public function store(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255'
+    ]);
+
+    $user = auth()->user();
+    
+    if (!$user->restaurant) {
+        return response()->json([
+            'message' => 'User is not associated with a restaurant'
+        ], 422);
     }
+
+    $category = Category::create([
+        'name' => $request->name,
+        'restaurant_id' => $user->restaurant->id
+    ]);
+
+    return response()->json($category, 201);
+}
 
     public function show($id)
     {

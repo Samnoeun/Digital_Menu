@@ -26,7 +26,7 @@ class UpdateItemRequest extends FormRequest
             'description' => 'nullable|string',
             'price' => 'required|numeric',
             'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|image|max:2048',
+            'image_path' => 'nullable|image|max:2048',
         ];
     }
 }

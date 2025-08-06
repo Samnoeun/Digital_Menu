@@ -6,17 +6,17 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRestaurantRequest extends FormRequest
 {
-    public function authorize(): bool
+    public function authorize()
     {
         return true;
     }
 
-    public function rules(): array
+    public function rules()
     {
         return [
-            'restaurant_name' => 'sometimes|string|max:255',
-            'address' => 'sometimes|string|max:255',
-            'profile' => 'sometimes|image|max:2048',
+            'restaurant_name' => 'required|string|max:255',
+            'address' => 'required|string',
+            'profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
     }
 }

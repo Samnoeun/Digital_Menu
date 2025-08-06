@@ -1,3 +1,5 @@
+import 'category_model.dart';
+
 class Item {
   final int id;
   final int categoryId;
@@ -5,6 +7,7 @@ class Item {
   final String? imagePath;
   final String? description;
   final double price;
+  final Category? category;
 
   Item({
     required this.id,
@@ -13,6 +16,7 @@ class Item {
     this.imagePath,
     this.description,
     required this.price,
+    this.category,
   });
 
   factory Item.fromJson(Map<String, dynamic> json) {
@@ -23,6 +27,29 @@ class Item {
       imagePath: json['image_path'],
       description: json['description'],
       price: double.parse(json['price'].toString()),
+      category: json['category'] != null 
+          ? Category.fromJson(json['category'])
+          : null,
+    );
+  }
+
+  Item copyWith({
+    int? id,
+    int? categoryId,
+    String? name,
+    String? imagePath,
+    String? description,
+    double? price,
+    Category? category,
+  }) {
+    return Item(
+      id: id ?? this.id,
+      categoryId: categoryId ?? this.categoryId,
+      name: name ?? this.name,
+      imagePath: imagePath ?? this.imagePath,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      category: category ?? this.category,
     );
   }
 }

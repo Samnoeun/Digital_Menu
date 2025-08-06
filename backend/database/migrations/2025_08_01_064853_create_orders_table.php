@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('restaurants', function (Blueprint $table) {
+        Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->string('restaurant_name');
-            $table->string('address');
-            $table->string('profile')->nullable(); // path to image
+            $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');
+            $table->integer('table_number');
+            $table->string('status')->default('pending');
             $table->timestamps();
+
+            $table->unique(['restaurant_id', 'table_number']);
         });
     }
 
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('restaurants');
+        Schema::dropIfExists('orders');
     }
 };

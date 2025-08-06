@@ -18,6 +18,6 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
-    protected $fillable = ['table_number', 'status'];
+    protected $fillable = ['table_number','restaurant_id', 'status'];
 
 }

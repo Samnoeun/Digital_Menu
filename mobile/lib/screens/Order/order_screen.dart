@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/api_services.dart';
-import '../models/order_model.dart';
+import '../../services/api_services.dart';
+import '../../models/order_model.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({Key? key}) : super(key: key);
@@ -82,37 +82,35 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Future<void> _updateOrderStatus(Order order, String newStatus) async {
-    try {
-      await ApiService.updateOrderStatus(order.id, newStatus);
-      
+  try {
+    await ApiService.updateOrderStatus(order.id, newStatus);
+    
+    if (!mounted) return;
+    
+    setState(() {
       if (newStatus == 'completed') {
-        await ApiService.deleteOrder(order.id);
-        if (!mounted) return;
-        setState(() {
-          _orders.removeWhere((o) => o.id == order.id);
-          _expandedOrders.remove(order.id);
-        });
+        _orders.removeWhere((o) => o.id == order.id);
+        _expandedOrders.remove(order.id);
       } else {
-        if (!mounted) return;
-        setState(() {
-          _orders = _orders.map((o) {
-            if (o.id == order.id) {
-              return Order(
-                id: o.id,
-                tableNumber: o.tableNumber,
-                status: newStatus,
-                createdAt: o.createdAt,
-                items: o.items,
-              );
-            }
-            return o;
-          }).toList();
-        });
+        _orders = _orders.map((o) {
+          if (o.id == order.id) {
+            return Order(
+              id: o.id,
+              tableNumber: o.tableNumber,
+              status: newStatus,
+              createdAt: o.createdAt,
+              items: o.items,
+            );
+          }
+          return o;
+        }).toList();
       }
-    } catch (e) {
-      debugPrint('Failed to update status: ${e.toString()}');
-    }
+    });
+  } catch (e) {
+    debugPrint('Failed to update status: ${e.toString()}');
+    // Consider showing an error message to the user
   }
+}
 
   @override
   Widget build(BuildContext context) {

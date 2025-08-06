@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'screens/login_screen.dart';
-import 'screens/web_menu_screen.dart';
-import 'screens/menu_preview_screen.dart';
+import 'package:flutter/material.dart';
+import 'screens/Login/login_screen.dart';
+import './screens/web_menu_screen.dart';
 
 void main() => runApp(const DigitalMenuApp());
 
