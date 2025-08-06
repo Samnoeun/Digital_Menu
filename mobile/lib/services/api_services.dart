@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl = 'http://192.168.108.174:8000/api'; // Update with your preferred base URL
+  // static const String baseUrl =
+  //     'http://192.168.108.40:8000/api'; // Update with your preferred base URL
 
   static String? _token;
 
@@ -36,35 +38,37 @@ class ApiService {
 
   // User Authentication
   static Future<UserModel?> register(
-    String name,
-    String email,
-    String password,
-    String confirmPassword,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/register'),
-        headers: {'Accept': 'application/json'},
-        body: {
-          'name': name,
-          'email': email,
-          'password': password,
-          'password_confirmation': confirmPassword,
-        },
-      );
+  String name,
+  String email,
+  String password,
+  String confirmPassword,
+) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/register'),
+      headers: {'Accept': 'application/json'},
+      body: {
+        'name': name,
+        'email': email,
+        'password': password,
+        'password_confirmation': confirmPassword,
+      },
+    );
 
-      final data = json.decode(response.body);
-      if (response.statusCode == 200) {
-        final token = data['token'];
-        if (token != null) await saveAuthToken(token);
-        return UserModel.fromJson(data['user']);
-      } else {
-        throw data['message'] ?? 'Registration failed';
-      }
-    } catch (e) {
-      throw Exception('Error: $e');
+    final data = json.decode(response.body);
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final token = data['token'] ?? data['data']['token'];
+      if (token != null) await saveAuthToken(token);
+      return UserModel.fromJson(data['user'] ?? data['data']['user']);
+    } else {
+      throw data['message'] ?? 'Registration failed';
     }
+  } catch (e) {
+    debugPrint('Registration error: $e');
+    throw 'Registration failed: ${e.toString()}';
   }
+}
 
   // User Login
   static Future<UserModel?> login(String email, String password) async {

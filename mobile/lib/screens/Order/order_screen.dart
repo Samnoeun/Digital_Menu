@@ -4,7 +4,7 @@ import '../../services/api_services.dart';
 import '../../models/order_model.dart';
 
 class OrderScreen extends StatefulWidget {
-  const OrderScreen({super.key});
+  const OrderScreen({Key? key}) : super(key: key);
 
   @override
   State<OrderScreen> createState() => _OrderScreenState();
@@ -33,13 +33,28 @@ class _OrderScreenState extends State<OrderScreen> {
 
     try {
       final response = await ApiService.getOrders();
+      
       if (!mounted) return;
 
       final List<Order> loadedOrders = [];
       if (response is List) {
         for (var orderData in response) {
           try {
-            loadedOrders.add(Order.fromJson(orderData));
+            if (orderData is Map<String, dynamic>) {
+              if (orderData['order_items'] != null) {
+                orderData['items'] = orderData['order_items'].map((item) {
+                  return {
+                    'id': item['id'],
+                    'item_id': item['item_id'],
+                    'name': item['item']['name'],
+                    'price': double.parse(item['item']['price']),
+                    'quantity': item['quantity'],
+                    'special_note': item['special_note'],
+                  };
+                }).toList();
+              }
+              loadedOrders.add(Order.fromJson(orderData));
+            }
           } catch (e) {
             debugPrint('Error parsing order: $e');
           }
@@ -49,7 +64,6 @@ class _OrderScreenState extends State<OrderScreen> {
       setState(() {
         _orders = loadedOrders;
         _isLoading = false;
-        _expandedOrders.clear();
         for (var order in _orders) {
           _expandedOrders[order.id] = false;
         }
@@ -68,37 +82,35 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Future<void> _updateOrderStatus(Order order, String newStatus) async {
-    try {
-      await ApiService.updateOrderStatus(order.id, newStatus);
-      
+  try {
+    await ApiService.updateOrderStatus(order.id, newStatus);
+    
+    if (!mounted) return;
+    
+    setState(() {
       if (newStatus == 'completed') {
-        await ApiService.deleteOrder(order.id);
-        if (!mounted) return;
-        setState(() {
-          _orders.removeWhere((o) => o.id == order.id);
-          _expandedOrders.remove(order.id);
-        });
+        _orders.removeWhere((o) => o.id == order.id);
+        _expandedOrders.remove(order.id);
       } else {
-        if (!mounted) return;
-        setState(() {
-          _orders = _orders.map((o) {
-            if (o.id == order.id) {
-              return Order(
-                id: o.id,
-                tableNumber: o.tableNumber,
-                status: newStatus,
-                createdAt: o.createdAt,
-                items: o.items,
-              );
-            }
-            return o;
-          }).toList();
-        });
+        _orders = _orders.map((o) {
+          if (o.id == order.id) {
+            return Order(
+              id: o.id,
+              tableNumber: o.tableNumber,
+              status: newStatus,
+              createdAt: o.createdAt,
+              items: o.items,
+            );
+          }
+          return o;
+        }).toList();
       }
-    } catch (e) {
-      debugPrint('Failed to update status: ${e.toString()}');
-    }
+    });
+  } catch (e) {
+    debugPrint('Failed to update status: ${e.toString()}');
+    // Consider showing an error message to the user
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -160,81 +172,94 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildOrderCard(Order order) {
-    final statusColor = _getStatusColor(order.status);
-    
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          setState(() {
-            _expandedOrders[order.id] = !(_expandedOrders[order.id] ?? false);
-          });
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Table ${order.tableNumber}',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        DateFormat('MMM d, hh:mm a').format(order.createdAt),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Chip(
-                    backgroundColor: statusColor.withOpacity(0.2),
-                    label: Text(
-                      order.status.toUpperCase(),
-                      style: TextStyle(
-                        color: statusColor,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Table ${order.tableNumber}',
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    Text(
+                      DateFormat('MMM d, hh:mm a').format(order.createdAt.toLocal()),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(order.status).withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text(
+                    order.status.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _getStatusColor(order.status),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Text(
-                    '\$${_calculateTotal(order.items).toStringAsFixed(2)}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              if (_expandedOrders[order.id] == true) ...[
-                const SizedBox(height: 12),
-                ..._buildOrderItemsList(order.items),
-                const SizedBox(height: 12),
-                _buildStatusButton(order),
+                ),
               ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  '\$${_calculateTotal(order.items).toStringAsFixed(2)}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () {
+                setState(() {
+                  _expandedOrders[order.id] = !(_expandedOrders[order.id] ?? false);
+                });
+              },
+              child: Row(
+                children: [
+                  Text(
+                    'Items (${order.items.length})',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    _expandedOrders[order.id] == true 
+                        ? Icons.keyboard_arrow_up 
+                        : Icons.keyboard_arrow_down,
+                    size: 20,
+                  ),
+                ],
+              ),
+            ),
+            if (_expandedOrders[order.id] == true) ...[
+              const SizedBox(height: 8),
+              ..._buildOrderItemsList(order.items),
             ],
-          ),
+            const SizedBox(height: 8),
+            _buildStatusButton(order),
+          ],
         ),
       ),
     );
