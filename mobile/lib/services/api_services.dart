@@ -11,7 +11,7 @@ import 'package:intl/intl.dart';  // Add this import
 
 class ApiService {
   static const String baseUrl =
-      'http://192.168.108.72:8000/api'; // Update with your preferred base URL
+      'http://192.168.108.139:8000/api'; // Update with your preferred base URL
 
   static String? _token;
 
@@ -580,15 +580,13 @@ class ApiService {
     return baseUrl.replaceFirst('/api', '') + path;
   }
 
-static Future<dynamic> getOrderStatistics(String period, {DateTime? customDate}) async {
+static Future<Map<String, dynamic>> getOrderStatistics(String period, {DateTime? customDate}) async {
   final token = await getAuthToken();
   final params = {
     'period': period,
     if (customDate != null) 'date': DateFormat('yyyy-MM-dd').format(customDate),
   };
-  
-  debugPrint('Making stats request with params: $params');
-  
+
   final response = await http.get(
     Uri.parse('$baseUrl/statistics').replace(queryParameters: params),
     headers: {
@@ -596,9 +594,6 @@ static Future<dynamic> getOrderStatistics(String period, {DateTime? customDate})
       if (token != null) 'Authorization': 'Bearer $token',
     },
   );
-
-  debugPrint('Stats response status: ${response.statusCode}');
-  debugPrint('Stats response body: ${response.body}');
 
   if (response.statusCode == 200) {
     return jsonDecode(response.body);

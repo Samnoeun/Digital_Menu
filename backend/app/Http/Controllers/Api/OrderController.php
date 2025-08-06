@@ -63,37 +63,56 @@ class OrderController extends Controller
     return response()->json($order->load('orderItems.item'), 201);
 }
 
-    public function updateStatus(Order $order, Request $request)
+public function updateStatus(Order $order, Request $request)
 {
     $this->authorizeOrderAccess($order);
     $request->validate([
         'status' => 'required|in:pending,preparing,ready,completed',
     ]);
 
-    $order->update(['status' => $request->status]);
-
+    // Update statistics first
     if ($request->status === 'completed') {
-        // Don't delete statistics when order is completed
+        foreach ($order->orderItems as $orderItem) {
+            OrderStatistic::updateOrCreate(
+                [
+                    'restaurant_id' => $order->restaurant_id,
+                    'stat_date' => $order->created_at->format('Y-m-d'),
+                    'item_id' => $orderItem->item_id
+                ],
+                [
+                    'quantity_sold' => DB::raw("quantity_sold + {$orderItem->quantity}"),
+                    'order_count' => DB::raw("order_count + 1")
+                ]
+            );
+        }
+        
+        // Soft delete the order
         $order->delete();
-        return response()->json(['message' => 'Order completed and deleted']);
+        
+        return response()->json(['message' => 'Order completed and archived']);
     }
 
+    $order->update(['status' => $request->status]);
     return response()->json($order->load('orderItems.item'));
 }
 
-protected function updateStatistics($restaurantId, $itemId, $quantity, $date)
+protected function updateOrderStatistics(Order $order)
 {
-    OrderStatistic::updateOrCreate(
-        [
-            'restaurant_id' => $restaurantId,
-            'stat_date' => $date,
-            'item_id' => $itemId
-        ],
-        [
-            'quantity_sold' => DB::raw("quantity_sold + $quantity"),
-            'order_count' => DB::raw("order_count + 1")
-        ]
-    );
+    $date = $order->created_at->toDateString();
+    
+    foreach ($order->orderItems as $orderItem) {
+        OrderStatistic::updateOrCreate(
+            [
+                'restaurant_id' => $order->restaurant_id,
+                'stat_date' => $date,
+                'item_id' => $orderItem->item_id
+            ],
+            [
+                'quantity_sold' => DB::raw("quantity_sold + {$orderItem->quantity}"),
+                'order_count' => DB::raw("order_count + 1")
+            ]
+        );
+    }
 }
 
     public function destroy(Order $order)

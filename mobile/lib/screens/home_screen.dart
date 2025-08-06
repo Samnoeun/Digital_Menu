@@ -85,78 +85,57 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _loadData() async {
-    setState(() => isLoading = true);
-    _animationController.reset();
+Future<void> _loadData() async {
+  setState(() {
+    isLoading = true;
+    topItems = [];
+    topItem = "Loading...";
+  });
 
-    try {
-      final results = await Future.wait([
-        ApiService.getItems(),
-        ApiService.getCategories(),
-        ApiService.getOrders(),
-      ]);
-      final items = results[0] as List<item.Item>;
-      final categories = results[1] as List<category.Category>;
-      final orders = results[2] as List<dynamic>;
+  try {
+    // Get statistics from the dedicated endpoint
+    final statsResponse = await ApiService.getOrderStatistics(
+      selectedFilter.toLowerCase().replaceAll(' ', '_'),
+      customDate: selectedFilter == 'Custom Date' ? customDate : null,
+    );
 
-      final categoryMap = {for (var cat in categories) cat.id: cat};
-      final filteredOrders = _filterOrdersByDate(orders);
+    // Get items for additional info
+    final itemsResponse = await ApiService.getItems();
+    final items = itemsResponse as List<item.Item>;
+    final itemMap = {for (var item in items) item.id.toString(): item};
 
-      final itemMap = {
-        for (var item in items)
-          item.id.toString(): item.copyWith(
-            category: categoryMap[item.categoryId],
-          ),
-      };
+    setState(() {
+      totalOrders = statsResponse['total_orders'] ?? 0;
+      topItems = (statsResponse['top_items'] as List?)?.map((itemStat) {
+        final item = itemMap[itemStat['item_id'].toString()];
+        return {
+          'name': item?.name ?? 'Unknown Item',
+          'count': itemStat['count'],
+          'image': item?.imagePath,
+          'category': item?.category?.name ?? 'No category',
+          'item': item,
+        };
+      }).toList() ?? [];
+      
+      topItem = topItems.isNotEmpty ? topItems.first['name'] : "No orders";
+      isLoading = false;
+    });
 
-      final itemCounts = <String, int>{};
-      final itemData = <String, item.Item>{};
-
-      for (var order in filteredOrders) {
-        if (order['order_items'] != null) {
-          for (var orderItem in order['order_items']) {
-            final itemId = orderItem['item_id'].toString();
-            final item = itemMap[itemId];
-            if (item != null) {
-              final quantity = (orderItem['quantity'] as num).toInt();
-              itemCounts[item.name] = (itemCounts[item.name] ?? 0) + quantity;
-              itemData[item.name] = item;
-            }
-          }
-        }
-      }
-
-      final sortedItems = itemCounts.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
-
-      setState(() {
-        totalItems = items.length;
-        totalCategories = categories.length;
-        totalOrders = filteredOrders.length;
-        topItem = sortedItems.isNotEmpty ? sortedItems.first.key : "No orders";
-        topItems = sortedItems.take(5).map((e) {
-          final item = itemData[e.key]!;
-          return {
-            'name': item.name,
-            'count': e.value,
-            'image': item.imagePath,
-            'item': item,
-            'category': item.category?.name ?? 'No category',
-          };
-        }).toList();
-        isLoading = false;
-      });
-
-      _animationController.forward();
-    } catch (e) {
-      setState(() {
-        topItem = "Error loading data";
-        topItems = [];
-        isLoading = false;
-      });
-      debugPrint('Error loading home data: $e');
-    }
+  } catch (e) {
+    debugPrint('Error loading home data: $e');
+    setState(() {
+      topItem = "Error loading data";
+      isLoading = false;
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error: ${e.toString()}'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
   List<dynamic> _filterOrdersByDate(List<dynamic> orders) {
     final now = DateTime.now();

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['restaurant_id', 'table_number']);
+            $table->softDeletes();
         });
     }
 
@@ -28,5 +29,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('orders');
+        $table->dropSoftDeletes();
     }
 };
