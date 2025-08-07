@@ -291,6 +291,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           const SizedBox(width: 8),
         ],
       ),
+
       body: Column(
         children: [
           Container(
