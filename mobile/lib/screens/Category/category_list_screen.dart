@@ -604,34 +604,19 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           ),
         ],
       ),
-      floatingActionButton: _isSelectionMode ? null : Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.deepPurple.shade600,
-              Colors.deepPurple.shade400,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.deepPurple.withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
+floatingActionButton: _isSelectionMode
+    ? null
+    : Padding(
+        padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+        child: ElevatedButton(
           onPressed: () async {
             final result = await Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => const AddCategoryScreen(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    const AddCategoryScreen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   return SlideTransition(
                     position: animation.drive(
                       Tween(begin: const Offset(0.0, 1.0), end: Offset.zero)
@@ -644,15 +629,26 @@ class _CategoryListScreenState extends State<CategoryListScreen>
             );
             if (result == true) _fetchCategories();
           },
-          backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.deepPurple.shade600,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 6,
+            shadowColor: Colors.deepPurple.withOpacity(0.4),
           ),
-          child: const Icon(Icons.add_rounded, size: 28),
+          child: const Text(
+            'Add Category',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
         ),
       ),
+
     );
   }
 }
