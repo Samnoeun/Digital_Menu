@@ -94,8 +94,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              // 👇 Make the spacing smaller or remove it
-              const SizedBox(width: 0), // 
+              const SizedBox(width: 0),
               Text(
                 widget.category == null ? 'Add Category' : 'Edit Category',
                 style: const TextStyle(

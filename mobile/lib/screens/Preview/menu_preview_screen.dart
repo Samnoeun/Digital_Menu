@@ -116,7 +116,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Disable default back arrow
+        automaticallyImplyLeading: false, 
         backgroundColor: const Color(0xFFF3E5F5),
         iconTheme: const IconThemeData(color: Color(0xFF6A1B9A)),
         title: Padding(
@@ -141,7 +141,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
               ),
               const SizedBox(
                 width: 0,
-              ), // ⬅️ Very tight spacing between icon & text
+              ), 
               const Text(
                 'Preview',
                 style: TextStyle(

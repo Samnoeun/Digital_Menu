@@ -106,10 +106,10 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // remove default back icon
-        backgroundColor: Theme.of(context).primaryColor, // dark background
+        automaticallyImplyLeading: false, 
+        backgroundColor: Theme.of(context).primaryColor, 
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white), // icon color
+        iconTheme: const IconThemeData(color: Colors.white), 
         actionsIconTheme: const IconThemeData(color: Colors.white),
         title: Row(
           mainAxisSize: MainAxisSize.min,

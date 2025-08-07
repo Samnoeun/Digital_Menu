@@ -105,15 +105,15 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Remove default back button
+        automaticallyImplyLeading: false, 
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
-        titleSpacing: 0, // Remove default title spacing
+        titleSpacing: 0, 
         title: Padding(
           padding: const EdgeInsets.only(
             left: 5,
             right: 0,
-          ), // Optional padding
+          ), 
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

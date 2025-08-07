@@ -49,10 +49,10 @@ class _QrScreenState extends State<QrScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Disable default back button
-        backgroundColor: const Color(0xFFF3E5F5), // Light purple background
+        automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xFFF3E5F5), 
         elevation: 0,
-        titleSpacing: 0, // Remove default spacing
+        titleSpacing: 0, 
         title: Padding(
           padding: const EdgeInsets.only(left: 10, right: 2),
           child: Row(
@@ -79,7 +79,7 @@ class _QrScreenState extends State<QrScreen> {
           ),
         ),
         iconTheme: const IconThemeData(
-          color: Color(0xFF6A1B9A), // Apply purple to all icons if needed
+          color: Color(0xFF6A1B9A), 
         ),
         actions: [
           IconButton(

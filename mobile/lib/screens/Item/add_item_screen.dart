@@ -271,12 +271,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
         automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFFF3E5F5),
         elevation: 0,
-        titleSpacing: 0, // Aligns title to the start
+        titleSpacing: 0, 
         title: Padding(
           padding: const EdgeInsets.only(
             left: 2,
             right: 0,
-          ), // <<< Here’s your spacing
+          ), 
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -110,18 +110,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             right: 0,
           ), // ⬅️ Your desired spacing
           child: Row(
-            mainAxisSize: MainAxisSize.min, // Shrinks Row to only needed width
+            mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back_ios, size: 18),
                 onPressed: () => Navigator.pop(context),
-                padding: EdgeInsets.zero, // Tighter icon layout
-                constraints:
-                    const BoxConstraints(), // Remove min size constraints
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
               const SizedBox(
                 width: 0,
-              ), // ⬅️ Even tighter spacing between icon & text
+              ), 
               const Text('Settings'),
             ],
           ),

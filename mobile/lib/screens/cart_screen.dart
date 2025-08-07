@@ -115,10 +115,10 @@ class _CartScreenState extends State<CartScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Remove default back button
+        automaticallyImplyLeading: false,
         elevation: 0,
-        backgroundColor: const Color(0xFFF3E5F5), // Optional
-        titleSpacing: 0, // No default spacing
+        backgroundColor: const Color(0xFFF3E5F5), 
+        titleSpacing: 0, 
         title: Padding(
           padding: const EdgeInsets.only(
             left: 20,

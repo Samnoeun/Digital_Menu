@@ -175,7 +175,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24), // Added extra spacing
+                      const SizedBox(height: 24), 
                     ],
                   ),
                 ),

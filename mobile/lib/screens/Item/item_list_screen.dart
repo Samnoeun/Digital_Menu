@@ -146,15 +146,15 @@ class _ItemListScreenState extends State<ItemListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Disable default back button
+        automaticallyImplyLeading: false, 
         elevation: 0,
         backgroundColor: const Color(0xFFF3E5F5),
-        titleSpacing: 0, // Ensures custom padding starts from edge
+        titleSpacing: 0, 
         title: Padding(
           padding: const EdgeInsets.only(
-            left: 5, // Adjusted for tighter layout
+            left: 5, 
             right: 0,
-          ), // <<< This is what you want
+          ), 
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -168,7 +168,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 2), // reduced from 4 to get tighter spacing
+              const SizedBox(width: 2),
               const Text(
                 'Items',
                 style: TextStyle(

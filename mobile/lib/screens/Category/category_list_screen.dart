@@ -127,16 +127,16 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Disable default back arrow
-        backgroundColor: const Color(0xFFF3E5F5), // Light lavender background
+        automaticallyImplyLeading: false, 
+        backgroundColor: const Color(0xFFF3E5F5), 
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.deepPurple.shade700),
         actionsIconTheme: IconThemeData(color: Colors.deepPurple.shade700),
-        titleSpacing: 0, // Needed so custom padding applies from the edge
+        titleSpacing: 0, 
         title: Padding(
           padding: const EdgeInsets.only(
             left: 2,
-          ), // 👈 this matches what you want
+          ), 
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -150,12 +150,12 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              // const SizedBox(width: ), // 👈 tightened spacing (was 4)
+             
               const Text(
                 'Categories',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF6A1B9A), // Deep purple text
+                  color: Color(0xFF6A1B9A), 
                 ),
               ),
             ],

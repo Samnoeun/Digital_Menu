@@ -117,12 +117,12 @@ class _OrderScreenState extends State<OrderScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        titleSpacing: 0, // ensures padding starts from left edge
+        titleSpacing: 0, 
         title: Padding(
           padding: const EdgeInsets.only(
             left: 2,
             right: 0,
-          ), // ⬅️ Exact spacing you want
+          ), 
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
