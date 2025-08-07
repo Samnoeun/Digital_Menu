@@ -130,7 +130,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         elevation: 0, // Optional: flat app bar
         titleSpacing: 0, // Remove default spacing
         title: Padding(
-          padding: const EdgeInsets.only(left: 5, right: 2), // Custom padding
+          padding: const EdgeInsets.only(left: 5, right: 0), // Custom padding
           child: Row(
             mainAxisSize:
                 MainAxisSize.min, // Only takes space for icon and text
@@ -146,7 +146,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 constraints:
                     const BoxConstraints(), // Remove default button constraints
               ),
-              const SizedBox(width: 4), // Small spacing between icon and text
+              const SizedBox(width: 0), // Small spacing between icon and text
               const Text(
                 'QR Scanner Demo',
                 style: TextStyle(

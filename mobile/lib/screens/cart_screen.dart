@@ -115,10 +115,41 @@ class _CartScreenState extends State<CartScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Cart'),
-        centerTitle: true,
+        automaticallyImplyLeading: false, // Remove default back button
         elevation: 0,
+        backgroundColor: const Color(0xFFF3E5F5), // Optional
+        titleSpacing: 0, // No default spacing
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 2,
+          ), // Your desired padding
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color(0xFF6A1B9A),
+                ),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 4),
+              const Text(
+                'Your Cart',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6A1B9A),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+
       body: Column(
         children: [
           Expanded(
