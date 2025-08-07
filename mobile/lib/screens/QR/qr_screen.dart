@@ -48,50 +48,58 @@ class _QrScreenState extends State<QrScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     appBar: AppBar(
-  title: const Text(
-    'Generate QR',
-    style: TextStyle(
-      fontWeight: FontWeight.w600,
-      color: Color(0xFF6A1B9A), // Purple text color
-    ),
-  ),
-  backgroundColor: const Color(0xFFF3E5F5), // Light purple background
-  elevation: 0,
-  automaticallyImplyLeading: false, // Disable default back arrow
-  leading: IconButton(
-    icon: const Icon(
-      Icons.arrow_forward_ios,
-      size: 16,
-      color: Color(0xFF6A1B9A), // Purple color for icon
-    ),
-    onPressed: () {
-      Navigator.of(context).pop();
-    },
-  ),
-  iconTheme: const IconThemeData(
-    color: Color(0xFF6A1B9A),
-  ), // Purple icon theme for other icons
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.qr_code_scanner),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const QRScannerScreen()),
-        );
-      },
-      tooltip: 'QR Scanner Demo',
-    ),
-    if (showQR)
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: _clearQR,
-        tooltip: 'Clear QR Code',
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // Disable default back button
+        backgroundColor: const Color(0xFFF3E5F5), // Light purple background
+        elevation: 0,
+        titleSpacing: 0, // Remove default spacing
+        title: Padding(
+          padding: const EdgeInsets.only(left: 10, right: 2),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color(0xFF6A1B9A),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 0),
+              const Text(
+                'Generate QR',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6A1B9A),
+                ),
+              ),
+            ],
+          ),
+        ),
+        iconTheme: const IconThemeData(
+          color: Color(0xFF6A1B9A), // Apply purple to all icons if needed
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const QRScannerScreen()),
+              );
+            },
+            tooltip: 'QR Scanner Demo',
+          ),
+          if (showQR)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: _clearQR,
+              tooltip: 'Clear QR Code',
+            ),
+        ],
       ),
-  ],
-),
-
 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),

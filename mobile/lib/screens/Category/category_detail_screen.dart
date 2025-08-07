@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/category_model.dart' as category_model;
-import '../../models/item_model.dart' as item_model ;
+import '../../models/item_model.dart' as item_model;
 import '../../services/api_services.dart';
 import '../Item/add_item_screen.dart';
 
@@ -106,21 +106,34 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.category.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.white, // Make title text white
-          ),
-        ),
-        backgroundColor: Theme.of(
-          context,
-        ).primaryColor, // Dark color background
+        automaticallyImplyLeading: false, // remove default back icon
+        backgroundColor: Theme.of(context).primaryColor, // dark background
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white), // Back icon white
-        actionsIconTheme: const IconThemeData(
-          color: Colors.white,
-        ), // Action icons white
+        iconTheme: const IconThemeData(color: Colors.white), // icon color
+        actionsIconTheme: const IconThemeData(color: Colors.white),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios,
+                size: 18,
+                color: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(context),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const SizedBox(width: 0),
+            Text(
+              widget.category.name,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -133,149 +146,149 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _items.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.inventory_2_outlined,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No items in this category',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add items to "${widget.category.name}" via the Items screen',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _reloadItems,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _items.length,
-                    itemBuilder: (context, index) {
-                      final item = _items[index];
-                      final hasImage =
-                          item.imagePath != null && item.imagePath!.isNotEmpty;
+                  const SizedBox(height: 16),
+                  Text(
+                    'No items in this category',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add items to "${widget.category.name}" via the Items screen',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _reloadItems,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _items.length,
+                itemBuilder: (context, index) {
+                  final item = _items[index];
+                  final hasImage =
+                      item.imagePath != null && item.imagePath!.isNotEmpty;
 
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: hasImage
-                                ? Image.network(
-                                    ApiService.getImageUrl(item.imagePath!),
-                                    width: 60,
-                                    height: 60,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) =>
-                                        Container(
-                                          width: 60,
-                                          height: 60,
-                                          color: Colors.grey[200],
-                                          child: const Icon(
-                                            Icons.broken_image,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                  )
-                                : Container(
-                                    width: 60,
-                                    height: 60,
-                                    color: Colors.grey[200],
-                                    child: const Icon(
-                                      Icons.image_not_supported,
-                                      color: Colors.grey,
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: hasImage
+                            ? Image.network(
+                                ApiService.getImageUrl(item.imagePath!),
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                      width: 60,
+                                      height: 60,
+                                      color: Colors.grey[200],
+                                      child: const Icon(
+                                        Icons.broken_image,
+                                        color: Colors.grey,
+                                      ),
                                     ),
-                                  ),
-                          ),
-                          title: Text(
-                            item.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
+                              )
+                            : Container(
+                                width: 60,
+                                height: 60,
+                                color: Colors.grey[200],
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                      ),
+                      title: Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (item.description != null &&
+                              item.description!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                item.description!,
+                                style: TextStyle(
+                                  color: Colors.grey[700],
+                                  fontSize: 14,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '\$${item.price.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (item.description != null &&
-                                  item.description!.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    item.description!,
-                                    style: TextStyle(
-                                      color: Colors.grey[700],
-                                      fontSize: 14,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  '\$${item.price.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    color: Theme.of(context).primaryColor,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
-                                  ),
-                                ),
+                        ],
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            _editItem(item);
+                          } else if (value == 'delete') {
+                            _deleteItem(item.id, item.name);
+                          }
+                        },
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'edit',
+                            child: Text(
+                              'Edit',
+                              style: TextStyle(
+                                color: Colors.blue[700],
+                                fontWeight: FontWeight.w500,
                               ),
-                            ],
+                            ),
                           ),
-                          trailing: PopupMenuButton<String>(
-                            onSelected: (value) {
-                              if (value == 'edit') {
-                                _editItem(item);
-                              } else if (value == 'delete') {
-                                _deleteItem(item.id, item.name);
-                              }
-                            },
-                            itemBuilder: (_) => [
-                              PopupMenuItem(
-                                value: 'edit',
-                                child: Text(
-                                  'Edit',
-                                  style: TextStyle(
-                                    color: Colors.blue[700],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text(
+                              'Delete',
+                              style: TextStyle(
+                                color: Colors.red[700],
+                                fontWeight: FontWeight.w500,
                               ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Text(
-                                  'Delete',
-                                  style: TextStyle(
-                                    color: Colors.red[700],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }

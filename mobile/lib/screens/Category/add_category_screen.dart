@@ -76,8 +76,38 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.category == null ? 'Add Category' : 'Edit Category'),
+        automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xFFF3E5F5),
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(left:2, right: 0),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color(0xFF6A1B9A),
+                ),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              // 👇 Make the spacing smaller or remove it
+              const SizedBox(width: 0), // 
+              Text(
+                widget.category == null ? 'Add Category' : 'Edit Category',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6A1B9A),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

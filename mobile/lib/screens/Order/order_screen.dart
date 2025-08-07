@@ -25,7 +25,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Future<void> _loadOrders() async {
     if (!mounted) return;
-    
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -33,7 +33,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
     try {
       final response = await ApiService.getOrders();
-      
+
       if (!mounted) return;
 
       final List<Order> loadedOrders = [];
@@ -82,48 +82,65 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Future<void> _updateOrderStatus(Order order, String newStatus) async {
-  try {
-    await ApiService.updateOrderStatus(order.id, newStatus);
-    
-    if (!mounted) return;
-    
-    setState(() {
-      if (newStatus == 'completed') {
-        _orders.removeWhere((o) => o.id == order.id);
-        _expandedOrders.remove(order.id);
-      } else {
-        _orders = _orders.map((o) {
-          if (o.id == order.id) {
-            return Order(
-              id: o.id,
-              tableNumber: o.tableNumber,
-              status: newStatus,
-              createdAt: o.createdAt,
-              items: o.items,
-            );
-          }
-          return o;
-        }).toList();
-      }
-    });
-  } catch (e) {
-    debugPrint('Failed to update status: ${e.toString()}');
-    // Consider showing an error message to the user
+    try {
+      await ApiService.updateOrderStatus(order.id, newStatus);
+
+      if (!mounted) return;
+
+      setState(() {
+        if (newStatus == 'completed') {
+          _orders.removeWhere((o) => o.id == order.id);
+          _expandedOrders.remove(order.id);
+        } else {
+          _orders = _orders.map((o) {
+            if (o.id == order.id) {
+              return Order(
+                id: o.id,
+                tableNumber: o.tableNumber,
+                status: newStatus,
+                createdAt: o.createdAt,
+                items: o.items,
+              );
+            }
+            return o;
+          }).toList();
+        }
+      });
+    } catch (e) {
+      debugPrint('Failed to update status: ${e.toString()}');
+      // Consider showing an error message to the user
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Orders'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadOrders,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0, // ensures padding starts from left edge
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 2,
+            right: 0,
+          ), // ⬅️ Exact spacing you want
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero, // 
+                constraints: const BoxConstraints(), 
+              ),
+              const SizedBox(
+                width: 0,
+              ), //
+              const Text('Orders', style: TextStyle(fontWeight: FontWeight.w600)),
+            ],
           ),
-        ],
+        ),
       ),
+
       body: _buildBody(),
     );
   }
@@ -140,10 +157,7 @@ class _OrderScreenState extends State<OrderScreen> {
           children: [
             Text('Error: $_error'),
             const SizedBox(height: 8),
-            TextButton(
-              onPressed: _loadOrders,
-              child: const Text('Retry'),
-            ),
+            TextButton(onPressed: _loadOrders, child: const Text('Retry')),
           ],
         ),
       );
@@ -194,16 +208,18 @@ class _OrderScreenState extends State<OrderScreen> {
                       ),
                     ),
                     Text(
-                      DateFormat('MMM d, hh:mm a').format(order.createdAt.toLocal()),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      DateFormat(
+                        'MMM d, hh:mm a',
+                      ).format(order.createdAt.toLocal()),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: _getStatusColor(order.status).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -223,7 +239,10 @@ class _OrderScreenState extends State<OrderScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'Total:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 Text(
                   '\$${_calculateTotal(order.items).toStringAsFixed(2)}',
                   style: const TextStyle(fontWeight: FontWeight.bold),
@@ -234,7 +253,8 @@ class _OrderScreenState extends State<OrderScreen> {
             InkWell(
               onTap: () {
                 setState(() {
-                  _expandedOrders[order.id] = !(_expandedOrders[order.id] ?? false);
+                  _expandedOrders[order.id] =
+                      !(_expandedOrders[order.id] ?? false);
                 });
               },
               child: Row(
@@ -245,8 +265,8 @@ class _OrderScreenState extends State<OrderScreen> {
                   ),
                   const Spacer(),
                   Icon(
-                    _expandedOrders[order.id] == true 
-                        ? Icons.keyboard_arrow_up 
+                    _expandedOrders[order.id] == true
+                        ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
                     size: 20,
                   ),
@@ -266,36 +286,40 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   List<Widget> _buildOrderItemsList(List<OrderItem> items) {
-    return items.map((item) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Text('${item.quantity}x', style: const TextStyle(fontSize: 14)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return items
+        .map(
+          (item) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
               children: [
-                Text(item.name, style: const TextStyle(fontSize: 14)),
-                if (item.specialNote.isNotEmpty)
-                  Text(
-                    'Note: ${item.specialNote}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.orange[700],
-                      fontStyle: FontStyle.italic,
-                    ),
+                Text('${item.quantity}x', style: const TextStyle(fontSize: 14)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.name, style: const TextStyle(fontSize: 14)),
+                      if (item.specialNote.isNotEmpty)
+                        Text(
+                          'Note: ${item.specialNote}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange[700],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                    ],
                   ),
+                ),
+                Text(
+                  '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 14),
+                ),
               ],
             ),
           ),
-          Text(
-            '\$${(item.price * item.quantity).toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 14),
-          ),
-        ],
-      ),
-    )).toList();
+        )
+        .toList();
   }
 
   Widget _buildStatusButton(Order order) {
@@ -308,17 +332,12 @@ class _OrderScreenState extends State<OrderScreen> {
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 8),
           backgroundColor: _getStatusColor(nextStatus).withOpacity(0.1),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () => _updateOrderStatus(order, nextStatus),
         child: Text(
           'Mark as ${nextStatus.toUpperCase()}',
-          style: TextStyle(
-            color: _getStatusColor(nextStatus),
-            fontSize: 14,
-          ),
+          style: TextStyle(color: _getStatusColor(nextStatus), fontSize: 14),
         ),
       ),
     );
@@ -330,28 +349,17 @@ class _OrderScreenState extends State<OrderScreen> {
       child: DropdownButtonFormField<String>(
         value: _filterStatus,
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
           ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
         items: const [
-          DropdownMenuItem(
-            value: 'all',
-            child: Text('All Orders'),
-          ),
-          DropdownMenuItem(
-            value: 'pending',
-            child: Text('Pending'),
-          ),
-          DropdownMenuItem(
-            value: 'preparing',
-            child: Text('Preparing'),
-          ),
-          DropdownMenuItem(
-            value: 'ready',
-            child: Text('Ready'),
-          ),
+          DropdownMenuItem(value: 'all', child: Text('All Orders')),
+          DropdownMenuItem(value: 'pending', child: Text('Pending')),
+          DropdownMenuItem(value: 'preparing', child: Text('Preparing')),
+          DropdownMenuItem(value: 'ready', child: Text('Ready')),
         ],
         onChanged: (value) {
           setState(() {

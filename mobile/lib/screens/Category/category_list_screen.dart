@@ -41,38 +41,40 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   }
 
   Future<void> _fetchCategories() async {
-  try {
-    setState(() => _isLoading = true);
-    final categories = await ApiService.getCategories();
-    
-    if (mounted) {
-      setState(() {
-        _categories = categories;
-        _filteredCategories = categories;
-        _isLoading = false;
-      });
+    try {
+      setState(() => _isLoading = true);
+      final categories = await ApiService.getCategories();
+
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+          _filteredCategories = categories;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+      debugPrint('Error fetching categories: $e');
     }
-  } catch (e) {
-    if (mounted) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
-    debugPrint('Error fetching categories: $e');
   }
-}
 
   Future<void> _deleteCategory(int id, String name) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Delete'),
-        content: Text('Delete category "$name"? This will also delete all items in it.'),
+        content: Text(
+          'Delete category "$name"? This will also delete all items in it.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -125,14 +127,40 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Categories',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
-        elevation: 0,
+        automaticallyImplyLeading: false, // Disable default back arrow
         backgroundColor: const Color(0xFFF3E5F5), // Light lavender background
+        elevation: 0,
         iconTheme: IconThemeData(color: Colors.deepPurple.shade700),
         actionsIconTheme: IconThemeData(color: Colors.deepPurple.shade700),
+        titleSpacing: 0, // Needed so custom padding applies from the edge
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 2,
+          ), // 👈 this matches what you want
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Colors.deepPurple.shade700,
+                ),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              // const SizedBox(width: ), // 👈 tightened spacing (was 4)
+              const Text(
+                'Categories',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6A1B9A), // Deep purple text
+                ),
+              ),
+            ],
+          ),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.refresh, color: Colors.deepPurple.shade700),
@@ -140,6 +168,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           ),
         ],
       ),
+
       body: Column(
         children: [
           Padding(
@@ -165,91 +194,96 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredCategories.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.category_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'No categories found'
-                                  : 'No matching categories',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _searchQuery.isEmpty
-                                  ? 'Tap the + button to add a new category'
-                                  : 'Try a different search term',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.category_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _fetchCategories,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _filteredCategories.length,
-                          itemBuilder: (context, index) {
-                            final category = _filteredCategories[index];
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: ListTile(
-                                title: Text(category.name),
-                                subtitle: Text(
-                                  '${category.items.length} items',
-                                  style: const TextStyle(color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'No categories found'
+                              : 'No matching categories',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Tap the + button to add a new category'
+                              : 'Try a different search term',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _fetchCategories,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: _filteredCategories.length,
+                      itemBuilder: (context, index) {
+                        final category = _filteredCategories[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            title: Text(category.name),
+                            subtitle: Text(
+                              '${category.items.length} items',
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                            trailing: PopupMenuButton(
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Text('Edit'),
                                 ),
-                                trailing: PopupMenuButton(
-                                  itemBuilder: (context) => [
-                                    const PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text('Edit'),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text('Delete', style: TextStyle(color: Colors.red)),
-                                    ),
-                                  ],
-                                  onSelected: (value) async {
-                                    if (value == 'edit') {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => AddCategoryScreen(category: category),
-                                        ),
-                                      );
-                                      if (result == true) _fetchCategories();
-                                    } else if (value == 'delete') {
-                                      _deleteCategory(category.id, category.name);
-                                    }
-                                  },
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Text(
+                                    'Delete',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
                                 ),
-                                onTap: () {
-                                  Navigator.push(
+                              ],
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  final result = await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => CategoryDetailScreen(category: category),
+                                      builder: (context) =>
+                                          AddCategoryScreen(category: category),
                                     ),
                                   );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                                  if (result == true) _fetchCategories();
+                                } else if (value == 'delete') {
+                                  _deleteCategory(category.id, category.name);
+                                }
+                              },
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      CategoryDetailScreen(category: category),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -257,9 +291,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const AddCategoryScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const AddCategoryScreen()),
           );
           if (result == true) _fetchCategories();
         },

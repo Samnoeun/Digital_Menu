@@ -116,27 +116,41 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Preview',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF6A1B9A), // Darker purple text (to match arrow)
-          ),
-        ),
-        backgroundColor: const Color(0xFFF3E5F5), // Light purple background
         automaticallyImplyLeading: false, // Disable default back arrow
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: Color(0xFF6A1B9A), // Purple color for the icon
+        backgroundColor: const Color(0xFFF3E5F5),
+        iconTheme: const IconThemeData(color: Color(0xFF6A1B9A)),
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 0,
+            right: 0,
+          ), // ⬅️ Your desired spacing
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color(0xFF6A1B9A),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Back navigation
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(
+                width: 0,
+              ), // ⬅️ Very tight spacing between icon & text
+              const Text(
+                'Preview',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6A1B9A),
+                ),
+              ),
+            ],
           ),
-          onPressed: () {
-            Navigator.of(context).pop(); // Back navigation
-          },
-        ),
-        iconTheme: const IconThemeData(
-          color: Color(0xFF6A1B9A), // Purple icon color for actions
         ),
         actions: [
           Stack(
