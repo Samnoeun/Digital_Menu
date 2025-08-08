@@ -140,14 +140,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.deepPurple.shade600,  // Purple background
+        
         title: Row(
           children: [
-            Icon(Icons.settings, color: Colors.deepPurple.shade50),  // Light icon color
+            const Icon(Icons.settings),
             const SizedBox(width: 8),
             Text(
               lang['settings']!,
-              style: getTextStyle().copyWith(color: Colors.deepPurple.shade50), // Light text color
+              style: getTextStyle(),
             ),
           ],
         ),
