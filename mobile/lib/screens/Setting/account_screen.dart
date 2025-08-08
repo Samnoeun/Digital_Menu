@@ -60,55 +60,82 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-Future<void> _saveChanges() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _saveChanges() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _isSaving = true);
-  
-  try {
-    await ApiService.updateRestaurant(
-      id: _restaurant?.id ?? 1,
-      restaurantName: _nameController.text.trim(),
-      address: _addressController.text.trim(),
-      profileImage: _profileImage,
-    );
+    setState(() => _isSaving = true);
 
-    // Refresh data after update
-    await _loadRestaurantData();
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Restaurant updated successfully'),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      await ApiService.updateRestaurant(
+        id: _restaurant?.id ?? 1,
+        restaurantName: _nameController.text.trim(),
+        address: _addressController.text.trim(),
+        profileImage: _profileImage,
       );
-    }
-  } catch (e) {
-    debugPrint('Update error: $e');
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  } finally {
-    if (mounted) {
-      setState(() => _isSaving = false);
+
+      // Refresh data after update
+      await _loadRestaurantData();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Restaurant updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Update error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Restaurant'),
+        automaticallyImplyLeading: false, 
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        titleSpacing: 0, 
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 5,
+            right: 0,
+          ), 
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 0),
+              const Text(
+                'Edit Restaurant',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -155,8 +182,8 @@ Future<void> _saveChanges() async {
                         prefixIcon: Icon(Icons.restaurant),
                         border: OutlineInputBorder(),
                       ),
-                      validator: (value) => value?.isEmpty ?? true 
-                          ? 'Please enter restaurant name' 
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter restaurant name'
                           : null,
                     ),
                     const SizedBox(height: 20),
@@ -170,8 +197,8 @@ Future<void> _saveChanges() async {
                         border: OutlineInputBorder(),
                       ),
                       maxLines: 2,
-                      validator: (value) => value?.isEmpty ?? true 
-                          ? 'Please enter address' 
+                      validator: (value) => value?.isEmpty ?? true
+                          ? 'Please enter address'
                           : null,
                     ),
                     const SizedBox(height: 30),
@@ -190,7 +217,9 @@ Future<void> _saveChanges() async {
                           ),
                         ),
                         child: _isSaving
-                            ? const CircularProgressIndicator(color: Colors.white)
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
                             : const Text('SAVE CHANGES'),
                       ),
                     ),

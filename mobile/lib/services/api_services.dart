@@ -9,8 +9,8 @@ import '../models/restaurant_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl =
-      'http://192.168.108.154:8000/api'; // Update with your preferred base URL
+  
+  static const String baseUrl = 'http://192.168.108.154:8000/api'; // Update with your preferred base URL
 
   static String? _token;
 
