@@ -44,6 +44,58 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     super.dispose();
   }
 
+  // Helper function to get restaurant/food related icons
+  IconData _getCategoryIcon(String categoryName) {
+    final name = categoryName.toLowerCase();
+
+    // Food categories
+    if (name.contains('pizza')) return Icons.local_pizza;
+    if (name.contains('burger') || name.contains('sandwich'))
+      return Icons.lunch_dining;
+    if (name.contains('coffee') || name.contains('cafe'))
+      return Icons.local_cafe;
+    if (name.contains('drink') ||
+        name.contains('beverage') ||
+        name.contains('juice'))
+      return Icons.local_drink;
+    if (name.contains('dessert') ||
+        name.contains('cake') ||
+        name.contains('sweet'))
+      return Icons.cake;
+    if (name.contains('salad') ||
+        name.contains('vegetable') ||
+        name.contains('healthy'))
+      return Icons.eco;
+    if (name.contains('pasta') || name.contains('noodle'))
+      return Icons.ramen_dining;
+    if (name.contains('chicken') ||
+        name.contains('meat') ||
+        name.contains('grill'))
+      return Icons.outdoor_grill;
+    if (name.contains('seafood') ||
+        name.contains('fish') ||
+        name.contains('sushi'))
+      return Icons.set_meal;
+    if (name.contains('bread') || name.contains('bakery'))
+      return Icons.bakery_dining;
+    if (name.contains('ice cream') || name.contains('frozen'))
+      return Icons.icecream;
+    if (name.contains('wine') ||
+        name.contains('alcohol') ||
+        name.contains('bar'))
+      return Icons.wine_bar;
+    if (name.contains('breakfast') || name.contains('morning'))
+      return Icons.free_breakfast;
+    if (name.contains('soup')) return Icons.soup_kitchen;
+    if (name.contains('snack') || name.contains('appetizer'))
+      return Icons.tapas;
+    if (name.contains('fast food') || name.contains('quick'))
+      return Icons.fastfood;
+
+    // Default restaurant icon
+    return Icons.restaurant;
+  }
+
   void _onSearchChanged() {
     setState(() {
       _searchQuery = _searchController.text.trim().toLowerCase();
@@ -114,12 +166,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     if (confirmed == true) {
       try {
         setState(() => _isLoading = true);
-
         // Delete all selected categories
         for (int categoryId in _selectedCategoryIds) {
           await ApiService.deleteCategory(categoryId);
         }
-
         _selectedCategoryIds.clear();
         _isSelectionMode = false;
         _fetchCategories();
@@ -135,7 +185,6 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     try {
       setState(() => _isLoading = true);
       final categories = await ApiService.getCategories();
-
       if (mounted) {
         setState(() {
           _categories = categories;
@@ -265,25 +314,18 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 padding: EdgeInsets.zero,
               )
             else
-              IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  size: 18,
+              const SizedBox(width: 0), // Tight spacing between icon and text
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Text(
+                _isSelectionMode
+                    ? '${_selectedCategoryIds.length} Selected'
+                    : 'Categories',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 24,
                   color: Colors.white,
                 ),
-                onPressed: () => Navigator.pop(context),
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-              ),
-            const SizedBox(width: 0), // Tight spacing between icon and text
-            Text(
-              _isSelectionMode
-                  ? '${_selectedCategoryIds.length} Selected'
-                  : 'Categories',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 24,
-                color: Colors.white,
               ),
             ),
           ],
@@ -323,9 +365,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           const SizedBox(width: 8),
         ],
       ),
-
       body: Column(
         children: [
+          // Search Bar in CategoryListScreen
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -340,6 +382,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
               child: Container(
+                height: 45, // Set fixed height for shorter search bar
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -355,16 +398,21 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Search categories...',
-                    hintStyle: TextStyle(color: Colors.grey.shade500),
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 14,
+                    ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
                       color: Colors.deepPurple.shade600,
+                      size: 20,
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(
                               Icons.clear_rounded,
                               color: Colors.grey.shade600,
+                              size: 18,
                             ),
                             onPressed: () => _searchController.clear(),
                           )
@@ -377,9 +425,11 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 16,
+                      vertical: 8, // Reduced vertical padding
                     ),
+                    isDense: true, // Makes the field more compact
                   ),
+                  style: const TextStyle(fontSize: 14), // Smaller text size
                 ),
               ),
             ),
@@ -420,7 +470,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.category_outlined,
+                              Icons.restaurant_menu,
                               size: 64,
                               color: Colors.deepPurple.shade400,
                             ),
@@ -469,7 +519,6 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                   final Category item = _filteredCategories
                                       .removeAt(oldIndex);
                                   _filteredCategories.insert(newIndex, item);
-
                                   // Also update the main categories list if no search is active
                                   if (_searchQuery.isEmpty) {
                                     final Category mainItem = _categories
@@ -483,7 +532,6 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                           final isSelected = _selectedCategoryIds.contains(
                             category.id,
                           );
-
                           return AnimatedContainer(
                             key: ValueKey(category.id),
                             duration: Duration(
@@ -556,8 +604,8 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                               8,
                                             ),
                                           ),
-                                          child: const Icon(
-                                            Icons.category_rounded,
+                                          child: Icon(
+                                            _getCategoryIcon(category.name),
                                             color: Colors.white,
                                             size: 18,
                                           ),
@@ -737,52 +785,32 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       ),
       floatingActionButton: _isSelectionMode
           ? null
-          : Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
-              child: ElevatedButton(
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          const AddCategoryScreen(),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                            return SlideTransition(
-                              position: animation.drive(
-                                Tween(
-                                  begin: const Offset(0.0, 1.0),
-                                  end: Offset.zero,
-                                ).chain(CurveTween(curve: Curves.easeInOut)),
-                              ),
-                              child: child,
-                            );
-                          },
-                    ),
-                  );
-                  if (result == true) _fetchCategories();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple.shade600,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+          : FloatingActionButton(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        const AddCategoryScreen(),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                          return SlideTransition(
+                            position: animation.drive(
+                              Tween(
+                                begin: const Offset(0.0, 1.0),
+                                end: Offset.zero,
+                              ).chain(CurveTween(curve: Curves.easeInOut)),
+                            ),
+                            child: child,
+                          );
+                        },
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 6,
-                  shadowColor: Colors.deepPurple.withOpacity(0.4),
-                ),
-                child: const Text(
-                  'Add Category',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+                );
+                if (result == true) _fetchCategories();
+              },
+              backgroundColor: Colors.deepPurple.shade600,
+              elevation: 6,
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
     );
   }
