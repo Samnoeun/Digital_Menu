@@ -1,0 +1,16 @@
+{
+  "@@locale": "km",
+  "editRestaurant": "កែប្រែភោជនីយដ្ឋាន",
+  "restaurantName": "ឈ្មោះភោជនីយដ្ឋាន",
+  "pleaseEnterRestaurantName": "សូមបញ្ចូលឈ្មោះភោជនីយដ្ឋាន",
+  "address": "អាសយដ្ឋាន",
+  "pleaseEnterAddress": "សូមបញ្ចូលអាសយដ្ឋាន",
+  "saveChanges": "រក្សាទុកការផ្លាស់ប្តូរ",
+  "restaurantUpdated": "✅ ភោជនីយដ្ឋានបានកែប្រែដោយជោគជ័យ",
+  "errorOccurred": "❌ បញ្ហាបានកើតឡើង៖ {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {}
+    }
+  }
+}
