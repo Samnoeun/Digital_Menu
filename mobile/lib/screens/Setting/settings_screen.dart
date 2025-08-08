@@ -58,12 +58,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Center(
                     child: Text(
-                      localization[selectedLanguage]!['choose_language']!,
+                      localization[tempSelected]!['choose_language']!,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         fontFamily:
-                            selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                            tempSelected == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ),
@@ -99,12 +99,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Navigator.pop(context);
                     },
                     child: Text(
-                      localization[selectedLanguage]!['apply']!,
+                      localization[tempSelected]!['apply']!,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         fontFamily:
-                            selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                            tempSelected == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ),
@@ -152,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.only(
             left: 0,
             right: 0,
-          ), // ⬅️ Your desired spacing
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -162,9 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(
-                width: 0,
-              ),
+              const SizedBox(width: 0),
               const Text(
                 'Settings',
                 style: TextStyle(color: Colors.white),
