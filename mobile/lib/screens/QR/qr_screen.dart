@@ -49,8 +49,38 @@ class _QrScreenState extends State<QrScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Generate QR'),
         automaticallyImplyLeading: false,
+        backgroundColor: const Color(0xFFF3E5F5), 
+        elevation: 0,
+        titleSpacing: 0, 
+        title: Padding(
+          padding: const EdgeInsets.only(left: 10, right: 2),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color(0xFF6A1B9A),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 0),
+              const Text(
+                'Generate QR',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6A1B9A),
+                ),
+              ),
+            ],
+          ),
+        ),
+        iconTheme: const IconThemeData(
+          color: Color(0xFF6A1B9A), 
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
@@ -70,6 +100,7 @@ class _QrScreenState extends State<QrScreen> {
             ),
         ],
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -133,7 +164,8 @@ class _QrScreenState extends State<QrScreen> {
                   foregroundColor: Colors.black,
                   errorCorrectionLevel: QrErrorCorrectLevel.M,
                   // Add logo in the center (optional)
-                  embeddedImage: null, // You can add AssetImage('assets/logo.png') here
+                  embeddedImage:
+                      null, // You can add AssetImage('assets/logo.png') here
                   embeddedImageStyle: const QrEmbeddedImageStyle(
                     size: Size(40, 40),
                   ),

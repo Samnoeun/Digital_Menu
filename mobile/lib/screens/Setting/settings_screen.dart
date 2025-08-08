@@ -149,18 +149,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.deepPurple.shade700,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+        ),
         elevation: 0,
         automaticallyImplyLeading: false,
-
-        title: Row(
-          children: [
-            Icon(Icons.settings, color: Colors.white, size: 26),
-            const SizedBox(width: 12),
-            Text(
-              lang['settings']!,
-              style: getTextStyle().copyWith(color: Colors.white, fontSize: 20),
-            ),
-          ],
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 0,
+            right: 0,
+          ), // ⬅️ Your desired spacing
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(
+                width: 0,
+              ), 
+              const Text('Settings'),
+            ],
+          ),
         ),
       ),
 

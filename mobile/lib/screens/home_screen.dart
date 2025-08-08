@@ -53,10 +53,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
   }
 
   @override
@@ -205,9 +208,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Colors.deepPurple,
-            ),
+            colorScheme: Theme.of(
+              context,
+            ).colorScheme.copyWith(primary: Colors.deepPurple),
           ),
           child: child!,
         );
@@ -235,7 +238,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             pinned: true,
             automaticallyImplyLeading: false,
             backgroundColor: Colors.deepPurple,
-            flexibleSpace: Container( // Remove FlexibleSpaceBar and use Container directly
+            flexibleSpace: Container(
+              // Remove FlexibleSpaceBar and use Container directly
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -252,9 +256,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: restaurant == null
                       ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
+                          child: CircularProgressIndicator(color: Colors.white),
                         )
                       : Row(
                           children: [
@@ -275,10 +277,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   radius: 28,
                                   backgroundColor: Colors.white,
                                   backgroundImage: restaurant!.profile != null
-                                      ? NetworkImage(ApiService.getImageUrl(restaurant!.profile!))
+                                      ? NetworkImage(
+                                          ApiService.getImageUrl(
+                                            restaurant!.profile!,
+                                          ),
+                                        )
                                       : null,
                                   child: restaurant!.profile == null
-                                      ? const Icon(Icons.restaurant, size: 28, color: Colors.deepPurple)
+                                      ? const Icon(
+                                          Icons.restaurant,
+                                          size: 28,
+                                          color: Colors.deepPurple,
+                                        )
                                       : null,
                                 ),
                               ),
@@ -315,7 +325,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: IconButton(
-                                icon: const Icon(Icons.refresh, color: Colors.white),
+                                icon: const Icon(
+                                  Icons.refresh,
+                                  color: Colors.white,
+                                ),
                                 onPressed: () {
                                   _loadRestaurantInfo();
                                   _loadData();
@@ -382,9 +395,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         color: Colors.grey[300],
       ),
       child: const Center(
-        child: CircularProgressIndicator(
-          color: Colors.deepPurple,
-        ),
+        child: CircularProgressIndicator(color: Colors.deepPurple),
       ),
     );
   }
@@ -430,11 +441,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Colors.deepPurple,
-            Color(0xFF7B1FA2),
-            Color(0xFF4A148C),
-          ],
+          colors: [Colors.deepPurple, Color(0xFF7B1FA2), Color(0xFF4A148C)],
         ),
         boxShadow: [
           BoxShadow(
@@ -505,10 +512,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 const SizedBox(height: 8),
                 const Text(
                   "Here's your restaurant's performance overview",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white70,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.white70),
                 ),
               ],
             ),
@@ -554,18 +558,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _loadData();
                 }
               },
+              // decoration: InputDecoration(
+              //   labelText: 'Filter by',
+              //   labelStyle: const TextStyle(color: Colors.deepPurple),
+              //   border: OutlineInputBorder(
+              //     borderRadius: BorderRadius.circular(12),
+              //     borderSide: const BorderSide(color: Colors.deepPurple),
+              //   ),
+              //   focusedBorder: OutlineInputBorder(
+              //     borderRadius: BorderRadius.circular(12),
+              //     borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
+              //   ),
+              //   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              // ),
               decoration: InputDecoration(
                 labelText: 'Filter by',
                 labelStyle: const TextStyle(color: Colors.deepPurple),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.deepPurple),
+                border: InputBorder.none, // <- remove the visible border
+                focusedBorder:
+                    InputBorder.none, // <- no border even when focused
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
             ),
           ),
@@ -630,7 +645,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: cards.asMap().entries.map((entry) {
         final index = entry.key;
         final card = entry.value;
-        
+
         return TweenAnimationBuilder(
           duration: Duration(milliseconds: 600 + (index * 100)),
           tween: Tween<double>(begin: 0, end: 1),
@@ -704,11 +719,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             child: Column(
               children: [
-                Icon(
-                  Icons.inbox_outlined,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
+                Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
                   "No orders found for selected period",
@@ -726,7 +737,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: topItems.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
-              
+
               return TweenAnimationBuilder(
                 duration: Duration(milliseconds: 800 + (index * 100)),
                 tween: Tween<double>(begin: 0, end: 1),
@@ -774,7 +785,7 @@ class ModernSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth - 56) / 2;
-    
+
     return Container(
       width: cardWidth,
       height: 110,
@@ -789,7 +800,8 @@ class ModernSummaryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding( // Remove Stack and Positioned circle, use Padding directly
+      child: Padding(
+        // Remove Stack and Positioned circle, use Padding directly
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -800,7 +812,11 @@ class ModernSummaryCard extends StatelessWidget {
                 color: (iconColor ?? Colors.deepPurple).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 20, color: iconColor ?? Colors.deepPurple),
+              child: Icon(
+                icon,
+                size: 20,
+                color: iconColor ?? Colors.deepPurple,
+              ),
             ),
             const Spacer(),
             Text(
@@ -906,7 +922,10 @@ class ModernTopItemTile extends StatelessWidget {
                                 ApiService.getImageUrl(image!),
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    Icon(Icons.fastfood, color: Colors.grey[400]),
+                                    Icon(
+                                      Icons.fastfood,
+                                      color: Colors.grey[400],
+                                    ),
                               )
                             : Icon(Icons.fastfood, color: Colors.grey[400]),
                       ),
@@ -959,7 +978,10 @@ class ModernTopItemTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.deepPurple.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
@@ -989,10 +1011,7 @@ class ModernTopItemTile extends StatelessWidget {
                     ),
                     const Text(
                       'orders',
-                      style: TextStyle(
-                        color: Colors.deepPurple,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.deepPurple, fontSize: 12),
                     ),
                   ],
                 ),
