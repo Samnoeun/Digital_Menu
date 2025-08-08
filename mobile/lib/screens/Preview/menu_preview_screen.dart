@@ -100,7 +100,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
     });
   }
 
-  // Add this new method to show item details
+
   void _showItemDetail(item.Item item) {
     showModalBottomSheet(
       context: context,
@@ -115,6 +115,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.deepPurple, // Purple background
@@ -246,31 +247,78 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                               ),
                               const SizedBox(height: 10),
                               ...itemsInCategory.map((item.Item item) {
-                                return Card(
-                                  child: ListTile(
-                                    onTap: () =>
-                                        _showItemDetail(item), // Add this line
-                                    leading: item.imagePath != null
-                                        ? Image.network(
-                                            ApiService.getImageUrl(item.imagePath),
-                                            width: 50,
-                                            height: 50,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    const Icon(Icons.broken_image),
-                                          )
-                                        : const Icon(Icons.image_not_supported),
-                                    title: Text(item.name),
-                                    subtitle: Text(
-                                      '${item.price.toStringAsFixed(2)} \$',
+                                return GestureDetector(
+                                  onTap: () => _showItemDetail(item),
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.deepPurple.withOpacity(0.1),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
                                     ),
-                                    trailing: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.deepPurple,
-                                      ),
-                                      onPressed: () => _addToCart(item),
-                                      child: const Text("Add"),
+                                    child: Row(
+                                      children: [
+                                        // Image or icon
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: item.imagePath != null
+                                              ? Image.network(
+                                                  ApiService.getImageUrl(item.imagePath),
+                                                  width: 70,
+                                                  height: 70,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder: (context, error, stackTrace) =>
+                                                      const Icon(Icons.broken_image, size: 70),
+                                                )
+                                              : const Icon(Icons.image_not_supported, size: 70),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        // Name & price
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                item.name,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                '${item.price.toStringAsFixed(2)} \$',
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        // Add button
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.deepPurple,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 12,
+                                            ),
+                                          ),
+                                          onPressed: () => _addToCart(item),
+                                          child: const Text("Add"),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 );
