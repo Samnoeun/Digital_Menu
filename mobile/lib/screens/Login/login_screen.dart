@@ -69,41 +69,39 @@ class _LoginScreenState extends State<LoginScreen> {
     return isValid;
   }
 
-  void loginUser() async {
-    if (!validateForm()) return;
+ void loginUser() async {
+  if (!validateForm()) return;
 
-    setState(() {
-      isLoading = true;
-      generalError = null;
-    });
+  setState(() {
+    isLoading = true;
+    generalError = null;
+  });
 
-    try {
-      await ApiService.login(
-        emailController.text.trim(),
-        passwordController.text.trim(),
+  try {
+    final response = await ApiService.login(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
+
+    final user = response['user'];
+    final token = response['token'] as String;
+
+    if (context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MenuScreen()),
       );
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Login successful")));
-        Navigator.pushReplacement(
-          // Changed from push to pushReplacement
-          context,
-          MaterialPageRoute(builder: (_) => const MenuScreen()),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        generalError = e.toString();
-      });
     }
-
+  } catch (e) {
     setState(() {
-      isLoading = false;
+      generalError = e.toString();
     });
+  } finally {
+    if (context.mounted) {
+      setState(() => isLoading = false);
+    }
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
