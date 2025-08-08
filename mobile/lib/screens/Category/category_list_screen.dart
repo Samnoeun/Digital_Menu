@@ -254,39 +254,45 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     return Scaffold(
       backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Disable default leading button
-        title: Row(
-          children: [
-            if (_isSelectionMode)
-              IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: _toggleSelectionMode,
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-              )
-            else
-              IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  size: 18,
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 2,
+            right: 0,
+          ), // 👈 Your requested padding
+          child: Row(
+            children: [
+              if (_isSelectionMode)
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white),
+                  onPressed: _toggleSelectionMode,
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                )
+              else
+                IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios,
+                    size: 18,
+                    color: Colors.white,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                ),
+              const SizedBox(width: 0),
+              Text(
+                _isSelectionMode
+                    ? '${_selectedCategoryIds.length} Selected'
+                    : 'Categories',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 24,
                   color: Colors.white,
                 ),
-                onPressed: () => Navigator.pop(context),
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
               ),
-            const SizedBox(width: 0), // Tight spacing between icon and text
-            Text(
-              _isSelectionMode
-                  ? '${_selectedCategoryIds.length} Selected'
-                  : 'Categories',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 24,
-                color: Colors.white,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
         elevation: 0,
         backgroundColor: Colors.deepPurple.shade700,
@@ -738,48 +744,66 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       floatingActionButton: _isSelectionMode
           ? null
           : Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
-              child: ElevatedButton(
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          const AddCategoryScreen(),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                            return SlideTransition(
-                              position: animation.drive(
-                                Tween(
-                                  begin: const Offset(0.0, 1.0),
-                                  end: Offset.zero,
-                                ).chain(CurveTween(curve: Curves.easeInOut)),
-                              ),
-                              child: child,
-                            );
-                          },
+              padding: const EdgeInsets.only(bottom: 2, right: 2.0,),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF7E57C2), Color(0xFF512DA8)],
+                    begin: Alignment.topLeft,
+                    // end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.deepPurple.withOpacity(0.3),
+                      offset: Offset(0, 3),
+                      blurRadius: 16,
                     ),
-                  );
-                  if (result == true) _fetchCategories();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple.shade600,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 6,
-                  shadowColor: Colors.deepPurple.withOpacity(0.4),
+                  ],
                 ),
-                child: const Text(
-                  'Add Category',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const AddCategoryScreen(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                              return SlideTransition(
+                                position: animation.drive(
+                                  Tween(
+                                    begin: const Offset(0.0, 1.0),
+                                    end: Offset.zero,
+                                  ).chain(CurveTween(curve: Curves.easeInOut)),
+                                ),
+                                child: child,
+                              );
+                            },
+                      ),
+                    );
+                    if (result == true) _fetchCategories();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor:
+                        Colors.transparent, // Shadow from container instead
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  child: const Text(
+                    '+',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: 1,
+                    ),
                   ),
                 ),
               ),

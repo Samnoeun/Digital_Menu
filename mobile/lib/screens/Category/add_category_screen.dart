@@ -131,28 +131,34 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
       backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false, // Disable default back button
-        title: Row(
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                size: 18,
-                color: Colors.white,
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 2,
+            right: 0,
+          ), // 👈 Your requested padding
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Colors.white,
+                ),
+                onPressed: () => Navigator.pop(context),
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
               ),
-              onPressed: () => Navigator.pop(context),
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-            ),
-            const SizedBox(width: 0), // Adjust spacing between icon and text
-            Text(
-              widget.category == null ? 'Add Category' : 'Edit Category',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 22,
-                color: Colors.white,
+              const SizedBox(width: 0), // Adjust spacing between icon and text
+              Text(
+                widget.category == null ? 'Add Category' : 'Edit Category',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  color: Colors.white,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         elevation: 0,
         backgroundColor: Colors.deepPurple.shade700,

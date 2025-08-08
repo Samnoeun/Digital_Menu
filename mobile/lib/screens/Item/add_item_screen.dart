@@ -301,6 +301,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
             ],
           ),
         ),
+        
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFF6A1B9A)),
