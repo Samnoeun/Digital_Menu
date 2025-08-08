@@ -13,7 +13,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool isDarkMode = false;
   String selectedLanguage = 'English';
 
-
   final Map<String, Map<String, String>> localization = {
     'English': {
       'settings': 'Settings',
@@ -118,7 +117,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-
   void _logout(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
@@ -144,7 +142,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = localization[selectedLanguage]!;
 
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -160,20 +157,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(
                 width: 0,
-              ), 
-              const Text('Settings'),
+              ),
+              const Text(
+                'Settings',
+                style: TextStyle(color: Colors.white),
+              ),
             ],
           ),
         ),
       ),
-
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 20),
         children: [
