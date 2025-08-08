@@ -21,7 +21,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   void _processQRData() {
     final qrData = _qrDataController.text.trim();
-    
+
     if (qrData.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -35,18 +35,20 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     try {
       // Try to parse as JSON (menu data)
       final jsonData = jsonDecode(qrData);
-      
+
       if (jsonData['menu_items'] != null) {
         // This is menu data
         final List<MenuItem> menuItems = (jsonData['menu_items'] as List)
-            .map((item) => MenuItem(
-                  id: item['id'],
-                  name: item['name'],
-                  price: item['price'].toDouble(),
-                  description: item['description'],
-                  category: item['category'],
-                  imageUrl: item['image_url'],
-                ))
+            .map(
+              (item) => MenuItem(
+                id: item['id'],
+                name: item['name'],
+                price: item['price'].toDouble(),
+                description: item['description'],
+                category: item['category'],
+                imageUrl: item['image_url'],
+              ),
+            )
             .toList();
 
         Navigator.push(
@@ -75,7 +77,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Scanned Data:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Scanned Data:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -87,7 +92,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               ),
               const SizedBox(height: 16),
               if (data.startsWith('http'))
-                const Text('This appears to be a URL. You can open it in a browser.'),
+                const Text(
+                  'This appears to be a URL. You can open it in a browser.',
+                ),
             ],
           ),
           actions: [
@@ -116,8 +123,42 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR Scanner Demo'),
+        automaticallyImplyLeading: false,
+        backgroundColor: const Color(
+          0xFFF3E5F5,
+        ),
+        elevation: 0,
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 5, right: 0), 
+          child: Row(
+            mainAxisSize:
+                MainAxisSize.min, 
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color(0xFF6A1B9A),
+                ),
+                onPressed: () => Navigator.pop(context), // Go back
+                padding: EdgeInsets.zero, 
+                constraints:
+                    const BoxConstraints(),
+              ),
+              const SizedBox(width: 0), 
+              const Text(
+                'QR Scanner Demo',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6A1B9A), // Match icon color
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
