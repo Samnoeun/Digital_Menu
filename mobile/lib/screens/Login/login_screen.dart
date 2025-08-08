@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../services/api_services.dart';
 import 'register_screen.dart';
 
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -88,7 +87,8 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text("Login successful")));
-        Navigator.push(
+        Navigator.pushReplacement(
+          // Changed from push to pushReplacement
           context,
           MaterialPageRoute(builder: (_) => const MenuScreen()),
         );
