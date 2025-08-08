@@ -140,26 +140,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Padding(
-          padding: const EdgeInsets.only(
-            left: 0,
-            right: 0,
-          ), // ⬅️ Your desired spacing
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18),
-                onPressed: () => Navigator.pop(context),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(
-                width: 0,
-              ), 
-              const Text('Settings'),
-            ],
-          ),
+        backgroundColor: Colors.deepPurple.shade600,  // Purple background
+        title: Row(
+          children: [
+            Icon(Icons.settings, color: Colors.deepPurple.shade50),  // Light icon color
+            const SizedBox(width: 8),
+            Text(
+              lang['settings']!,
+              style: getTextStyle().copyWith(color: Colors.deepPurple.shade50), // Light text color
+            ),
+          ],
         ),
       ),
 
