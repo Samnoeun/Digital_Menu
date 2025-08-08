@@ -34,41 +34,41 @@ class _ItemListScreenState extends State<ItemListScreen> {
     super.dispose();
   }
 
-Future<void> _loadData() async {
-  setState(() => _isLoading = true);
-  try {
-    final token = await ApiService.getAuthToken();
-    if (token == null) {
-      // Redirect to login if not authenticated
-      Navigator.pushReplacementNamed(context, '/login');
-      return;
-    }
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final token = await ApiService.getAuthToken();
+      if (token == null) {
+        // Redirect to login if not authenticated
+        Navigator.pushReplacementNamed(context, '/login');
+        return;
+      }
 
-    final categories = await ApiService.getCategories();
-    final items = await ApiService.getItems();
-    
-    setState(() {
-      _categories = categories;
-      _allItems = items;
-      _filterItems();
-    });
-  } catch (e) {
-    if (e.toString().contains('Unauthenticated')) {
-      // Handle expired token
-      await ApiService.clearAuthToken();
-      Navigator.pushReplacementNamed(context, '/login');
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      final categories = await ApiService.getCategories();
+      final items = await ApiService.getItems();
+
+      setState(() {
+        _categories = categories;
+        _allItems = items;
+        _filterItems();
+      });
+    } catch (e) {
+      if (e.toString().contains('Unauthenticated')) {
+        // Handle expired token
+        await ApiService.clearAuthToken();
+        Navigator.pushReplacementNamed(context, '/login');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isLoading = false);
     }
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
 
   void _onSearchChanged() {
     setState(() {
@@ -146,20 +146,48 @@ Future<void> _loadData() async {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Items',
-          style: TextStyle(fontWeight: FontWeight.w600),
-        ),
+        automaticallyImplyLeading: false, 
         elevation: 0,
         backgroundColor: const Color(0xFFF3E5F5),
+        titleSpacing: 0, 
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 5, 
+            right: 0,
+          ), 
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color(0xFF6A1B9A),
+                ),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 2),
+              const Text(
+                'Items',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF6A1B9A),
+                ),
+              ),
+            ],
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh, color: Color(0xFF6A1B9A)),
             onPressed: _loadData,
             tooltip: 'Refresh',
           ),
         ],
       ),
+
       body: Column(
         children: [
           Padding(

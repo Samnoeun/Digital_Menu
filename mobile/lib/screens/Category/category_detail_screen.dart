@@ -7,7 +7,7 @@ import '../Item/add_item_screen.dart';
 class CategoryDetailScreen extends StatefulWidget {
   final category_model.Category category;
   const CategoryDetailScreen({Key? key, required this.category})
-      : super(key: key);
+    : super(key: key);
 
   @override
   State<CategoryDetailScreen> createState() => _CategoryDetailScreenState();
@@ -64,7 +64,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           ),
           backgroundColor: Colors.red.shade600,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     } finally {
@@ -88,13 +90,18 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
@@ -117,7 +124,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           ),
           backgroundColor: Colors.green.shade600,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       setState(() {
@@ -135,7 +144,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           ),
           backgroundColor: Colors.red.shade600,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
     }
@@ -145,12 +156,15 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
     final result = await Navigator.push<bool>(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => AddItemScreen(item: item),
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            AddItemScreen(item: item),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position: animation.drive(
-              Tween(begin: const Offset(1.0, 0.0), end: Offset.zero)
-                  .chain(CurveTween(curve: Curves.easeInOut)),
+              Tween(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).chain(CurveTween(curve: Curves.easeInOut)),
             ),
             child: child,
           );
@@ -186,7 +200,15 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             ),
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        leading: IconButton(
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            size: 18,
+            color: Colors.white, // override to match the AppBar style
+          ),
+          onPressed: () => Navigator.pop(context),
+          constraints: const BoxConstraints(), // optional for tighter spacing
+        ),
         actionsIconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
@@ -194,9 +216,10 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             onPressed: _reloadItems,
             tooltip: 'Refresh items',
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 0),
         ],
       ),
+
       body: _isLoading
           ? Center(
               child: Column(
@@ -219,239 +242,254 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
               ),
             )
           : _items.isEmpty
-              ? Center(
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: Colors.deepPurple.shade100,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.inventory_2_outlined,
-                            size: 64,
-                            color: Colors.deepPurple.shade400,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'No items in this category',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.deepPurple.shade700,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Text(
-                            'Add items to "${widget.category.name}" via the Items screen',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
+          ? Center(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.deepPurple.shade100,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.inventory_2_outlined,
+                        size: 64,
+                        color: Colors.deepPurple.shade400,
+                      ),
                     ),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _reloadItems,
-                  color: Colors.deepPurple.shade600,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _items.length,
-                      itemBuilder: (context, index) {
-                        final item = _items[index];
-                        final hasImage = item.imagePath != null && item.imagePath!.isNotEmpty;
-                        
-                        return AnimatedContainer(
-                          duration: Duration(milliseconds: 300 + (index * 100)),
-                          curve: Curves.easeOutBack,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: Card(
-                            elevation: 6,
-                            shadowColor: Colors.deepPurple.withOpacity(0.2),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.white,
-                                    Colors.deepPurple.shade50,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                              ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.all(20),
-                                leading: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Container(
-                                    width: 70,
-                                    height: 70,
-                                    decoration: BoxDecoration(
-                                      gradient: hasImage ? null : LinearGradient(
-                                        colors: [
-                                          Colors.deepPurple.shade200,
-                                          Colors.deepPurple.shade100,
-                                        ],
-                                      ),
-                                    ),
-                                    child: hasImage
-                                        ? Image.network(
-                                            ApiService.getImageUrl(item.imagePath!),
-                                            width: 70,
-                                            height: 70,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) =>
-                                                Container(
-                                                  width: 70,
-                                                  height: 70,
-                                                  decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        Colors.deepPurple.shade200,
-                                                        Colors.deepPurple.shade100,
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  child: Icon(
-                                                    Icons.broken_image_rounded,
-                                                    color: Colors.deepPurple.shade600,
-                                                    size: 32,
-                                                  ),
-                                                ),
-                                          )
-                                        : Icon(
-                                            Icons.image_not_supported_rounded,
-                                            color: Colors.deepPurple.shade600,
-                                            size: 32,
-                                          ),
-                                  ),
-                                ),
-                                title: Text(
-                                  item.name,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.deepPurple.shade800,
-                                  ),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (item.description != null && item.description!.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 6),
-                                        child: Text(
-                                          item.description!,
-                                          style: TextStyle(
-                                            color: Colors.grey.shade700,
-                                            fontSize: 14,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 8),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.deepPurple.shade600,
-                                              Colors.deepPurple.shade400,
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: Text(
-                                          '\$${item.price.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                trailing: PopupMenuButton<String>(
-                                  icon: Icon(
-                                    Icons.more_vert_rounded,
-                                    color: Colors.deepPurple.shade600,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  onSelected: (value) {
-                                    if (value == 'edit') {
-                                      _editItem(item);
-                                    } else if (value == 'delete') {
-                                      _deleteItem(item.id, item.name);
-                                    }
-                                  },
-                                  itemBuilder: (_) => [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.edit_rounded, 
-                                               color: Colors.deepPurple.shade600, size: 20),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Edit',
-                                            style: TextStyle(
-                                              color: Colors.deepPurple.shade700,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete_rounded, 
-                                               color: Colors.red.shade600, size: 20),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Delete',
-                                            style: TextStyle(
-                                              color: Colors.red.shade700,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                    const SizedBox(height: 24),
+                    Text(
+                      'No items in this category',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.deepPurple.shade700,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        'Add items to "${widget.category.name}" via the Items screen',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _reloadItems,
+              color: Colors.deepPurple.shade600,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _items.length,
+                  itemBuilder: (context, index) {
+                    final item = _items[index];
+                    final hasImage =
+                        item.imagePath != null && item.imagePath!.isNotEmpty;
+
+                    return AnimatedContainer(
+                      duration: Duration(milliseconds: 300 + (index * 100)),
+                      curve: Curves.easeOutBack,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Card(
+                        elevation: 6,
+                        shadowColor: Colors.deepPurple.withOpacity(0.2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(
+                              colors: [Colors.white, Colors.deepPurple.shade50],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.all(20),
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  gradient: hasImage
+                                      ? null
+                                      : LinearGradient(
+                                          colors: [
+                                            Colors.deepPurple.shade200,
+                                            Colors.deepPurple.shade100,
+                                          ],
+                                        ),
+                                ),
+                                child: hasImage
+                                    ? Image.network(
+                                        ApiService.getImageUrl(item.imagePath!),
+                                        width: 70,
+                                        height: 70,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                            ) => Container(
+                                              width: 70,
+                                              height: 70,
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    Colors.deepPurple.shade200,
+                                                    Colors.deepPurple.shade100,
+                                                  ],
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                Icons.broken_image_rounded,
+                                                color:
+                                                    Colors.deepPurple.shade600,
+                                                size: 32,
+                                              ),
+                                            ),
+                                      )
+                                    : Icon(
+                                        Icons.image_not_supported_rounded,
+                                        color: Colors.deepPurple.shade600,
+                                        size: 32,
+                                      ),
+                              ),
+                            ),
+                            title: Text(
+                              item.name,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.deepPurple.shade800,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (item.description != null &&
+                                    item.description!.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Text(
+                                      item.description!,
+                                      style: TextStyle(
+                                        color: Colors.grey.shade700,
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.deepPurple.shade600,
+                                          Colors.deepPurple.shade400,
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      '\$${item.price.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              icon: Icon(
+                                Icons.more_vert_rounded,
+                                color: Colors.deepPurple.shade600,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  _editItem(item);
+                                } else if (value == 'delete') {
+                                  _deleteItem(item.id, item.name);
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.edit_rounded,
+                                        color: Colors.deepPurple.shade600,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Edit',
+                                        style: TextStyle(
+                                          color: Colors.deepPurple.shade700,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete_rounded,
+                                        color: Colors.red.shade600,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Delete',
+                                        style: TextStyle(
+                                          color: Colors.red.shade700,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
     );
   }
 }

@@ -104,12 +104,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Row(
-          children: const [
-            Icon(Icons.settings),
-            SizedBox(width: 8),
-            Text('Settings'),
-          ],
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 0,
+            right: 0,
+          ), // ⬅️ Your desired spacing
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(
+                width: 0,
+              ), 
+              const Text('Settings'),
+            ],
+          ),
         ),
       ),
 
