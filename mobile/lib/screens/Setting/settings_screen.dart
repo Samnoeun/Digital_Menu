@@ -146,6 +146,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.deepPurple.shade700,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+        ),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Padding(
