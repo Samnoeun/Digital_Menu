@@ -60,7 +60,6 @@ class _OrderScreenState extends State<OrderScreen> {
           }
         }
       }
-
       setState(() {
         _orders = loadedOrders;
         _isLoading = false;
@@ -112,10 +111,10 @@ class _OrderScreenState extends State<OrderScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 243, 242, 245),
       appBar: AppBar(
         automaticallyImplyLeading: false,
         titleSpacing: 0, // Aligns content to the edge
@@ -205,270 +204,234 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildOrderCard(Order order) {
-  final statusColor = _getStatusColor(order.status);
-  final expanded = _expandedOrders[order.id] ?? false;
-  final time = DateFormat('MMM d · h:mm a').format(order.createdAt.toLocal());
-  final totalStr = _calculateTotal(order.items).toStringAsFixed(2);
-
-  String statusLabel(String s) {
-    final t = s.trim();
-    if (t.isEmpty) return 'Unknown';
-    return t[0].toUpperCase() + t.substring(1).toLowerCase();
-  }
-
-  IconData statusIcon(String s) {
-    switch (s.toLowerCase()) {
-      case 'pending':
-        return Icons.schedule;
-      case 'preparing':
-        return Icons.local_fire_department;
-      case 'ready':
-        return Icons.check_circle;
-      case 'completed':
-        return Icons.done_all;
-      default:
-        return Icons.info_outline;
-    }
-  }
-
-
-  Widget countBadge(int count, {Color? bg, Color? fg}) {
     final theme = Theme.of(context);
-    final background = bg ?? theme.colorScheme.primary.withOpacity(0.08);
-    final foreground = fg ?? theme.colorScheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '$count',
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w700,
+    final statusColor = _getStatusColor(order.status);
+    final expanded = _expandedOrders[order.id] ?? false;
+    final time = DateFormat('MMM d · h:mm a').format(order.createdAt.toLocal());
+    final totalStr = _calculateTotal(order.items).toStringAsFixed(2);
+
+    String statusLabel(String s) {
+      final t = s.trim();
+      if (t.isEmpty) return 'Unknown';
+      return t[0].toUpperCase() + t.substring(1).toLowerCase();
+    }
+
+    IconData statusIcon(String s) {
+      switch (s.toLowerCase()) {
+        case 'pending':
+          return Icons.schedule;
+        case 'preparing':
+          return Icons.local_fire_department;
+        case 'ready':
+          return Icons.check_circle;
+        case 'completed':
+          return Icons.done_all;
+        default:
+          return Icons.info_outline;
+      }
+    }
+
+    Widget countBadge(int count, {Color? bg, Color? fg}) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: bg ?? theme.colorScheme.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          '$count',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: fg ?? theme.colorScheme.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+
+    return Semantics(
+      label:
+          'Order for table ${order.tableNumber}, ${order.items.length} items, status ${order.status}',
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 10),
+        elevation: 2,
+        shadowColor: statusColor.withOpacity(0.15),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(color: const Color.fromARGB(255, 231, 217, 234)),
+
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Table header
+              Container(
+                padding: const EdgeInsets.all(14),
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundColor: theme.colorScheme.primary.withOpacity(
+                        0.12,
+                      ),
+                      child: Icon(
+                        Icons.restaurant,
+                        color: theme.colorScheme.primary,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Table ${order.tableNumber}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: theme.hintColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                time,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.hintColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Status badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: order.status.toLowerCase() == 'pending'
+                            ? Colors.amber.shade100
+                            : statusColor.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            statusIcon(order.status),
+                            size: 14,
+                            color: order.status.toLowerCase() == 'pending'
+                                ? Colors.orange
+                                : statusColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusLabel(order.status),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: order.status.toLowerCase() == 'pending'
+                                  ? Colors.orange
+                                  : statusColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Body
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Total',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        countBadge(order.items.length),
+                        const Spacer(),
+                        Text(
+                          '\$$totalStr',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        setState(() {
+                          _expandedOrders[order.id] = !expanded;
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Text('Items', style: theme.textTheme.bodyMedium),
+                            const SizedBox(width: 4),
+                            countBadge(order.items.length),
+                            const Spacer(),
+                            AnimatedRotation(
+                              turns: expanded ? 0.5 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOut,
+                              child: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    AnimatedCrossFade(
+                      firstChild: const SizedBox.shrink(),
+                      secondChild: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          children: [
+                            ..._buildOrderItemsList(order.items),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                      ),
+                      crossFadeState: expanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      duration: const Duration(milliseconds: 200),
+                    ),
+
+                    _buildStatusButton(order),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  return Semantics(
-  label:
-      'Order for table ${order.tableNumber}, ${order.items.length} items, status ${order.status}',
-  child: Card(
-    margin: const EdgeInsets.only(bottom: 12),
-    elevation: 6,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
-    ),
-    clipBehavior: Clip.antiAlias,
-    child: Container(
-       decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Colors.deepPurple.shade100,
-              Colors.deepPurple.shade50,
-              Colors.white,
-              Colors.deepPurple.shade50,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Gradient header
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  statusColor.withOpacity(0.15),
-                  Theme.of(context).cardColor,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Leading icon
-                Container(
-                  height: 44,
-                  width: 44,
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(Icons.restaurant, color: statusColor, size: 24),
-                ),
-                const SizedBox(width: 12),
-                // Title and time
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Table ${order.tableNumber}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Icon(Icons.access_time,
-                              size: 14, color: Theme.of(context).hintColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            time,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).hintColor,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: order.status == 'pending'
-                        ? Colors.amber.shade100
-                        : statusColor.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-
-                      color: order.status == 'pending'
-                          ? Colors.amber.shade400.withOpacity(0.5)
-                          : statusColor.withOpacity(0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        statusIcon(order.status),
-                        size: 14,
-                        color: order.status == 'pending'
-                            ? Colors.orange
-                            : statusColor,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        statusLabel(order.status),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: order.status == 'pending'
-                                  ? Colors.orange
-                                  : statusColor,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.2,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Body content
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              children: [
-                // Total row
-                Row(
-                  children: [
-                    Text(
-                      'Total',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(width: 6),
-                    countBadge(
-                      order.items.length,
-                      bg: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-                      fg: Theme.of(context).colorScheme.primary,
-                    ),
-                    const Spacer(),
-                    Text(
-                      '\$$totalStr',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-
-                // Items toggler
-                InkWell(
-                  borderRadius: BorderRadius.circular(10),
-                  onTap: () {
-                    setState(() {
-                      _expandedOrders[order.id] = !expanded;
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                       
-                        Text('Items',
-                            style: Theme.of(context).textTheme.bodyMedium),
-                        const SizedBox(width: 4),
-                        countBadge(order.items.length),
-                        const Spacer(),
-                        AnimatedRotation(
-                          turns: expanded ? 0.5 : 0.0,
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeOut,
-                          child: const Icon(Icons.keyboard_arrow_down, size: 20),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-
-                // Animated items list
-                AnimatedCrossFade(
-                  firstChild: const SizedBox.shrink(),
-                  secondChild: Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: Column(
-                      children: [
-                        ..._buildOrderItemsList(order.items),
-                        const SizedBox(height: 8),
-                      ],
-                    ),
-                  ),
-                  crossFadeState: expanded
-                      ? CrossFadeState.showSecond
-                      : CrossFadeState.showFirst,
-                  duration: const Duration(milliseconds: 200),
-                  sizeCurve: Curves.easeOut,
-                ),
-
-                const SizedBox(height: 4),
-                _buildStatusButton(order),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  ),
-);
-
-}
 
   List<Widget> _buildOrderItemsList(List<OrderItem> items) {
     return items
@@ -508,31 +471,30 @@ class _OrderScreenState extends State<OrderScreen> {
         .toList();
   }
 
-Widget _buildStatusButton(Order order) {
-  final nextStatus = _getNextStatus(order.status);
-  if (nextStatus == null) return const SizedBox();
+  Widget _buildStatusButton(Order order) {
+    final nextStatus = _getNextStatus(order.status);
+    if (nextStatus == null) return const SizedBox();
 
-  return SizedBox(
-    width: double.infinity,
-    child: TextButton(
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        backgroundColor: Color.fromARGB(255, 224, 215, 233),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-      onPressed: () => _updateOrderStatus(order, nextStatus),
-      child: Text(
-        'Mark as ${nextStatus.toUpperCase()}',
-        style: const TextStyle(
-          color: Colors.black, 
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
+    return SizedBox(
+      width: double.infinity,
+      child: TextButton(
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          backgroundColor: Color.fromARGB(255, 217, 207, 230),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        onPressed: () => _updateOrderStatus(order, nextStatus),
+        child: Text(
+          'Mark as ${nextStatus.toUpperCase()}',
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildFilterDropdown() {
     return Container(
