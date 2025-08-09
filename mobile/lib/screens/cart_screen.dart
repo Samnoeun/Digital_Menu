@@ -41,6 +41,22 @@ class _CartScreenState extends State<CartScreen> {
   void _updateQuantity(item.Item item, int newQuantity) {
     setState(() {
       if (newQuantity > 0) {
+        // Calculate how many items to add/remove
+        final currentQuantity = _itemQuantities[item] ?? 0;
+        final difference = newQuantity - currentQuantity;
+
+        if (difference > 0) {
+          // Add more items
+          for (int i = 0; i < difference; i++) {
+            widget.cart.add(item);
+          }
+        } else {
+          // Remove items
+          for (int i = 0; i < -difference; i++) {
+            widget.cart.remove(item);
+          }
+        }
+
         _itemQuantities[item] = newQuantity;
       } else {
         _removeItem(item);
@@ -50,7 +66,7 @@ class _CartScreenState extends State<CartScreen> {
 
   void _removeItem(item.Item itemToRemove) {
     setState(() {
-      widget.onDelete(itemToRemove);
+      widget.cart.removeWhere((item) => item.id == itemToRemove.id);
       _calculateQuantities();
       _specialNotes.remove(itemToRemove);
     });
@@ -117,8 +133,8 @@ class _CartScreenState extends State<CartScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
-        backgroundColor: const Color(0xFFF3E5F5), 
-        titleSpacing: 0, 
+        backgroundColor: const Color(0xFFF3E5F5),
+        titleSpacing: 0,
         title: Padding(
           padding: const EdgeInsets.only(
             left: 20,
