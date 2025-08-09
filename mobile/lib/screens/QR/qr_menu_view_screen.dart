@@ -14,22 +14,26 @@ class QRMenuViewScreen extends StatelessWidget {
     final menuData = {
       'restaurant': 'Digital Menu Restaurant',
       'timestamp': DateTime.now().toIso8601String(),
-      'menu_items': menuItems.map((item) => {
-        'id': item.id,
-        'name': item.name,
-        'price': item.price,
-        'description': item.description,
-        'category': item.category,
-        'image_url': item.imageUrl,
-      }).toList(),
+      'menu_items': menuItems
+          .map(
+            (item) => {
+              'id': item.id,
+              'name': item.name,
+              'price': item.price,
+              'description': item.description,
+              'category': item.category,
+              'image_url': item.imageUrl,
+            },
+          )
+          .toList(),
     };
-    
+
     return jsonEncode(menuData);
   }
 
   void _generateQRCode(BuildContext context) {
     final menuJson = _generateMenuJson();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -79,7 +83,9 @@ class QRMenuViewScreen extends StatelessWidget {
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: menuJson));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Menu data copied to clipboard!')),
+                          const SnackBar(
+                            content: Text('Menu data copied to clipboard!'),
+                          ),
                         );
                       },
                       child: const Text('Copy Data'),
@@ -90,7 +96,8 @@ class QRMenuViewScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => PublicMenuViewScreen(menuItems: menuItems),
+                            builder: (_) =>
+                                PublicMenuViewScreen(menuItems: menuItems),
                           ),
                         );
                       },
@@ -110,14 +117,44 @@ class QRMenuViewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Generate QR Code'),
+        automaticallyImplyLeading: false, // Disable default back button
+        backgroundColor: const Color(0xFFF3E5F5),
+        elevation: 0,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 0),
+              child: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color(0xFF6A1B9A),
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Generate QR Code',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF6A1B9A),
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.qr_code),
+            icon: const Icon(Icons.refresh, color: Color(0xFF6A1B9A)),
             onPressed: () => _generateQRCode(context),
+            tooltip: 'Refresh QR Code',
           ),
         ],
       ),
+
       body: Column(
         children: [
           Container(
@@ -146,7 +183,10 @@ class QRMenuViewScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final item = menuItems[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   child: ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
@@ -169,7 +209,10 @@ class QRMenuViewScreen extends StatelessWidget {
                     subtitle: Text(item.category),
                     trailing: Text(
                       '\$${item.price.toStringAsFixed(2)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
                     ),
                   ),
                 );

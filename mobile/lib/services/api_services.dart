@@ -9,8 +9,8 @@ import '../models/restaurant_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl =
-      'http://192.168.108.194:8000/api'; // Update with your preferred base URL
+  static const String baseUrl = 'http://192.168.108.154:8000/api'; // Update with your preferred base URL
+
 
   static String? _token;
 
@@ -37,57 +37,64 @@ class ApiService {
 
   // User Authentication
   static Future<UserModel?> register(
-    String name,
-    String email,
-    String password,
-    String confirmPassword,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/register'),
-        headers: {'Accept': 'application/json'},
-        body: {
-          'name': name,
-          'email': email,
-          'password': password,
-          'password_confirmation': confirmPassword,
-        },
-      );
+  String name,
+  String email,
+  String password,
+  String confirmPassword,
+) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/register'),
+      headers: {'Accept': 'application/json'},
+      body: {
+        'name': name,
+        'email': email,
+        'password': password,
+        'password_confirmation': confirmPassword,
+      },
+    );
 
-      final data = json.decode(response.body);
-      if (response.statusCode == 200) {
-        final token = data['token'];
-        if (token != null) await saveAuthToken(token);
-        return UserModel.fromJson(data['user']);
-      } else {
-        throw data['message'] ?? 'Registration failed';
-      }
-    } catch (e) {
-      throw Exception('Error: $e');
+    final data = json.decode(response.body);
+    
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final token = data['token'] ?? data['data']['token'];
+      if (token != null) await saveAuthToken(token);
+      return UserModel.fromJson(data['user'] ?? data['data']['user']);
+    } else {
+      throw data['message'] ?? 'Registration failed';
     }
+  } catch (e) {
+    debugPrint('Registration error: $e');
+    throw 'Registration failed: ${e.toString()}';
   }
+}
 
   // User Login
-  static Future<UserModel?> login(String email, String password) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/login'),
-        headers: {'Accept': 'application/json'},
-        body: {'email': email, 'password': password},
-      );
+static Future<Map<String, dynamic>> login(String email, String password) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/login'),
+      headers: {'Accept': 'application/json'},
+      body: {'email': email, 'password': password},
+    );
 
-      final data = json.decode(response.body);
-      if (response.statusCode == 200) {
-        final token = data['token'];
-        if (token != null) await saveAuthToken(token);
-        return UserModel.fromJson(data['user']);
-      } else {
-        throw data['message'] ?? 'Login failed';
-      }
-    } catch (e) {
-      throw Exception('Error: $e');
+    final data = json.decode(response.body);
+    if (response.statusCode == 200) {
+      // Save the token immediately
+      final token = data['token'] as String;
+      await saveLoginData(token, email);
+      
+      return {
+        'user': UserModel.fromJson(data['user']),
+        'token': token,
+      };
+    } else {
+      throw data['message'] ?? 'Login failed';
     }
+  } catch (e) {
+    throw Exception('Login error: ${e.toString()}');
   }
+}
 
   // User Logout
   static Future<void> logout() async {
@@ -578,4 +585,26 @@ class ApiService {
     // Case 2: Return with direct path concatenation
     return baseUrl.replaceFirst('/api', '') + path;
   }
+  static Future<void> saveLoginData(String token, String email) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('auth_token', token);
+  await prefs.setString('user_email', email);
+}
+
+static Future<Map<String, String>?> getLoginData() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('auth_token');
+  final email = prefs.getString('user_email');
+  
+  if (token != null && email != null) {
+    return {'token': token, 'email': email};
+  }
+  return null;
+}
+
+static Future<void> clearLoginData() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('auth_token');
+  await prefs.remove('user_email');
+}
 }

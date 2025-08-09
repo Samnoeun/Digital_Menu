@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../Preview/menu_preview_screen.dart';
+
 class OrderConfirmationScreen extends StatelessWidget {
   final int tableNumber;
   final List<Map<String, dynamic>> orderItems;
@@ -62,10 +64,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.blue,
-                            width: 2,
-                          ),
+                          border: Border.all(color: Colors.blue, width: 2),
                         ),
                         child: Center(
                           child: Column(
@@ -129,28 +128,32 @@ class OrderConfirmationScreen extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            ...orderItems.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        '${item['quantity']}x',
+                            ...orderItems.map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      '${item['quantity']}x',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        item['name'] ?? 'Unknown Item',
                                         style: const TextStyle(fontSize: 16),
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          item['name'] ?? 'Unknown Item',
-                                          style: const TextStyle(fontSize: 16),
-                                        ),
-                                      ),
-                                      Text(
-                                        '\$${((item['price'] ?? 0.0) * (item['quantity'] ?? 1)).toStringAsFixed(2)}',
-                                        style: const TextStyle(fontSize: 16),
-                                      ),
-                                    ],
-                                  ),
-                                )),
+                                    ),
+                                    Text(
+                                      '\$${((item['price'] ?? 0.0) * (item['quantity'] ?? 1)).toStringAsFixed(2)}',
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                             const Divider(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -175,7 +178,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24), // Added extra spacing
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -195,15 +198,17 @@ class OrderConfirmationScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      onClearCart();
-                      Navigator.popUntil(context, (route) => route.isFirst);
+                      onClearCart(); // Clear the cart or do any needed cleanup
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MenuPreviewScreen(),
+                        ),
+                      );
                     },
                     child: const Text(
                       'Back to Menu',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
                 ),
