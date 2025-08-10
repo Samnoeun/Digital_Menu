@@ -114,36 +114,22 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 243, 242, 245),
+      backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        titleSpacing: 0, // Aligns content to the edge
+        titleSpacing: 0,
         title: Padding(
-          padding: const EdgeInsets.only(left: 2, right: 0),
-          child: Row(
-            mainAxisSize:
-                MainAxisSize.min, // Keeps the icon and text tightly grouped
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  size: 18,
-                  color: Colors.white,
-                ),
-                onPressed: () => Navigator.pop(context),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(width: 0),
-              const Text(
-                'Orders',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 22,
-                  color: Colors.white,
-                ),
-              ),
-            ],
+          padding: const EdgeInsets.only(
+            left: 24,
+            right: 0,
+          ), // Adjusted padding
+          child: const Text(
+            'Orders',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 22,
+              color: Colors.white,
+            ),
           ),
         ),
         elevation: 0,
@@ -254,11 +240,13 @@ class _OrderScreenState extends State<OrderScreen> {
       child: Card(
         margin: const EdgeInsets.only(bottom: 10),
         elevation: 2,
-        shadowColor: statusColor.withOpacity(0.15),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shadowColor: statusColor.withOpacity(0.19),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         clipBehavior: Clip.antiAlias,
         child: Container(
-          decoration: BoxDecoration(color: const Color.fromARGB(255, 231, 217, 234)),
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(249, 248, 250, 1),
+          ),
 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,7 +254,7 @@ class _OrderScreenState extends State<OrderScreen> {
               // Table header
               Container(
                 padding: const EdgeInsets.all(14),
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.9),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -320,7 +308,7 @@ class _OrderScreenState extends State<OrderScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: order.status.toLowerCase() == 'pending'
-                            ? Colors.amber.shade100
+                            ? const Color.fromARGB(255, 246, 222, 152)
                             : statusColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
@@ -480,7 +468,7 @@ class _OrderScreenState extends State<OrderScreen> {
       child: TextButton(
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          backgroundColor: Color.fromARGB(255, 217, 207, 230),
+          backgroundColor: Color.fromARGB(255, 241, 238, 245),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () => _updateOrderStatus(order, nextStatus),
@@ -517,7 +505,7 @@ class _OrderScreenState extends State<OrderScreen> {
               horizontal: 16,
               vertical: 12,
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
             filled: true,
             fillColor: Colors.white,
           ),
