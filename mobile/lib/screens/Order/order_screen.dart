@@ -505,7 +505,7 @@ class _OrderScreenState extends State<OrderScreen> {
               horizontal: 16,
               vertical: 12,
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(1)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
             filled: true,
             fillColor: Colors.white,
           ),
