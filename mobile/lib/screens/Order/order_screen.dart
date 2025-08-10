@@ -60,7 +60,6 @@ class _OrderScreenState extends State<OrderScreen> {
           }
         }
       }
-
       setState(() {
         _orders = loadedOrders;
         _isLoading = false;
@@ -115,28 +114,33 @@ class _OrderScreenState extends State<OrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        titleSpacing: 0, 
+        titleSpacing: 0,
         title: Padding(
           padding: const EdgeInsets.only(
-            left: 2,
+            left: 24,
             right: 0,
-          ), 
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18),
-                onPressed: () => Navigator.pop(context),
-                padding: EdgeInsets.zero, // 
-                constraints: const BoxConstraints(), 
-              ),
-              const SizedBox(
-                width: 0,
-              ), //
-              const Text('Orders', style: TextStyle(fontWeight: FontWeight.w600)),
-            ],
+          ), // Adjusted padding
+          child: const Text(
+            'Orders',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 22,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.deepPurple.shade700,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
       ),
@@ -186,100 +190,232 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildOrderCard(Order order) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+    final theme = Theme.of(context);
+    final statusColor = _getStatusColor(order.status);
+    final expanded = _expandedOrders[order.id] ?? false;
+    final time = DateFormat('MMM d · h:mm a').format(order.createdAt.toLocal());
+    final totalStr = _calculateTotal(order.items).toStringAsFixed(2);
+
+    String statusLabel(String s) {
+      final t = s.trim();
+      if (t.isEmpty) return 'Unknown';
+      return t[0].toUpperCase() + t.substring(1).toLowerCase();
+    }
+
+    IconData statusIcon(String s) {
+      switch (s.toLowerCase()) {
+        case 'pending':
+          return Icons.schedule;
+        case 'preparing':
+          return Icons.local_fire_department;
+        case 'ready':
+          return Icons.check_circle;
+        case 'completed':
+          return Icons.done_all;
+        default:
+          return Icons.info_outline;
+      }
+    }
+
+    Widget countBadge(int count, {Color? bg, Color? fg}) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: bg ?? theme.colorScheme.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          '$count',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: fg ?? theme.colorScheme.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+    }
+
+    return Semantics(
+      label:
+          'Order for table ${order.tableNumber}, ${order.items.length} items, status ${order.status}',
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 10),
+        elevation: 2,
+        shadowColor: statusColor.withOpacity(0.19),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        clipBehavior: Clip.antiAlias,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color.fromRGBO(249, 248, 250, 1),
+          ),
+
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Table header
+              Container(
+                padding: const EdgeInsets.all(14),
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.9),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Table ${order.tableNumber}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundColor: theme.colorScheme.primary.withOpacity(
+                        0.12,
+                      ),
+                      child: Icon(
+                        Icons.restaurant,
+                        color: theme.colorScheme.primary,
+                        size: 22,
                       ),
                     ),
-                    Text(
-                      DateFormat(
-                        'MMM d, hh:mm a',
-                      ).format(order.createdAt.toLocal()),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Table ${order.tableNumber}',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: theme.hintColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                time,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.hintColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Status badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: order.status.toLowerCase() == 'pending'
+                            ? const Color.fromARGB(255, 246, 222, 152)
+                            : statusColor.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            statusIcon(order.status),
+                            size: 14,
+                            color: order.status.toLowerCase() == 'pending'
+                                ? Colors.orange
+                                : statusColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusLabel(order.status),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: order.status.toLowerCase() == 'pending'
+                                  ? Colors.orange
+                                  : statusColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(order.status).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    order.status.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: _getStatusColor(order.status),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '\$${_calculateTotal(order.items).toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _expandedOrders[order.id] =
-                      !(_expandedOrders[order.id] ?? false);
-                });
-              },
-              child: Row(
-                children: [
-                  Text(
-                    'Items (${order.items.length})',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  const Spacer(),
-                  Icon(
-                    _expandedOrders[order.id] == true
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    size: 20,
-                  ),
-                ],
               ),
-            ),
-            if (_expandedOrders[order.id] == true) ...[
-              const SizedBox(height: 8),
-              ..._buildOrderItemsList(order.items),
+
+              // Body
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Total',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        countBadge(order.items.length),
+                        const Spacer(),
+                        Text(
+                          '\$$totalStr',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        setState(() {
+                          _expandedOrders[order.id] = !expanded;
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Text('Items', style: theme.textTheme.bodyMedium),
+                            const SizedBox(width: 4),
+                            countBadge(order.items.length),
+                            const Spacer(),
+                            AnimatedRotation(
+                              turns: expanded ? 0.5 : 0.0,
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOut,
+                              child: const Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    AnimatedCrossFade(
+                      firstChild: const SizedBox.shrink(),
+                      secondChild: Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Column(
+                          children: [
+                            ..._buildOrderItemsList(order.items),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                      ),
+                      crossFadeState: expanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      duration: const Duration(milliseconds: 200),
+                    ),
+
+                    _buildStatusButton(order),
+                  ],
+                ),
+              ),
             ],
-            const SizedBox(height: 8),
-            _buildStatusButton(order),
-          ],
+          ),
         ),
       ),
     );
@@ -304,6 +440,7 @@ class _OrderScreenState extends State<OrderScreen> {
                           'Note: ${item.specialNote}',
                           style: TextStyle(
                             fontSize: 12,
+
                             color: Colors.orange[700],
                             fontStyle: FontStyle.italic,
                           ),
@@ -331,41 +468,66 @@ class _OrderScreenState extends State<OrderScreen> {
       child: TextButton(
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          backgroundColor: _getStatusColor(nextStatus).withOpacity(0.1),
+          backgroundColor: Color.fromARGB(255, 241, 238, 245),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () => _updateOrderStatus(order, nextStatus),
         child: Text(
           'Mark as ${nextStatus.toUpperCase()}',
-          style: TextStyle(color: _getStatusColor(nextStatus), fontSize: 14),
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildFilterDropdown() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: DropdownButtonFormField<String>(
-        value: _filterStatus,
-        decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        items: const [
-          DropdownMenuItem(value: 'all', child: Text('All Orders')),
-          DropdownMenuItem(value: 'pending', child: Text('Pending')),
-          DropdownMenuItem(value: 'preparing', child: Text('Preparing')),
-          DropdownMenuItem(value: 'ready', child: Text('Ready')),
-        ],
-        onChanged: (value) {
-          setState(() {
-            _filterStatus = value!;
-          });
-        },
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: Colors.white, // White background for dropdown popup
+        ),
+        child: DropdownButtonFormField<String>(
+          value: _filterStatus,
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+            filled: true,
+            fillColor: Colors.white,
+          ),
+          dropdownColor: Colors.white, // White dropdown popup background
+          iconEnabledColor:
+              Colors.deepPurple.shade700, // Icon color to contrast
+          style: TextStyle(
+            color: Colors.deepPurple.shade700, // Text color for dropdown items
+            fontWeight: FontWeight.w500,
+          ),
+          items: const [
+            DropdownMenuItem(value: 'all', child: Text('All Orders')),
+            DropdownMenuItem(value: 'pending', child: Text('Pending')),
+            DropdownMenuItem(value: 'preparing', child: Text('Preparing')),
+            DropdownMenuItem(value: 'ready', child: Text('Ready')),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _filterStatus = value!;
+            });
+          },
+        ),
       ),
     );
   }

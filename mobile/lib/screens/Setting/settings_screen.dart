@@ -13,7 +13,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool isDarkMode = false;
   String selectedLanguage = 'English';
 
-
   final Map<String, Map<String, String>> localization = {
     'English': {
       'settings': 'Settings',
@@ -59,12 +58,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Center(
                     child: Text(
-                      localization[selectedLanguage]!['choose_language']!,
+                      localization[tempSelected]!['choose_language']!,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         fontFamily:
-                            selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                            tempSelected == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ),
@@ -100,12 +99,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Navigator.pop(context);
                     },
                     child: Text(
-                      localization[selectedLanguage]!['apply']!,
+                      localization[tempSelected]!['apply']!,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                         fontFamily:
-                            selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                            tempSelected == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ),
@@ -117,7 +116,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
   }
-
 
   void _logout(BuildContext context) {
     Navigator.pushAndRemoveUntil(
@@ -144,7 +142,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = localization[selectedLanguage]!;
 
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -162,25 +159,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.only(
             left: 0,
             right: 0,
-          ), // ⬅️ Your desired spacing
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(
-                width: 0,
-              ), 
-              const Text('Settings'),
+              const SizedBox(width: 0),
+              const Text(
+                'Settings',
+                style: TextStyle(color: Colors.white),
+              ),
             ],
           ),
         ),
       ),
-
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 20),
         children: [

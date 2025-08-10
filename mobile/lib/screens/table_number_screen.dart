@@ -29,12 +29,12 @@ class _TableNumberScreenState extends State<TableNumberScreen> {
 
   Future<void> _submitOrder() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSubmitting = true);
-    
+
     try {
       final tableNumber = int.parse(_tableNumberController.text);
-      
+
       await ApiService.submitOrder(
         tableNumber: tableNumber,
         items: widget.orderItems,
@@ -56,7 +56,9 @@ class _TableNumberScreenState extends State<TableNumberScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              'Error: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -69,8 +71,42 @@ class _TableNumberScreenState extends State<TableNumberScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Table Number'),
+        automaticallyImplyLeading: false, // disable default back button
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        titleSpacing: 0, // remove default padding before title
+        title: Row(
+          children: [
+            IconButton(
+              icon: const Icon(
+                Icons.arrow_back_ios,
+                size: 18,
+                color: Colors.white,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const SizedBox(width: 0), // small gap between icon and text
+            const Text(
+              'Table Number',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

@@ -24,10 +24,20 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   bool _isLoading = true;
   String? _error;
 
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _loadData();
+
+    // Listen to controller changes to update search text and UI
+    _searchController.addListener(() {
+      setState(() {
+        _searchText = _searchController.text;
+        _filterItems();
+      });
+    });
   }
 
   Future<void> _loadData() async {
@@ -49,13 +59,6 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
     }
   }
 
-  void _onSearchChanged(String value) {
-    setState(() {
-      _searchText = value;
-      _filterItems();
-    });
-  }
-
   void _onCategorySelected(int? categoryId) {
     setState(() {
       _selectedCategoryId = categoryId;
@@ -68,19 +71,15 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
       final matchesCategory =
           _selectedCategoryId == null || item.categoryId == _selectedCategoryId;
       final matchesSearch = item.name.toLowerCase().contains(
-            _searchText.toLowerCase(),
-          );
+        _searchText.toLowerCase(),
+      );
       return matchesCategory && matchesSearch;
     }).toList();
   }
 
   void _incrementQuantity(item.Item item) {
     setState(() {
-      _selectedItems.update(
-        item,
-        (value) => value + 1,
-        ifAbsent: () => 1,
-      );
+      _selectedItems.update(item, (value) => value + 1, ifAbsent: () => 1);
     });
   }
 
@@ -156,19 +155,96 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+        child: Container(
+          height: 45,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Search items...',
+              hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: Colors.deepPurple.shade600,
+                size: 20,
+              ),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.clear_rounded,
+                        color: Colors.grey.shade600,
+                        size: 18,
+                      ),
+                      onPressed: () {
+                        _searchController.clear();
+                        // _onSearchChanged(''); // not needed since listener will handle
+                      },
+                    )
+                  : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              isDense: true,
+            ),
+            style: const TextStyle(fontSize: 14),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFFF3E5F5),
-        iconTheme: const IconThemeData(color: Color(0xFF6A1B9A)),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Padding(
-          padding: const EdgeInsets.only(left: 0, right: 0),
+          padding: const EdgeInsets.only(left: 0, right: 20),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Color(0xFF6A1B9A)),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Colors.white,
+                ),
                 onPressed: () => Navigator.of(context).pop(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -178,7 +254,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                 'Preview',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF6A1B9A),
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -189,7 +265,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             alignment: Alignment.topRight,
             children: [
               IconButton(
-                icon: const Icon(Icons.shopping_cart),
+                icon: const Icon(Icons.shopping_cart, color: Colors.white),
                 onPressed: _goToCartPage,
               ),
               if (_cart.isNotEmpty)
@@ -211,42 +287,79 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             ],
           ),
         ],
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
-                hintText: 'Search items...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
+        ),
+      ),
+
+      body: Column(
+        children: [
+          _buildSearchBar(),
+
           SizedBox(
             width: double.infinity,
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   ChoiceChip(
-                    label: const Text('All'),
+                    label: const Text(
+                      'All',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     selected: _selectedCategoryId == null,
+                    selectedColor: Colors.deepPurple.shade600,
+                    backgroundColor: Colors.deepPurple.shade100,
+                    labelStyle: TextStyle(
+                      color: _selectedCategoryId == null
+                          ? Colors.white
+                          : Colors.deepPurple.shade700,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
                     onSelected: (_) => _onCategorySelected(null),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 8,
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   ..._categories.map(
                     (category.Category cat) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: ChoiceChip(
-                        label: Text(cat.name),
+                        label: Text(
+                          cat.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         selected: _selectedCategoryId == cat.id,
+                        selectedColor: Colors.deepPurple.shade600,
+                        backgroundColor: Colors.deepPurple.shade100,
+                        labelStyle: TextStyle(
+                          color: _selectedCategoryId == cat.id
+                              ? Colors.white
+                              : Colors.deepPurple.shade700,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
                         onSelected: (_) => _onCategorySelected(cat.id),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 8,
+                        ),
                       ),
                     ),
                   ),
@@ -259,142 +372,166 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(child: Text('Error: $_error'))
-                    : ListView(
-                        padding: const EdgeInsets.all(12),
-                        children: _categories.map((category.Category cat) {
-                          final itemsInCategory = _filteredItems
-                              .where((item) => item.categoryId == cat.id)
-                              .toList();
+                ? Center(child: Text('Error: $_error'))
+                : ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: _categories.map((category.Category cat) {
+                      final itemsInCategory = _filteredItems
+                          .where((item) => item.categoryId == cat.id)
+                          .toList();
 
-                          if (itemsInCategory.isEmpty) return const SizedBox();
+                      if (itemsInCategory.isEmpty) return const SizedBox();
 
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                cat.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              ...itemsInCategory.map((item.Item item) {
-                                final quantity = _selectedItems[item] ?? 0;
-                                return Card(
-                                  child: ListTile(
-                                    onTap: () => _showItemDetail(item),
-                                    leading: item.imagePath != null
-                                        ? Image.network(
-                                            ApiService.getImageUrl(item.imagePath),
-                                            width: 50,
-                                            height: 50,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) =>
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cat.name,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.deepPurple,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ...itemsInCategory.map((item.Item item) {
+                            final quantity = _selectedItems[item] ?? 0;
+                            return Card(
+                              child: ListTile(
+                                onTap: () => _showItemDetail(item),
+                                leading: item.imagePath != null
+                                    ? Image.network(
+                                        ApiService.getImageUrl(item.imagePath),
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
                                                 const Icon(Icons.broken_image),
-                                          )
-                                        : const Icon(Icons.image_not_supported),
-                                    title: Text(item.name),
-                                    subtitle: Text('\$${item.price.toStringAsFixed(2)}'),
-                                    trailing: quantity > 0
-                                        ? Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                                            decoration: BoxDecoration(
-                                              color: Colors.deepPurple.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                IconButton(
-                                                  icon: const Icon(Icons.remove, size: 18),
-                                                  onPressed: () => _decrementQuantity(item),
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
-                                                ),
-                                                Text('${quantity}',
-                                                  style: const TextStyle(fontSize: 14)),
-                                                IconButton(
-                                                  icon: const Icon(Icons.add, size: 18),
-                                                  onPressed: () => _incrementQuantity(item),
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : IconButton(
-                                            icon: const Icon(Icons.add),
-                                            onPressed: () => _incrementQuantity(item),
-                                            style: IconButton.styleFrom(
-                                              backgroundColor: Colors.deepPurple,
-                                              foregroundColor: Colors.white,
-                                            ),
+                                      )
+                                    : const Icon(Icons.image_not_supported),
+                                title: Text(item.name),
+                                subtitle: Text(
+                                  '\$${item.price.toStringAsFixed(2)}',
+                                ),
+                                trailing: quantity > 0
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.deepPurple.withOpacity(
+                                            0.1,
                                           ),
-                                  ),
-                                );
-                              }),
-                              const SizedBox(height: 20),
-                            ],
-                          );
-                        }).toList(),
-                      ),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.remove,
+                                                size: 18,
+                                              ),
+                                              onPressed: () =>
+                                                  _decrementQuantity(item),
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                            ),
+                                            Text(
+                                              '${quantity}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.add,
+                                                size: 18,
+                                              ),
+                                              onPressed: () =>
+                                                  _incrementQuantity(item),
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : IconButton(
+                                        icon: const Icon(Icons.add),
+                                        onPressed: () =>
+                                            _incrementQuantity(item),
+                                        style: IconButton.styleFrom(
+                                          backgroundColor: Colors.deepPurple,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    }).toList(),
+                  ),
           ),
         ],
       ),
-bottomNavigationBar: _selectedItems.isNotEmpty
-    ? Padding(
-        padding: const EdgeInsets.only(bottom: 60), // Added space from bottom
-        child: Container(
-          height: 55,
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.deepPurple,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: _addToCart,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Basket • ${_totalSelectedItems} Item${_totalSelectedItems > 1 ? 's' : ''}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '\$${_totalSelectedPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+      bottomNavigationBar: _selectedItems.isNotEmpty
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 60),
+              child: Container(
+                height: 55,
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: _addToCart,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Basket • ${_totalSelectedItems} Item${_totalSelectedItems > 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '\$${_totalSelectedPrice.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
-      )
-    : null,
+            )
+          : null,
     );
   }
 }
