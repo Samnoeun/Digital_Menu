@@ -13,73 +13,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool isDarkMode = false;
   String selectedLanguage = 'English';
 
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'settings': 'Settings',
+      'dark_mode': 'Dark Mode',
+      'language': 'Language',
+      'choose_language': 'Choose Language',
+      'apply': 'Apply',
+      'account': 'Account',
+      'logout': 'Log Out',
+    },
+    'Khmer': {
+      'settings': 'ការកំណត់',
+      'dark_mode': 'របៀបងងឹត',
+      'language': 'ភាសា',
+      'choose_language': 'ជ្រើសរើសភាសា',
+      'apply': 'អនុវត្ត',
+      'account': 'គណនី',
+      'logout': 'ចាកចេញ',
+    },
+  };
+
   void _toggleDarkMode(bool value) {
     setState(() {
       isDarkMode = value;
     });
-    // TODO: Apply theme switching
   }
 
   void _showLanguagePicker() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) {
         String tempSelected = selectedLanguage;
 
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Center(
+                  Center(
                     child: Text(
-                      'Choose Language',
+                      localization[tempSelected]!['choose_language']!,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        fontFamily:
+                            tempSelected == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Radio<String>(
-                        value: 'English',
-                        groupValue: tempSelected,
-                        onChanged: (value) {
-                          setModalState(() => tempSelected = value!);
-                        },
-                      ),
-                      const Text('English'),
-                      const SizedBox(width: 20),
-                      Radio<String>(
-                        value: 'Khmer',
-                        groupValue: tempSelected,
-                        onChanged: (value) {
-                          setModalState(() => tempSelected = value!);
-                        },
-                      ),
-                      const Text('ខ្មែរ'),
-                    ],
+                  const SizedBox(height: 24),
+                  RadioListTile<String>(
+                    title: Text(localization['English']!['language']!),
+                    value: 'English',
+                    groupValue: tempSelected,
+                    onChanged: (value) {
+                      setModalState(() => tempSelected = value!);
+                    },
                   ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          selectedLanguage = tempSelected;
-                        });
-                        Navigator.pop(context);
-                        // TODO: Trigger localization logic
-                      },
-                      child: const Text('Apply'),
+                  RadioListTile<String>(
+                    title: Text(localization['Khmer']!['language']!),
+                    value: 'Khmer',
+                    groupValue: tempSelected,
+                    onChanged: (value) {
+                      setModalState(() => tempSelected = value!);
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        selectedLanguage = tempSelected;
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      localization[tempSelected]!['apply']!,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        fontFamily:
+                            tempSelected == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
                     ),
                   ),
                 ],
@@ -99,62 +125,104 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  TextStyle getTextStyle({bool isSubtitle = false, bool isGray = false}) {
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: isSubtitle ? 14 : 16,
+      color: isGray
+          ? Colors.grey.shade700
+          : isSubtitle
+              ? Colors.deepPurple.shade600.withOpacity(0.7)
+              : Colors.deepPurple.shade900,
+      fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final lang = localization[selectedLanguage]!;
+
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.deepPurple.shade700,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+        ),
+        elevation: 0,
         automaticallyImplyLeading: false,
         title: Padding(
           padding: const EdgeInsets.only(
             left: 0,
             right: 0,
-          ), // ⬅️ Your desired spacing
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(
-                width: 0,
-              ), 
-              const Text('Settings'),
+              const SizedBox(width: 0),
+              const Text(
+                'Settings',
+                style: TextStyle(color: Colors.white),
+              ),
             ],
           ),
         ),
       ),
-
       body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         children: [
           SwitchListTile(
-            title: const Text('Dark Mode'),
+            title: Text(
+              lang['dark_mode']!,
+              style: getTextStyle(isGray: true),
+            ),
             value: isDarkMode,
             onChanged: _toggleDarkMode,
-            secondary: const Icon(Icons.dark_mode),
+            secondary: Icon(Icons.dark_mode, color: Colors.deepPurple.shade700),
+            activeColor: Colors.deepPurple,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           ),
           ListTile(
-            leading: const Icon(Icons.language),
-            title: const Text('Language'),
-            subtitle: Text(selectedLanguage),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            leading: Icon(Icons.language, color: Colors.deepPurple.shade700, size: 28),
+            title: Text(lang['language']!, style: getTextStyle(isGray: true)),
+            subtitle: Text(selectedLanguage, style: getTextStyle(isSubtitle: true, isGray: true)),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 18),
             onTap: _showLanguagePicker,
           ),
           ListTile(
-            leading: const Icon(Icons.account_circle),
-            title: const Text('Account'),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            leading: Icon(Icons.account_circle, color: Colors.deepPurple.shade700, size: 28),
+            title: Text(lang['account']!, style: getTextStyle(isGray: true)),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 18),
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AccountScreen()),
             ),
           ),
-          const Divider(),
+          const Divider(
+            indent: 24,
+            endIndent: 24,
+            thickness: 1,
+            height: 32,
+          ),
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('Log Out', style: TextStyle(color: Colors.red)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            leading: const Icon(Icons.logout, color: Colors.red, size: 28),
+            title: Text(
+              lang['logout']!,
+              style: getTextStyle().copyWith(color: Colors.red),
+            ),
             onTap: () => _logout(context),
           ),
         ],

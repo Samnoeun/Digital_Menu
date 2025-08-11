@@ -20,7 +20,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 
   void _processQRData() {
-    final qrData = _qrDataController.text.trim();
+    final String qrData = _qrDataController.text.trim();
 
     if (qrData.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -33,11 +33,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     }
 
     try {
-      // Try to parse as JSON (menu data)
-      final jsonData = jsonDecode(qrData);
+      final dynamic jsonData = jsonDecode(qrData);
 
-      if (jsonData['menu_items'] != null) {
-        // This is menu data
+      // Ensure jsonData is a Map before accessing keys
+      if (jsonData is Map && jsonData['menu_items'] != null) {
         final List<MenuItem> menuItems = (jsonData['menu_items'] as List)
             .map(
               (item) => MenuItem(
@@ -58,11 +57,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ),
         );
       } else {
-        // Regular text/URL
         _showRegularQRData(qrData);
       }
     } catch (e) {
-      // Not JSON, treat as regular text/URL
+      // If parsing fails, treat as regular text
       _showRegularQRData(qrData);
     }
   }
@@ -105,7 +103,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             if (data.startsWith('http'))
               ElevatedButton(
                 onPressed: () {
-                  // In a real app, you'd use url_launcher package
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Would open URL in browser')),
                   );
@@ -124,39 +121,34 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(
-          0xFFF3E5F5,
-        ),
+        backgroundColor: const Color(0xFF6A1B9A), // Purple color
         elevation: 0,
         titleSpacing: 0,
         title: Padding(
-          padding: const EdgeInsets.only(left: 5, right: 0), 
+          padding: const EdgeInsets.only(left: 10),
           child: Row(
-            mainAxisSize:
-                MainAxisSize.min, 
             children: [
               IconButton(
                 icon: const Icon(
                   Icons.arrow_back_ios,
                   size: 18,
-                  color: Color(0xFF6A1B9A),
+                  color: Colors.white,
                 ),
-                onPressed: () => Navigator.pop(context), // Go back
-                padding: EdgeInsets.zero, 
-                constraints:
-                    const BoxConstraints(),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 0), 
               const Text(
                 'QR Scanner Demo',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF6A1B9A), // Match icon color
+                  color: Colors.white,
                 ),
               ),
             ],
           ),
         ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
 
       body: Padding(
@@ -164,37 +156,47 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Info box
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFFE1BEE7), // Light purple background
+                borderRadius: BorderRadius.circular(12),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info, color: Colors.blue),
+                  Icon(Icons.info, color: Color(0xFF6A1B9A)), // Dark purple icon
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'In a real app, this would use the camera to scan QR codes. For demo purposes, paste the QR data below.',
-                      style: TextStyle(color: Colors.blue),
+                      style: TextStyle(color: Color(0xFF6A1B9A)),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             const Text(
               'Paste QR Code Data:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6A1B9A),
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _qrDataController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 hintText: 'Paste QR code data here...',
-                prefixIcon: Icon(Icons.qr_code_scanner),
+                prefixIcon:
+                    const Icon(Icons.qr_code_scanner, color: Color(0xFF6A1B9A)),
+                filled: true,
+                fillColor: Colors.grey.shade100,
               ),
               maxLines: 5,
             ),
@@ -206,14 +208,23 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 label: const Text('Process QR Data'),
                 onPressed: _processQRData,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6A1B9A),
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             const Text(
               'How to test:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF6A1B9A),
+              ),
             ),
             const SizedBox(height: 8),
             const Text(
