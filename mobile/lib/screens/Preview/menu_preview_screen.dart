@@ -161,7 +161,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
       backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFFF3E5F5),
+        backgroundColor: Colors.deepPurple.shade700,
         iconTheme: const IconThemeData(color: Color(0xFF6A1B9A)),
         title: Padding(
           padding: const EdgeInsets.only(left: 0, right: 0),
@@ -169,7 +169,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Color(0xFF6A1B9A)),
+                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Color.fromARGB(255, 255, 255, 255)),
                 onPressed: () => Navigator.of(context).pop(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
