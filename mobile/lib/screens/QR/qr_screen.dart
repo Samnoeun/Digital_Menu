@@ -48,9 +48,10 @@ class _QrScreenState extends State<QrScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.deepPurple.shade50, // Added background color
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: const Color(0xFF6A1B9A), // Purple theme
+        backgroundColor: Colors.deepPurple.shade600, // Changed to deep purple
         elevation: 0,
         titleSpacing: 0,
         title: Padding(
@@ -65,9 +66,7 @@ class _QrScreenState extends State<QrScreen> {
                 ),
                 onPressed: () => Navigator.of(context).pop(),
                 padding: EdgeInsets.zero,
-
               ),
-              
               const Text(
                 'Generate QR Code',
                 style: TextStyle(
@@ -89,36 +88,34 @@ class _QrScreenState extends State<QrScreen> {
                 MaterialPageRoute(builder: (_) => const QRScannerScreen()),
               );
             },
-
           ),
           if (showQR)
             IconButton(
               icon: const Icon(Icons.clear),
-
               tooltip: 'Clear QR Code',
               onPressed: _clearQR,
             ),
         ],
       ),
-
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 24.0), // Reduced top padding
+        padding: const EdgeInsets.fromLTRB(24.0, 12.0, 24.0, 24.0),
         child: Column(
-
           children: [
-            const SizedBox(height: 8), // Reduced space before TextField
-
+            const SizedBox(height: 8),
             TextField(
               controller: _textController,
               decoration: InputDecoration(
                 labelText: 'Enter link or data',
                 hintText: 'https://example.com',
-                prefixIcon: const Icon(Icons.link),
+                prefixIcon: const Icon(Icons.link, color: Colors.deepPurple), // Added icon color
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.deepPurple.shade200), // Added border color
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade100,
+                fillColor: Colors.white,
+                labelStyle: TextStyle(color: Colors.deepPurple.shade600), // Label color
+                hintStyle: TextStyle(color: Colors.deepPurple.shade400), // Hint color
               ),
               maxLines: 3,
               onChanged: (val) {
@@ -127,9 +124,7 @@ class _QrScreenState extends State<QrScreen> {
                 }
               },
             ),
-
             const SizedBox(height: 20),
-
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
@@ -137,7 +132,7 @@ class _QrScreenState extends State<QrScreen> {
                 label: const Text('Generate QR Code'),
                 onPressed: _generateQR,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6A1B9A),
+                  backgroundColor: Colors.deepPurple.shade600, // Changed to deep purple
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -146,16 +141,17 @@ class _QrScreenState extends State<QrScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 30),
-
             if (showQR) ...[
-              const Text(
+              Text(
                 'Your QR Code',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple.shade600, // Added text color
+                ),
               ),
               const SizedBox(height: 16),
-
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -163,52 +159,58 @@ class _QrScreenState extends State<QrScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
+                      color: Colors.deepPurple.withOpacity(0.1), // Changed shadow color
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
                   ],
+                  border: Border.all(color: Colors.deepPurple.shade100), // Added border
                 ),
                 child: QrImageView(
                   data: qrText,
                   version: QrVersions.auto,
                   size: 250.0,
                   backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
+                  foregroundColor: Colors.deepPurple.shade800, // Changed QR color
                   errorCorrectionLevel: QrErrorCorrectLevel.M,
-
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.deepPurple.shade100), // Added border
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'QR Code Data:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple.shade600, // Added text color
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       qrText,
-                      style: const TextStyle(fontSize: 13),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.deepPurple.shade600, // Added text color
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              const Text(
+              Text(
                 'Tip: You can scan this QR code with any QR scanner app or your camera.',
-                style: TextStyle(color: Colors.grey, fontSize: 13),
+                style: TextStyle(
+                  color: Colors.deepPurple.shade400, // Changed text color
+                  fontSize: 13,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
