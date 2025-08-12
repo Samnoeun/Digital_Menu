@@ -4,6 +4,7 @@ import '../../models/item_model.dart' as item;
 import '../../services/api_services.dart';
 import '../../screens/cart_screen.dart';
 import './item_detail_screen.dart';
+import '../../screens/home_screen.dart'; // Adjust the path as needed
 
 class MenuPreviewScreen extends StatefulWidget {
   const MenuPreviewScreen({super.key});
@@ -240,8 +241,14 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Color.fromARGB(255, 255, 255, 255)),
-                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  Navigator.popUntil(context, (route) => route.isFirst);
+                },
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
