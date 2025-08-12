@@ -8253,7 +8253,7 @@ LP(a,b,c,d){return A.aUS(a,b,c,d)},
 aUS(a,b,c,d){var s=0,r=A.H(t.SK),q,p=2,o=[],n,m,l,k,j,i,h,g,f,e
 var $async$LP=A.C(function(a0,a1){if(a0===1){o.push(a1)
 s=p}while(true)switch(s){case 0:p=4
-j=A.dv("http://13.239.27.60/api/register")
+j=A.dv("https://qrmenu.zapto.org/api/register")
 i=t.N
 h=A.ac(["Accept","application/json"],i,i)
 s=7
@@ -8299,7 +8299,7 @@ LO(a,b){return A.aUR(a,b)},
 aUR(a,b){var s=0,r=A.H(t.a),q,p=2,o=[],n,m,l,k,j,i,h,g,f
 var $async$LO=A.C(function(c,d){if(c===1){o.push(d)
 s=p}while(true)switch(s){case 0:p=4
-j=A.dv("http://13.239.27.60/api/login")
+j=A.dv("https://qrmenu.zapto.org/api/login")
 i=t.N
 h=A.ac(["Accept","application/json"],i,i)
 s=7
@@ -8342,7 +8342,7 @@ s=p}while(true)switch(s){case 0:p=4
 s=7
 return A.w(A.eS(),$async$zz)
 case 7:n=b
-i=A.dv("http://13.239.27.60/api/me")
+i=A.dv("https://qrmenu.zapto.org/api/me")
 h=t.N
 m=A.y(h,h)
 J.fr(m,"Accept","application/json")
@@ -8376,7 +8376,7 @@ var $async$lj=A.C(function(a,b){if(a===1)return A.E(b,r)
 while(true)switch(s){case 0:s=3
 return A.w(A.eS(),$async$lj)
 case 3:n=b
-m=A.dv("http://13.239.27.60/api/categories")
+m=A.dv("https://qrmenu.zapto.org/api/categories")
 l=t.N
 l=A.y(l,l)
 l.p(0,"Accept","application/json")
@@ -8404,7 +8404,7 @@ while(true)switch(s){case 0:s=2
 return A.w(A.eS(),$async$LN)
 case 2:m=c
 if(m==null)throw A.f(A.bL("Please login first"))
-q=A.dv("http://13.239.27.60/api/categories")
+q=A.dv("https://qrmenu.zapto.org/api/categories")
 p=t.N
 o=A.ac(["Content-Type","application/json","Authorization","Bearer "+m],p,p)
 s=3
@@ -8422,7 +8422,7 @@ while(true)switch(s){case 0:s=2
 return A.w(A.eS(),$async$LS)
 case 2:m=d
 if(m==null)throw A.f(A.bL("Please login first"))
-q=A.dv("http://13.239.27.60/api/categories/"+a)
+q=A.dv("https://qrmenu.zapto.org/api/categories/"+a)
 p=t.N
 o=A.ac(["Content-Type","application/json","Accept","application/json","Authorization","Bearer "+m],p,p)
 s=3
@@ -8438,7 +8438,7 @@ var $async$zy=A.C(function(b,c){if(b===1)return A.E(c,r)
 while(true)switch(s){case 0:s=2
 return A.w(A.eS(),$async$zy)
 case 2:p=c
-o=A.dv("http://13.239.27.60/api/categories/"+a)
+o=A.dv("https://qrmenu.zapto.org/api/categories/"+a)
 n=t.N
 n=A.y(n,n)
 n.p(0,"Accept","application/json")
@@ -8458,7 +8458,7 @@ case 3:n=b
 if(n==null)throw A.f(A.bL("Please login first"))
 p=t.N
 s=4
-return A.w(A.a2m(A.dv("http://13.239.27.60/api/items"),A.ac(["Accept","application/json","Authorization","Bearer "+n],p,p)),$async$n4)
+return A.w(A.a2m(A.dv("https://qrmenu.zapto.org/api/items"),A.ac(["Accept","application/json","Authorization","Bearer "+n],p,p)),$async$n4)
 case 4:o=b
 p=o.b
 s=p===200?5:7
@@ -8487,7 +8487,7 @@ while(true)switch(s){case 0:s=2
 return A.w(A.eS(),$async$tY)
 case 2:m=g
 if(m==null)throw A.f(A.bL("Please login first"))
-q=A.afw("POST",A.dv("http://13.239.27.60/api/items"))
+q=A.afw("POST",A.dv("https://qrmenu.zapto.org/api/items"))
 p=q.r
 p.p(0,"Authorization","Bearer "+m)
 p.p(0,"Accept","application/json")
@@ -8518,7 +8518,7 @@ while(true)switch(s){case 0:s=2
 return A.w(A.eS(),$async$pw)
 case 2:m=h
 if(m==null)throw A.f(A.bL("Please login first"))
-q=A.afw("POST",A.dv("http://13.239.27.60/api/items/"+a+"?_method=PUT"))
+q=A.afw("POST",A.dv("https://qrmenu.zapto.org/api/items/"+a+"?_method=PUT"))
 p=q.r
 p.p(0,"Authorization","Bearer "+m)
 p.p(0,"Accept","application/json")
@@ -8553,7 +8553,7 @@ case 2:o=c
 if(o==null)throw A.f(A.bL("Please login first"))
 q=t.N
 s=3
-return A.w(A.aJu(A.dv("http://13.239.27.60/api/items/"+a),A.ac(["Accept","application/json","Authorization","Bearer "+o],q,q)),$async$u_)
+return A.w(A.aJu(A.dv("https://qrmenu.zapto.org/api/items/"+a),A.ac(["Accept","application/json","Authorization","Bearer "+o],q,q)),$async$u_)
 case 3:p=c
 q=p.b
 if(q!==200&&q!==204)throw A.f(A.bL("Failed to delete item: "+p.gkf()))
@@ -8567,7 +8567,7 @@ case 3:n=b
 if(n==null)throw A.f(A.bL("Please login first"))
 p=t.N
 s=4
-return A.w(A.a2m(A.dv("http://13.239.27.60/api/orders"),A.ac(["Accept","application/json","Authorization","Bearer "+n],p,p)),$async$u0)
+return A.w(A.a2m(A.dv("https://qrmenu.zapto.org/api/orders"),A.ac(["Accept","application/json","Authorization","Bearer "+n],p,p)),$async$u0)
 case 4:o=b
 p=o.b
 s=p===200?5:7
@@ -8594,7 +8594,7 @@ while(true)switch(s){case 0:s=3
 return A.w(A.eS(),$async$zB)
 case 3:l=d
 if(l==null)throw A.f(A.bL("Please login first"))
-p=A.dv("http://13.239.27.60/api/orders/"+a+"/status")
+p=A.dv("https://qrmenu.zapto.org/api/orders/"+a+"/status")
 o=t.N
 n=A.ac(["Content-Type","application/json","Authorization","Bearer "+l],o,o)
 s=4
@@ -8625,7 +8625,7 @@ s=p}while(true)switch(s){case 0:p=4
 s=7
 return A.w(A.eS(),$async$LR)
 case 7:n=d
-i=A.dv("http://13.239.27.60/api/orders")
+i=A.dv("https://qrmenu.zapto.org/api/orders")
 h=t.N
 m=A.y(h,h)
 J.fr(m,"Content-Type","application/json")
@@ -8665,7 +8665,7 @@ var $async$tZ=A.C(function(d,e){if(d===1)return A.E(e,r)
 while(true)switch(s){case 0:s=2
 return A.w(A.eS(),$async$tZ)
 case 2:p=e
-o=A.afw("POST",A.dv("http://13.239.27.60/api/restaurants"))
+o=A.afw("POST",A.dv("https://qrmenu.zapto.org/api/restaurants"))
 n=t.N
 n=A.y(n,n)
 n.p(0,"Accept","application/json")
@@ -8699,7 +8699,7 @@ var $async$u2=A.C(function(e,f){if(e===1)return A.E(f,r)
 while(true)switch(s){case 0:s=2
 return A.w(A.eS(),$async$u2)
 case 2:o=f
-n=A.afw("POST",A.dv("http://13.239.27.60/api/restaurants/"+b+"?_method=PUT"))
+n=A.afw("POST",A.dv("https://qrmenu.zapto.org/api/restaurants/"+b+"?_method=PUT"))
 m=t.N
 n.r.Z(0,A.ac(["Authorization","Bearer "+A.k(o),"Accept","application/json"],m,m))
 m=n.x
@@ -8733,7 +8733,7 @@ case 8:m=b
 if(m==null){i=A.bL("User not found")
 throw A.f(i)}i=t.N
 s=9
-return A.w(A.a2m(A.dv("http://13.239.27.60/api/restaurants/user/"+m.a),A.ac(["Authorization","Bearer "+n,"Accept","application/json"],i,i)),$async$u1)
+return A.w(A.a2m(A.dv("https://qrmenu.zapto.org/api/restaurants/user/"+m.a),A.ac(["Authorization","Bearer "+n,"Accept","application/json"],i,i)),$async$u1)
 case 9:l=b
 if(l.b===200){i=l
 k=B.aL.cC(A.lc(A.l9(i.e)).cC(i.w))
@@ -8762,7 +8762,7 @@ break
 case 6:case 1:return A.F(q,r)
 case 2:return A.E(o.at(-1),r)}})
 return A.G($async$u1,r)},
-lk(a){var s="http://13.239.27.60/api"
+lk(a){var s="https://qrmenu.zapto.org/api"
 if(a==null||a.length===0)return""
 if(!B.c.bz(a,"http")&&!B.c.m(a,"/"))return B.c.DX(s,"/api","")+"/storage/profiles/"+a
 return B.c.DX(s,"/api","")+a},
