@@ -8,21 +8,19 @@ import '../../services/api_services.dart';
 
 class AddItemScreen extends StatefulWidget {
   final item_model.Item? item;
-  const AddItemScreen({Key? key, this.item}) : super(key: key);
+  final Function(bool)? onThemeToggle;
+  const AddItemScreen({Key? key, this.item, this.onThemeToggle}) : super(key: key);
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
 }
 
-class _AddItemScreenState extends State<AddItemScreen>
-    with TickerProviderStateMixin {
+class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final _priceController = TextEditingController();
   bool _isLoading = false;
-  bool _isSelectionMode = false;
-  Set<int> _selectedItemIds = {};
   List<Category> _categories = [];
   Category? _selectedCategory;
   File? _imageFile;
@@ -50,15 +48,6 @@ class _AddItemScreenState extends State<AddItemScreen>
     _priceController.dispose();
     _animationController.dispose();
     super.dispose();
-  }
-
-  void _toggleSelectionMode() {
-    setState(() {
-      _isSelectionMode = !_isSelectionMode;
-      if (!_isSelectionMode) {
-        _selectedItemIds.clear();
-      }
-    });
   }
 
   Future<void> _initializeForm() async {
@@ -213,20 +202,41 @@ class _AddItemScreenState extends State<AddItemScreen>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[800]
+            : Colors.white,
         title: Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
-            const Text('Confirm Delete'),
+            Text(
+              'Confirm Delete',
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : Colors.black87,
+              ),
+            ),
           ],
         ),
-        content: Text('Delete ${widget.item!.name}?'),
+        content: Text(
+          'Delete ${widget.item!.name}?',
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[400]
+                : Colors.grey[600],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[400]
+                    : Colors.grey[600],
+              ),
             ),
           ),
           ElevatedButton(
@@ -267,16 +277,12 @@ class _AddItemScreenState extends State<AddItemScreen>
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.red.shade600,
+        backgroundColor: Colors.deepPurple.shade700,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
       ),
     );
-  }
-
-  Future<void> _loadData() async {
-    await _fetchCategories();
   }
 
   void _showSuccessSnackbar(String message) {
@@ -300,9 +306,11 @@ class _AddItemScreenState extends State<AddItemScreen>
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.item != null;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Row(
@@ -339,19 +347,23 @@ class _AddItemScreenState extends State<AddItemScreen>
             ),
           ),
         ),
-        
         actions: [
-          TextButton(
-            onPressed: _toggleSelectionMode,
-            child: const Text(
-              'Select',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+          if (isEdit)
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.white),
+              onPressed: _deleteItem,
+              tooltip: 'Delete Item',
             ),
-          ),
+          if (widget.onThemeToggle != null)
+            IconButton(
+              icon: Icon(
+                isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                widget.onThemeToggle!(isDarkMode);
+              },
+            ),
           const SizedBox(width: 8),
         ],
       ),
@@ -361,14 +373,14 @@ class _AddItemScreenState extends State<AddItemScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircularProgressIndicator(
-                    color: Colors.deepPurple.shade600,
+                    color: Colors.deepPurple.shade700,
                     strokeWidth: 3,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Loading...',
                     style: TextStyle(
-                      color: Colors.deepPurple.shade600,
+                      color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -395,10 +407,9 @@ class _AddItemScreenState extends State<AddItemScreen>
                             height: 140,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [
-                                  Colors.deepPurple.shade100,
-                                  Colors.deepPurple.shade50,
-                                ],
+                                colors: isDarkMode
+                                    ? [Colors.grey.shade700, Colors.grey.shade800]
+                                    : [Colors.deepPurple.shade100, Colors.deepPurple.shade50],
                               ),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
@@ -430,7 +441,9 @@ class _AddItemScreenState extends State<AddItemScreen>
                                           errorBuilder: (_, __, ___) => Icon(
                                             Icons.broken_image_rounded,
                                             size: 50,
-                                            color: Colors.deepPurple.shade400,
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.deepPurple.shade400,
                                           ),
                                         ),
                                       )
@@ -440,13 +453,17 @@ class _AddItemScreenState extends State<AddItemScreen>
                                           Icon(
                                             Icons.add_photo_alternate_rounded,
                                             size: 50,
-                                            color: Colors.deepPurple.shade600,
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.deepPurple.shade600,
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
                                             'Add Image',
                                             style: TextStyle(
-                                              color: Colors.deepPurple.shade600,
+                                              color: isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : Colors.deepPurple.shade600,
                                               fontWeight: FontWeight.w600,
                                               fontSize: 16,
                                             ),
@@ -465,21 +482,29 @@ class _AddItemScreenState extends State<AddItemScreen>
                           controller: _nameController,
                           decoration: InputDecoration(
                             labelText: 'Item Name',
-                            labelStyle: TextStyle(color: Colors.deepPurple.shade600),
+                            labelStyle: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(color: Colors.deepPurple.shade300),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade600, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade600,
+                                width: 2,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                             prefixIcon: Icon(
                               Icons.restaurant_menu,
                               color: Colors.deepPurple.shade600,
                             ),
+                          ),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black87,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -498,21 +523,29 @@ class _AddItemScreenState extends State<AddItemScreen>
                           controller: _descController,
                           decoration: InputDecoration(
                             labelText: 'Description (Optional)',
-                            labelStyle: TextStyle(color: Colors.deepPurple.shade600),
+                            labelStyle: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(color: Colors.deepPurple.shade300),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade600, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade600,
+                                width: 2,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                             prefixIcon: Icon(
                               Icons.description_rounded,
                               color: Colors.deepPurple.shade600,
                             ),
+                          ),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black87,
                           ),
                           maxLines: 3,
                         ),
@@ -526,21 +559,29 @@ class _AddItemScreenState extends State<AddItemScreen>
                           controller: _priceController,
                           decoration: InputDecoration(
                             labelText: 'Price',
-                            labelStyle: TextStyle(color: Colors.deepPurple.shade600),
+                            labelStyle: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(color: Colors.deepPurple.shade300),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade600, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade600,
+                                width: 2,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                             prefixIcon: Icon(
                               Icons.attach_money_rounded,
                               color: Colors.deepPurple.shade600,
                             ),
+                          ),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black87,
                           ),
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           validator: (value) {
@@ -564,7 +605,12 @@ class _AddItemScreenState extends State<AddItemScreen>
                           items: _categories.map((category) {
                             return DropdownMenuItem<Category>(
                               value: category,
-                              child: Text(category.name),
+                              child: Text(
+                                category.name,
+                                style: TextStyle(
+                                  color: isDarkMode ? Colors.white : Colors.black87,
+                                ),
+                              ),
                             );
                           }).toList(),
                           onChanged: (category) {
@@ -574,22 +620,28 @@ class _AddItemScreenState extends State<AddItemScreen>
                           },
                           decoration: InputDecoration(
                             labelText: 'Category',
-                            labelStyle: TextStyle(color: Colors.deepPurple.shade600),
+                            labelStyle: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(color: Colors.deepPurple.shade300),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade600, width: 2),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade600,
+                                width: 2,
+                              ),
                             ),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                             prefixIcon: Icon(
                               Icons.category_rounded,
                               color: Colors.deepPurple.shade600,
                             ),
                           ),
+                          dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
                           validator: (value) {
                             if (value == null) {
                               return 'Please select category';
@@ -608,7 +660,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _saveItem,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple.shade600,
+                            backgroundColor: Colors.deepPurple.shade700,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),

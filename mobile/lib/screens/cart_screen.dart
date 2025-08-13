@@ -128,7 +128,6 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final theme = Theme.of(context);
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -232,8 +231,7 @@ class _CartScreenState extends State<CartScreen> {
                                         item.imagePath!.isNotEmpty)
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(12),
-                                        child: Image.network(
-                                          ApiService.getImageUrl(
+                                        child: Image.network(ApiService.getImageUrl(
                                             item.imagePath,
                                           ),
                                           width: 70,
@@ -304,8 +302,7 @@ class _CartScreenState extends State<CartScreen> {
                                             onPressed: () => _updateQuantity(
                                               item,
                                               quantity - 1,
-                                            ),
-                                          ),
+                                            ),),
                                           Padding(
                                             padding: const EdgeInsets.symmetric(
                                               horizontal: 12,
@@ -382,8 +379,7 @@ class _CartScreenState extends State<CartScreen> {
           ),
           if (widget.cart.isNotEmpty)
             Container(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
-              decoration: BoxDecoration(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),

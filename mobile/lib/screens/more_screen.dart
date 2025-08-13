@@ -3,7 +3,8 @@ import 'QR/qr_screen.dart';
 import 'Setting/settings_screen.dart';
 
 class MoreScreen extends StatelessWidget {
-  const MoreScreen({super.key});
+  final Function(bool) onThemeToggle;
+  const MoreScreen({super.key, required this.onThemeToggle});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,9 @@ class MoreScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                MaterialPageRoute(
+                  builder: (context) => SettingsScreen(onThemeToggle: onThemeToggle),
+                ),
               );
             },
           ),
