@@ -5,6 +5,9 @@ import 'package:http/http.dart' as http;
 import '../../models/category_model.dart';
 import '../../models/item_model.dart' as item_model;
 import '../../services/api_services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import '../../services/image_picker_service.dart';
 
 class AddItemScreen extends StatefulWidget {
   final item_model.Item? item;
@@ -26,6 +29,7 @@ class _AddItemScreenState extends State<AddItemScreen>
   List<Category> _categories = [];
   Category? _selectedCategory;
   File? _imageFile;
+  Uint8List? _imageBytes;
   String? _imagePath;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -96,10 +100,16 @@ class _AddItemScreenState extends State<AddItemScreen>
 
   Future<void> _pickImage() async {
     try {
-      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (picked != null) {
+      final result = await ImagePickerService.pickImage();
+      if (result != null) {
         setState(() {
-          _imageFile = File(picked.path);
+          if (kIsWeb) {
+            _imageBytes = result.webBytes;
+            _imageFile = null;
+          } else {
+            _imageFile = result.mobileFile;
+            _imageBytes = null;
+          }
           _imagePath = null;
         });
       }
@@ -128,6 +138,7 @@ class _AddItemScreenState extends State<AddItemScreen>
           price: price,
           categoryId: categoryId,
           imageFile: _imageFile,
+          imageBytes: _imageBytes,
         );
         _showSuccessSnackbar('Item created successfully');
       } else {
@@ -138,6 +149,7 @@ class _AddItemScreenState extends State<AddItemScreen>
           price: price,
           categoryId: categoryId,
           imageFile: _imageFile,
+          imageBytes: _imageBytes,
         );
         _showSuccessSnackbar('Item updated successfully');
       }
@@ -146,65 +158,6 @@ class _AddItemScreenState extends State<AddItemScreen>
       _showErrorSnackbar('Error: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _createItem({
-    required String name,
-    required String description,
-    required double price,
-    required int categoryId,
-  }) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('${ApiService.baseUrl}/items'),
-    );
-    request.headers['Accept'] = 'application/json';
-    request.fields['name'] = name;
-    request.fields['description'] = description;
-    request.fields['price'] = price.toString();
-    request.fields['category_id'] = categoryId.toString();
-
-    if (_imageFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('image', _imageFile!.path),
-      );
-    }
-
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
-    if (response.statusCode != 201) {
-      throw Exception('Failed to create item: $responseBody');
-    }
-  }
-
-  Future<void> _updateItem({
-    required int id,
-    required String name,
-    required String description,
-    required double price,
-    required int categoryId,
-  }) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('${ApiService.baseUrl}/items/$id?_method=PUT'),
-    );
-    request.headers['Accept'] = 'application/json';
-    request.fields['name'] = name;
-    request.fields['description'] = description;
-    request.fields['price'] = price.toString();
-    request.fields['category_id'] = categoryId.toString();
-
-    if (_imageFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('image', _imageFile!.path),
-      );
-    }
-
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update item: $responseBody');
     }
   }
 
@@ -275,10 +228,6 @@ class _AddItemScreenState extends State<AddItemScreen>
     );
   }
 
-  Future<void> _loadData() async {
-    await _fetchCategories();
-  }
-
   void _showSuccessSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -308,11 +257,7 @@ class _AddItemScreenState extends State<AddItemScreen>
         title: Row(
           children: [
             IconButton(
-              icon: const Icon(
-                Icons.close,
-                size: 20,
-                color: Colors.white,
-              ),
+              icon: const Icon(Icons.close, size: 20, color: Colors.white),
               onPressed: () => Navigator.pop(context),
               constraints: const BoxConstraints(),
               padding: EdgeInsets.zero,
@@ -339,7 +284,6 @@ class _AddItemScreenState extends State<AddItemScreen>
             ),
           ),
         ),
-        
         actions: [
           TextButton(
             onPressed: _toggleSelectionMode,
@@ -413,46 +357,54 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 ),
                               ],
                             ),
-                            child: _imageFile != null
+                            child: _imageBytes != null
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(18),
-                                    child: Image.file(
-                                      _imageFile!,
+                                    child: Image.memory(
+                                      _imageBytes!,
                                       fit: BoxFit.cover,
                                     ),
                                   )
-                                : _imagePath != null
+                                : _imageFile != null
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(18),
-                                        child: Image.network(
-                                          ApiService.getImageUrl(_imagePath!),
+                                        child: Image.file(
+                                          _imageFile!,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => Icon(
-                                            Icons.broken_image_rounded,
-                                            size: 50,
-                                            color: Colors.deepPurple.shade400,
-                                          ),
                                         ),
                                       )
-                                    : Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.add_photo_alternate_rounded,
-                                            size: 50,
-                                            color: Colors.deepPurple.shade600,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Add Image',
-                                            style: TextStyle(
-                                              color: Colors.deepPurple.shade600,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 16,
+                                    : _imagePath != null
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(18),
+                                            child: Image.network(
+                                              ApiService.getImageUrl(_imagePath!),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => Icon(
+                                                Icons.broken_image_rounded,
+                                                size: 50,
+                                                color: Colors.deepPurple.shade400,
+                                              ),
                                             ),
+                                          )
+                                        : Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.add_photo_alternate_rounded,
+                                                size: 50,
+                                                color: Colors.deepPurple.shade600,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'Add Image',
+                                                style: TextStyle(
+                                                  color: Colors.deepPurple.shade600,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
                           ),
                         ),
                       ),
