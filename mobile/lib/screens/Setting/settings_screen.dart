@@ -56,7 +56,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (_) {
         String tempSelected = selectedLanguage;
 
@@ -74,8 +75,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        fontFamily:
-                            tempSelected == 'Khmer' ? 'NotoSansKhmer' : null,
+                        fontFamily: tempSelected == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                   ),
@@ -101,7 +103,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     onPressed: () {
                       setState(() {
@@ -114,8 +117,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        fontFamily:
-                            tempSelected == 'Khmer' ? 'NotoSansKhmer' : null,
+                        fontFamily: tempSelected == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                   ),
@@ -145,8 +149,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       color: isGray
           ? Theme.of(context).textTheme.bodyMedium!.color
           : isSubtitle
-              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
-              : Theme.of(context).textTheme.bodyLarge!.color,
+          ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+          : Theme.of(context).textTheme.bodyLarge!.color,
       fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
     );
   }
@@ -166,25 +170,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         elevation: 0,
         automaticallyImplyLeading: false,
+
         title: Padding(
-          padding: const EdgeInsets.only(
-            left: 0,
-            right: 0,
-          ),
+          padding: const EdgeInsets.only(left: 0, right: 0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Colors.white,
+                ), // Added color here
                 onPressed: () => Navigator.pop(context),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 0),
+              const SizedBox(
+                width: 0,
+              ), // This SizedBox with width 0 can be removed if not needed
               Text(
                 lang['settings']!,
+                style: const TextStyle(
+                  color: Colors.white,
+                ), // Added white color for text
               ),
             ],
+          ),
+        ),
+
+        backgroundColor: Colors.deepPurple.shade700,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
       ),
@@ -192,10 +214,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 20),
         children: [
           SwitchListTile(
-            title: Text(
-              lang['dark_mode']!,
-              style: getTextStyle(isGray: true),
-            ),
+            title: Text(lang['dark_mode']!, style: getTextStyle(isGray: true)),
             value: isDarkMode,
             onChanged: _toggleDarkMode,
             secondary: Icon(
@@ -203,10 +222,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: isDark ? Colors.white70 : Colors.deepPurple.shade700,
             ),
             activeColor: Colors.deepPurple,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 8,
+            ),
           ),
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 8,
+            ),
             leading: Icon(
               Icons.language,
               size: 28,
@@ -221,7 +246,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onTap: _showLanguagePicker,
           ),
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 8,
+            ),
             leading: Icon(
               Icons.account_circle,
               size: 28,
@@ -234,14 +262,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               MaterialPageRoute(builder: (_) => const AccountScreen()),
             ),
           ),
-          const Divider(
-            indent: 24,
-            endIndent: 24,
-            thickness: 1,
-            height: 32,
-          ),
+          const Divider(indent: 24, endIndent: 24, thickness: 1, height: 32),
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 8,
+            ),
             leading: const Icon(Icons.logout, color: Colors.red, size: 28),
             title: Text(
               lang['logout']!,
