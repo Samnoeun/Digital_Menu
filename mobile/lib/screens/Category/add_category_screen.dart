@@ -32,11 +32,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    
+
     if (widget.category != null) {
       _nameController.text = widget.category!.name;
     }
-    
+
     _animationController.forward();
   }
 
@@ -66,7 +66,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
             ),
             backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       } else {
@@ -86,7 +88,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
             ),
             backgroundColor: Colors.green.shade600,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -103,7 +107,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
           ),
           backgroundColor: Colors.red.shade600,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           action: e.toString().contains('restaurant')
               ? SnackBarAction(
                   label: 'Create Restaurant',
@@ -124,16 +130,38 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     return Scaffold(
       backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
-        title: Text(
-          widget.category == null ? 'Add Category' : 'Edit Category',
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 22,
-            color: Colors.white,
+        automaticallyImplyLeading: false, // Disable default back button
+        title: Padding(
+          padding: const EdgeInsets.only(
+            left: 2,
+            right: 0,
+          ), // 👈 Your requested padding
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Colors.white,
+                ),
+                onPressed: () => Navigator.pop(context),
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+              const SizedBox(width: 0), // Adjust spacing between icon and text
+              Text(
+                widget.category == null ? 'Add Category' : 'Edit Category',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
         ),
-        backgroundColor: Colors.deepPurple.shade700,
         elevation: 0,
+        backgroundColor: Colors.deepPurple.shade700,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -143,8 +171,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
             ),
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
       ),
+
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -156,9 +184,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                 padding: const EdgeInsets.all(20.0),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height - 
-                               MediaQuery.of(context).padding.top - 
-                               kToolbarHeight - 40, // Account for padding and app bar
+                    minHeight:
+                        MediaQuery.of(context).size.height -
+                        MediaQuery.of(context).padding.top -
+                        kToolbarHeight -
+                        40, // Account for padding and app bar
                   ),
                   child: IntrinsicHeight(
                     child: Column(
@@ -202,8 +232,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                 ),
                                 const SizedBox(height: 20),
                                 Text(
-                                  widget.category == null 
-                                      ? 'Create Category' 
+                                  widget.category == null
+                                      ? 'Create Category'
                                       : 'Edit Category',
                                   style: TextStyle(
                                     fontSize: 22,
@@ -228,26 +258,37 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   controller: _nameController,
                                   decoration: InputDecoration(
                                     labelText: 'Category Name',
-                                    labelStyle: TextStyle(color: Colors.deepPurple.shade600),
+                                    labelStyle: TextStyle(
+                                      color: Colors.deepPurple.shade600,
+                                    ),
                                     hintText: 'Enter category name',
-                                    prefixIcon: Icon(Icons.label_outline, 
-                                                   color: Colors.deepPurple.shade600),
+                                    prefixIcon: Icon(
+                                      Icons.label_outline,
+                                      color: Colors.deepPurple.shade600,
+                                    ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                                      borderSide: BorderSide(
+                                        color: Colors.deepPurple.shade300,
+                                      ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.deepPurple.shade600, width: 2),
+                                      borderSide: BorderSide(
+                                        color: Colors.deepPurple.shade600,
+                                        width: 2,
+                                      ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                                      borderSide: BorderSide(
+                                        color: Colors.deepPurple.shade300,
+                                      ),
                                     ),
                                     filled: true,
                                     fillColor: Colors.deepPurple.shade50,
                                     contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16, 
+                                      horizontal: 16,
                                       vertical: 14,
                                     ),
                                   ),
@@ -275,7 +316,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                     borderRadius: BorderRadius.circular(12),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.deepPurple.withOpacity(0.3),
+                                        color: Colors.deepPurple.withOpacity(
+                                          0.3,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -300,11 +343,12 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                             ),
                                           )
                                         : Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Icon(
-                                                widget.category == null 
-                                                    ? Icons.add_rounded 
+                                                widget.category == null
+                                                    ? Icons.add_rounded
                                                     : Icons.update_rounded,
                                                 color: Colors.white,
                                                 size: 20,

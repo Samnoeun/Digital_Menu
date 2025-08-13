@@ -60,138 +60,201 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-Future<void> _saveChanges() async {
-  if (!_formKey.currentState!.validate()) return;
+  Future<void> _saveChanges() async {
+    if (!_formKey.currentState!.validate()) return;
 
-  setState(() => _isSaving = true);
-  
-  try {
-    await ApiService.updateRestaurant(
-      id: _restaurant?.id ?? 1,
-      restaurantName: _nameController.text.trim(),
-      address: _addressController.text.trim(),
-      profileImage: _profileImage,
-    );
+    setState(() => _isSaving = true);
 
-    // Refresh data after update
-    await _loadRestaurantData();
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Restaurant updated successfully'),
-          backgroundColor: Colors.green,
-        ),
+    try {
+      await ApiService.updateRestaurant(
+        id: _restaurant?.id ?? 1,
+        restaurantName: _nameController.text.trim(),
+        address: _addressController.text.trim(),
+        profileImage: _profileImage,
       );
-    }
-  } catch (e) {
-    debugPrint('Update error: $e');
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  } finally {
-    if (mounted) {
-      setState(() => _isSaving = false);
+
+
+      await _loadRestaurantData();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Restaurant updated successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Update error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Restaurant'),
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Row(
+
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, size: 20),
+                onPressed: () => Navigator.pop(context),
+                splashRadius: 22,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Edit Restaurant',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Profile Image Section
+                    // Profile image with shadow and border
                     GestureDetector(
                       onTap: _pickImage,
-                      child: Stack(
-                        alignment: Alignment.bottomRight,
-                        children: [
-                          CircleAvatar(
-                            radius: 80,
-                            backgroundColor: Colors.deepPurple.shade100,
-                            backgroundImage: _getProfileImage(),
-                            child: _showProfilePlaceholder(),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.deepPurple),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.deepPurple.withOpacity(0.2),
+                              blurRadius: 12,
+                              offset: const Offset(0, 8),
                             ),
-                            child: const Icon(
-                              Icons.edit,
-                              size: 20,
-                              color: Colors.deepPurple,
+                          ],
+                        ),
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            CircleAvatar(
+                              radius: 80,
+                              backgroundColor: Colors.deepPurple.shade50,
+                              backgroundImage: _getProfileImage(),
+                              child: _showProfilePlaceholder(),
                             ),
-                          ),
-                        ],
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.deepPurple, width: 2),
+                              ),
+                              padding: const EdgeInsets.all(6),
+                              child: const Icon(
+                                Icons.edit,
+                                color: Colors.deepPurple,
+                                size: 24,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 36),
 
-                    // Restaurant Name Field
+                    // Restaurant Name field
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Restaurant Name',
-                        prefixIcon: Icon(Icons.restaurant),
-                        border: OutlineInputBorder(),
+                        hintText: 'Enter restaurant name',
+                        prefixIcon: const Icon(Icons.restaurant),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
                       ),
-                      validator: (value) => value?.isEmpty ?? true 
-                          ? 'Please enter restaurant name' 
-                          : null,
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) {
+                          return 'Please enter restaurant name';
+                        }
+                        return null;
+                      },
+                      style: theme.textTheme.bodyLarge,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 28),
 
-                    // Address Field
+                    // Address field
                     TextFormField(
                       controller: _addressController,
-                      decoration: const InputDecoration(
+                      maxLines: 3,
+                      decoration: InputDecoration(
                         labelText: 'Address',
-                        prefixIcon: Icon(Icons.location_on),
-                        border: OutlineInputBorder(),
+                        hintText: 'Enter restaurant address',
+                        prefixIcon: const Icon(Icons.location_on),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
                       ),
-                      maxLines: 2,
-                      validator: (value) => value?.isEmpty ?? true 
-                          ? 'Please enter address' 
-                          : null,
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) {
+                          return 'Please enter address';
+                        }
+                        return null;
+                      },
+                      style: theme.textTheme.bodyLarge,
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 36),
 
-                    // Save Button
+                    // Save button
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 52,
                       child: ElevatedButton(
                         onPressed: _isSaving ? null : _saveChanges,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.deepPurple,
-                          foregroundColor: Colors.white,
+
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(14),
                           ),
+                          elevation: 4,
                         ),
                         child: _isSaving
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('SAVE CHANGES'),
+                            ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : const Text(
+                                'SAVE CHANGES',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 16,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
                       ),
                     ),
                   ],
@@ -212,7 +275,7 @@ Future<void> _saveChanges() async {
   Widget? _showProfilePlaceholder() {
     if (_profileImage != null) return null;
     if (_restaurant?.profile == null || _restaurant!.profile!.isEmpty) {
-      return const Icon(Icons.restaurant, size: 50, color: Colors.deepPurple);
+      return const Icon(Icons.restaurant, size: 60, color: Colors.deepPurple);
     }
     return null;
   }

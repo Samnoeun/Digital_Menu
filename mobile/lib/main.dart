@@ -1,9 +1,11 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'screens/Login/login_screen.dart';
-import './screens/web_menu_screen.dart';
+import 'screens/splash_screen.dart'; // Add this import
+import './screens/taskbar_screen.dart';
 
-void main() => runApp(const DigitalMenuApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const DigitalMenuApp());
+}
 
 class DigitalMenuApp extends StatelessWidget {
   const DigitalMenuApp({super.key});
@@ -34,12 +36,9 @@ class DigitalMenuApp extends StatelessWidget {
           ),
         ),
       ),
-      // If running on web, show the web menu directly
-      // If running on mobile, show the login screen
-      home: kIsWeb ? const WebMenuScreen() : const LoginScreen(),
-      // Add routing for web
+      home: const SplashScreen(), // Changed from LoginScreen to SplashScreen
       routes: {
-        '/menu': (context) => const WebMenuScreen(),
+        '/menu': (context) => const MenuScreen(),
       },
     );
   }
