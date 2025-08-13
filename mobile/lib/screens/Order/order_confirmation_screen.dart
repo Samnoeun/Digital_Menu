@@ -23,9 +23,42 @@ class OrderConfirmationScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Order Confirmation'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: false, // disable default back button
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            // IconButton(
+            //   icon: const Icon(
+            //     Icons.arrow_back_ios,
+            //     size: 18,
+            //     color: Colors.white,
+            //   ),
+            //   onPressed: () => Navigator.of(context).pop(),
+            //   padding: EdgeInsets.zero,
+            //   constraints: const BoxConstraints(),
+            // ),
+            const SizedBox(width: 30),
+            const Text(
+              'Order Confirmation',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
+
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -50,6 +83,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                               'Order Submitted Successfully!',
                               style: TextStyle(
                                 fontSize: 22,
+                                color: Colors.green,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -64,7 +98,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue, width: 2),
+                          border: Border.all(color: Colors.blue.shade100, width: 2),
                         ),
                         child: Center(
                           child: Column(
@@ -192,13 +226,13 @@ class OrderConfirmationScreen extends StatelessWidget {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.blue.shade700,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     onPressed: () {
-                      onClearCart(); // Clear the cart or do any needed cleanup
+                      onClearCart(); 
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(

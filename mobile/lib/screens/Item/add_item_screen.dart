@@ -339,6 +339,7 @@ class _AddItemScreenState extends State<AddItemScreen>
             ),
           ),
         ),
+        
         actions: [
           TextButton(
             onPressed: _toggleSelectionMode,

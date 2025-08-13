@@ -133,8 +133,8 @@ class _CartScreenState extends State<CartScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
-        backgroundColor: const Color(0xFFF3E5F5),
         titleSpacing: 0,
+        // Remove backgroundColor property because flexibleSpace will handle it
         title: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -155,10 +155,19 @@ class _CartScreenState extends State<CartScreen> {
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  fontSize: 20,
+                  fontSize: 22,
                 ),
               ),
             ],
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
           ),
         ),
       ),
@@ -189,7 +198,10 @@ class _CartScreenState extends State<CartScreen> {
                     ),
                   )
                 : ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     children: [
                       Text(
                         'Summary',
@@ -216,11 +228,14 @@ class _CartScreenState extends State<CartScreen> {
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (item.imagePath != null && item.imagePath!.isNotEmpty)
+                                    if (item.imagePath != null &&
+                                        item.imagePath!.isNotEmpty)
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(12),
                                         child: Image.network(
-                                          ApiService.getImageUrl(item.imagePath),
+                                          ApiService.getImageUrl(
+                                            item.imagePath,
+                                          ),
                                           width: 70,
                                           height: 70,
                                           fit: BoxFit.cover,
@@ -232,7 +247,9 @@ class _CartScreenState extends State<CartScreen> {
                                         height: 70,
                                         decoration: BoxDecoration(
                                           color: Colors.deepPurple.shade100,
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.fastfood,
@@ -243,7 +260,8 @@ class _CartScreenState extends State<CartScreen> {
                                     const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             item.name,
@@ -268,20 +286,30 @@ class _CartScreenState extends State<CartScreen> {
                                       decoration: BoxDecoration(
                                         color: Colors.deepPurple.shade50,
                                         borderRadius: BorderRadius.circular(24),
-                                        border: Border.all(color: Colors.deepPurple.shade200),
+                                        border: Border.all(
+                                          color: Colors.deepPurple.shade200,
+                                        ),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           IconButton(
-                                            icon: const Icon(Icons.remove, size: 22),
+                                            icon: const Icon(
+                                              Icons.remove,
+                                              size: 22,
+                                            ),
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
                                             color: Colors.deepPurple,
-                                            onPressed: () => _updateQuantity(item, quantity - 1),
+                                            onPressed: () => _updateQuantity(
+                                              item,
+                                              quantity - 1,
+                                            ),
                                           ),
                                           Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                            ),
                                             child: Text(
                                               quantity.toString(),
                                               style: const TextStyle(
@@ -292,11 +320,17 @@ class _CartScreenState extends State<CartScreen> {
                                             ),
                                           ),
                                           IconButton(
-                                            icon: const Icon(Icons.add, size: 22),
+                                            icon: const Icon(
+                                              Icons.add,
+                                              size: 22,
+                                            ),
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
                                             color: Colors.deepPurple,
-                                            onPressed: () => _updateQuantity(item, quantity + 1),
+                                            onPressed: () => _updateQuantity(
+                                              item,
+                                              quantity + 1,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -305,9 +339,11 @@ class _CartScreenState extends State<CartScreen> {
                                 ),
                                 const SizedBox(height: 12),
                                 TextField(
-                                  onChanged: (value) => _updateSpecialNote(item, value),
+                                  onChanged: (value) =>
+                                      _updateSpecialNote(item, value),
                                   decoration: InputDecoration(
-                                    hintText: 'Special note (e.g. No chilli...)',
+                                    hintText:
+                                        'Special note (e.g. No chilli...)',
                                     hintStyle: TextStyle(
                                       color: Colors.deepPurple.shade200,
                                       fontSize: 15,
@@ -349,7 +385,9 @@ class _CartScreenState extends State<CartScreen> {
               padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.08),
