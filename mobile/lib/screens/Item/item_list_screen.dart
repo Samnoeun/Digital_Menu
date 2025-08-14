@@ -419,7 +419,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: Colors.deepPurple.shade600,
+                      color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                       size: 20,
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
@@ -651,8 +651,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                               colors: isDarkMode
                                                   ? [
                                                       Colors.grey[700] ??
-                                                          Colors
-                                                              .grey, // Fallback to Colors.grey if null
+                                                          Colors.grey,
                                                       Colors.grey[800] ??
                                                           Colors.grey,
                                                     ]
@@ -732,8 +731,9 @@ class _ItemListScreenState extends State<ItemListScreen>
                                           vertical: 6,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.deepPurple.shade700
-                                              .withOpacity(0.1),
+                                          color: isDarkMode
+                                              ? Colors.grey[600]
+                                              : Colors.deepPurple.shade700.withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(
                                             20,
                                           ),
@@ -741,7 +741,9 @@ class _ItemListScreenState extends State<ItemListScreen>
                                         child: Text(
                                           '\$${item.price.toStringAsFixed(2)}',
                                           style: TextStyle(
-                                            color: Colors.deepPurple.shade700,
+                                            color: isDarkMode
+                                                ? Colors.white
+                                                : Colors.deepPurple.shade700,
                                             fontWeight: FontWeight.w600,
                                             fontSize: 14,
                                           ),
@@ -755,7 +757,9 @@ class _ItemListScreenState extends State<ItemListScreen>
                                     : PopupMenuButton<String>(
                                         icon: Icon(
                                           Icons.more_vert_rounded,
-                                          color: Colors.deepPurple.shade600,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.deepPurple.shade600,
                                         ),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
