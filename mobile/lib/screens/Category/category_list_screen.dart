@@ -4,15 +4,14 @@ import 'category_detail_screen.dart';
 import '../../models/category_model.dart';
 import '../../services/api_services.dart';
 
-
 class CategoryListScreen extends StatefulWidget {
   const CategoryListScreen({super.key});
-  
+
   @override
   State<CategoryListScreen> createState() => _CategoryListScreenState();
 }
 
-class _CategoryListScreenState extends State<CategoryListScreen> 
+class _CategoryListScreenState extends State<CategoryListScreen>
     with TickerProviderStateMixin {
   List<Category> _categories = [];
   List<Category> _filteredCategories = [];
@@ -314,8 +313,8 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 8),
+            const Icon(Icons.check_circle_outline),
+            const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
         ),
@@ -438,9 +437,13 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: Colors.deepPurple.shade600,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors
+                                .white // White in dark mode
+                          : Colors.deepPurple.shade600, // Purple in light mode
                       size: 20,
                     ),
+
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(

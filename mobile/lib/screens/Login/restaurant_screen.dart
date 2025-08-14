@@ -102,7 +102,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   labelText: 'Restaurant Name',
                   prefixIcon: Icon(
                     Icons.restaurant,
-                    color: isDark ? Colors.white70 : Colors.deepPurple,
+                    color: isDark ? Colors.black : Colors.deepPurple,
                   ),
                   border: const OutlineInputBorder(),
                   labelStyle: Theme.of(context).textTheme.bodyMedium,
@@ -122,7 +122,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   labelText: 'Address',
                   prefixIcon: Icon(
                     Icons.location_on,
-                    color: isDark ? Colors.white70 : Colors.deepPurple,
+                    color: isDark ? Colors.black : Colors.deepPurple,
                   ),
                   border: const OutlineInputBorder(),
                   labelStyle: Theme.of(context).textTheme.bodyMedium,

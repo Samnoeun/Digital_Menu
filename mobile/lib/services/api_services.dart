@@ -11,7 +11,7 @@ import '../models/restaurant_model.dart';
 
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.151:8000/api';
+  static const String baseUrl = 'http://192.168.108.197:8000/api';
 
   static String? _token;
 

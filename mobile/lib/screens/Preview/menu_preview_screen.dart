@@ -13,8 +13,6 @@ class MenuPreviewScreen extends StatefulWidget {
   State<MenuPreviewScreen> createState() => _MenuPreviewScreenState();
 }
 
-
-
 class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   List<category.Category> _categories = [];
   List<item.Item> _allItems = [];
@@ -201,11 +199,15 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             decoration: InputDecoration(
               hintText: 'Search items...',
               hintStyle: TextStyle(
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
-                  fontSize: 14),
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+                fontSize: 14,
+              ),
               prefixIcon: Icon(
                 Icons.search_rounded,
-                color: Colors.deepPurple.shade600,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors
+                          .white // White in dark mode
+                    : Colors.deepPurple.shade600, // Purple in light mode
                 size: 20,
               ),
               suffixIcon: _searchController.text.isNotEmpty
@@ -233,8 +235,9 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
               isDense: true,
             ),
             style: TextStyle(
-                fontSize: 14,
-                color: isDarkMode ? Colors.white : Colors.black87),
+              fontSize: 14,
+              color: isDarkMode ? Colors.white : Colors.black87,
+            ),
           ),
         ),
       ),
@@ -246,7 +249,9 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50,
+      backgroundColor: isDarkMode
+          ? Colors.grey[900]
+          : Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.deepPurple.shade700,
@@ -257,7 +262,11 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Color.fromARGB(255, 255, 255, 255)),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Color.fromARGB(255, 255, 255, 255),
+                ),
                 onPressed: () => Navigator.of(context).pop(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -347,8 +356,8 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                       color: _selectedCategoryId == null
                           ? Colors.white
                           : isDarkMode
-                              ? Colors.grey[400]
-                              : Colors.deepPurple.shade700,
+                          ? Colors.grey[400]
+                          : Colors.deepPurple.shade700,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                     ),
@@ -379,8 +388,8 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                           color: _selectedCategoryId == cat.id
                               ? Colors.white
                               : isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.deepPurple.shade700,
+                              ? Colors.grey[400]
+                              : Colors.deepPurple.shade700,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                         ),
@@ -399,146 +408,171 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           const SizedBox(height: 10),
           Expanded(
             child: _isLoading
-                ? Center(child: CircularProgressIndicator(color: Colors.deepPurple.shade700))
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.deepPurple.shade700,
+                    ),
+                  )
                 : _error != null
-                    ? Center(
-                        child: Text(
-                          'Error: $_error',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.black87,
+                ? Center(
+                    child: Text(
+                      'Error: $_error',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.grey[400] : Colors.black87,
+                      ),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: _categories.map((category.Category cat) {
+                      final itemsInCategory = _filteredItems
+                          .where((item) => item.categoryId == cat.id)
+                          .toList();
+
+                      if (itemsInCategory.isEmpty) return const SizedBox();
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cat.name,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors
+                                        .white // White text in dark mode
+                                  : Colors
+                                        .deepPurple
+                                        .shade700, // Deep purple in light mode
+                            ),
                           ),
-                        ),
-                      )
-                    : ListView(
-                        padding: const EdgeInsets.all(12),
-                        children: _categories.map((category.Category cat) {
-                          final itemsInCategory = _filteredItems
-                              .where((item) => item.categoryId == cat.id)
-                              .toList();
-
-                          if (itemsInCategory.isEmpty) return const SizedBox();
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                cat.name,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple.shade700,
-                                ),
+                          const SizedBox(height: 10),
+                          ...itemsInCategory.map((item.Item item) {
+                            final quantity = _selectedItems[item] ?? 0;
+                            return Card(
+                              color: isDarkMode
+                                  ? Colors.grey[800]
+                                  : Colors.white,
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              const SizedBox(height: 10),
-                              ...itemsInCategory.map((item.Item item) {
-                                final quantity = _selectedItems[item] ?? 0;
-                                return Card(
-                                  color: isDarkMode ? Colors.grey[800] : Colors.white,
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                  child: ListTile(
-                                    onTap: () => _showItemDetail(item),
-                                    leading: item.imagePath != null
-                                        ? Image.network(
-                                            ApiService.getImageUrl(item.imagePath),
-                                            width: 50,
-                                            height: 50,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) => Icon(
-                                              Icons.broken_image,
-                                              color: isDarkMode
-                                                  ? Colors.grey[400]
-                                                  : Colors.grey[600],
-                                            ),
-                                          )
-                                        : Icon(
-                                            Icons.image_not_supported,
-                                            color: isDarkMode
-                                                ? Colors.grey[400]
-                                                : Colors.grey[600],
-                                          ),
-                                    title: Text(
-                                      item.name,
-                                      style: TextStyle(
-                                        color: isDarkMode ? Colors.white : Colors.black87,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      '\$${item.price.toStringAsFixed(2)}',
-                                      style: TextStyle(
+                              child: ListTile(
+                                onTap: () => _showItemDetail(item),
+                                leading: item.imagePath != null
+                                    ? Image.network(
+                                        ApiService.getImageUrl(item.imagePath),
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Icon(
+                                                  Icons.broken_image,
+                                                  color: isDarkMode
+                                                      ? Colors.grey[400]
+                                                      : Colors.grey[600],
+                                                ),
+                                      )
+                                    : Icon(
+                                        Icons.image_not_supported,
                                         color: isDarkMode
                                             ? Colors.grey[400]
                                             : Colors.grey[600],
                                       ),
-                                    ),
-                                    trailing: quantity > 0
-                                        ? Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.deepPurple.shade700
-                                                  .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.remove,
-                                                    size: 18,
-                                                    color: Colors.deepPurple.shade700,
-                                                  ),
-                                                  onPressed: () =>
-                                                      _decrementQuantity(item),
-                                                  padding: EdgeInsets.zero,
-                                                  constraints:
-                                                      const BoxConstraints(),
-                                                ),
-                                                Text(
-                                                  '$quantity',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: isDarkMode
-                                                        ? Colors.white
-                                                        : Colors.black87,
-                                                  ),
-                                                ),
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.add,
-                                                    size: 18,
-                                                    color: Colors.deepPurple.shade700,
-                                                  ),
-                                                  onPressed: () =>
-                                                      _incrementQuantity(item),
-                                                  padding: EdgeInsets.zero,
-                                                  constraints:
-                                                      const BoxConstraints(),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : IconButton(
-                                            icon: const Icon(Icons.add, color: Colors.white),
-                                            onPressed: () => _incrementQuantity(item),
-                                            style: IconButton.styleFrom(
-                                              backgroundColor: Colors.deepPurple.shade700,
-                                              foregroundColor: Colors.white,
-                                            ),
-                                          ),
+                                title: Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black87,
                                   ),
-                                );
-                              }),
-                              const SizedBox(height: 20),
-                            ],
-                          );
-                        }).toList(),
-                      ),
+                                ),
+                                subtitle: Text(
+                                  '\$${item.price.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                  ),
+                                ),
+                                trailing: quantity > 0
+                                    ? Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.deepPurple.shade700
+                                              .withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.remove,
+                                                size: 18,
+                                                color:
+                                                    Colors.deepPurple.shade700,
+                                              ),
+                                              onPressed: () =>
+                                                  _decrementQuantity(item),
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                            ),
+                                            Text(
+                                              '$quantity',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: isDarkMode
+                                                    ? Colors.white
+                                                    : Colors.black87,
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.add,
+                                                size: 18,
+                                                color:
+                                                    Colors.deepPurple.shade700,
+                                              ),
+                                              onPressed: () =>
+                                                  _incrementQuantity(item),
+                                              padding: EdgeInsets.zero,
+                                              constraints:
+                                                  const BoxConstraints(),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : IconButton(
+                                        icon: const Icon(
+                                          Icons.add,
+                                          color: Colors.white,
+                                        ),
+                                        onPressed: () =>
+                                            _incrementQuantity(item),
+                                        style: IconButton.styleFrom(
+                                          backgroundColor:
+                                              Colors.deepPurple.shade700,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    }).toList(),
+                  ),
           ),
         ],
       ),
