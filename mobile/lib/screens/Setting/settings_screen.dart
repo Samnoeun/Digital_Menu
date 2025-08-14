@@ -188,12 +188,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const SizedBox(
                 width: 0,
-              ), // This SizedBox with width 0 can be removed if not needed
+              ), 
               Text(
                 lang['settings']!,
                 style: const TextStyle(
                   color: Colors.white,
-                ), // Added white color for text
+                ), 
               ),
             ],
           ),
@@ -219,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: _toggleDarkMode,
             secondary: Icon(
               Icons.dark_mode,
-              color: isDark ? Colors.white70 : Colors.deepPurple.shade700,
+              color: isDark ? Colors.white : Colors.deepPurple.shade700,
             ),
             activeColor: Colors.deepPurple,
             contentPadding: const EdgeInsets.symmetric(
@@ -235,7 +235,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Icon(
               Icons.language,
               size: 28,
-              color: isDark ? Colors.white70 : Colors.deepPurple.shade700,
+              color: isDark ? Colors.white : Colors.deepPurple.shade700,
             ),
             title: Text(lang['language']!, style: getTextStyle(isGray: true)),
             subtitle: Text(
@@ -253,7 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: Icon(
               Icons.account_circle,
               size: 28,
-              color: isDark ? Colors.white70 : Colors.deepPurple.shade700,
+              color: isDark ? Colors.white : Colors.deepPurple.shade700,
             ),
             title: Text(lang['account']!, style: getTextStyle(isGray: true)),
             trailing: const Icon(Icons.arrow_forward_ios, size: 18),
