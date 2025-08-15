@@ -85,10 +85,19 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => SplashScreen(onThemeToggle: toggleTheme),
-        '/menu': (context) => MenuScreen(onThemeToggle: toggleTheme),
+        '/menu': (context) {
+          final onThemeToggle = ModalRoute.of(context)?.settings.arguments as Function(bool)?;
+          return MenuScreen(onThemeToggle: onThemeToggle ?? toggleTheme);
+        },
         '/preview': (context) => const MenuPreviewScreen(),
-        '/restaurant': (context) => RestaurantScreen(onThemeToggle: toggleTheme),
-        '/login': (context) => LoginScreen(onThemeToggle: toggleTheme),
+        '/restaurant': (context) {
+          final onThemeToggle = ModalRoute.of(context)?.settings.arguments as Function(bool)?;
+          return RestaurantScreen(onThemeToggle: onThemeToggle ?? toggleTheme);
+        },
+        '/login': (context) {
+          final onThemeToggle = ModalRoute.of(context)?.settings.arguments as Function(bool)?;
+          return LoginScreen(onThemeToggle: onThemeToggle ?? toggleTheme);
+        },
       },
     );
   }

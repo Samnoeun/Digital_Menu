@@ -28,11 +28,11 @@ class _SplashScreenState extends State<SplashScreen> {
             try {
               await ApiService.getRestaurant();
               if (mounted) {
-                Navigator.pushReplacementNamed(context, '/menu');
+                Navigator.pushReplacementNamed(context, '/menu', arguments: widget.onThemeToggle);
               }
             } catch (e) {
               if (mounted) {
-                Navigator.pushReplacementNamed(context, '/restaurant');
+                Navigator.pushReplacementNamed(context, '/restaurant', arguments: widget.onThemeToggle);
               }
             }
           } else {
@@ -41,17 +41,17 @@ class _SplashScreenState extends State<SplashScreen> {
         } catch (e) {
           await ApiService.clearLoginData();
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/login');
+            Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
           }
         }
       } else {
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/login');
+          Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
         }
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
       }
     }
   }
