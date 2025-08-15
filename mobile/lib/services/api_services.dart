@@ -1,7 +1,9 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/material.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'dart:io';
 import '../models/user_model.dart';
 import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
@@ -11,8 +13,9 @@ import 'package:flutter/foundation.dart' show kIsWeb; // For web image storage
 import 'dart:typed_data';
 
 class ApiService {
-  static const String baseUrl =
-      'http://192.168.108.40:8080/api'; // Update with your preferred base URL
+  static const String baseUrl = 'https://qrmenu.zapto.org/api'; // Update with your preferred base URL
+
+
 
   static String? _token;
 
@@ -38,22 +41,25 @@ class ApiService {
   }
 
   // User Authentication
-  static Future<UserModel?> register(
-    String name,
-    String email,
-    String password,
-    String confirmPassword,
-  ) async {
+  static Future<UserModel?> register({
+    required String name,
+    required String email,
+    required String password,
+    required String confirmPassword,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/register'),
-        headers: {'Accept': 'application/json'},
-        body: {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
           'name': name,
           'email': email,
           'password': password,
           'password_confirmation': confirmPassword,
-        },
+        }),
       );
 
       final data = json.decode(response.body);
@@ -72,15 +78,15 @@ class ApiService {
   }
 
   // User Login
-  static Future<Map<String, dynamic>> login(
-    String email,
-    String password,
-  ) async {
+  static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
-        headers: {'Accept': 'application/json'},
-        body: {'email': email, 'password': password},
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       final data = json.decode(response.body);
@@ -89,7 +95,10 @@ class ApiService {
         final token = data['token'] as String;
         await saveLoginData(token, email);
 
-        return {'user': UserModel.fromJson(data['user']), 'token': token};
+        return {
+          'user': UserModel.fromJson(data['user']),
+          'token': token,
+        };
       } else {
         throw data['message'] ?? 'Login failed';
       }
@@ -203,7 +212,6 @@ class ApiService {
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      // Sometimes Laravel returns 201 on successful PUT
       throw Exception(
         'Failed to update category: ${response.statusCode} ${response.body}',
       );
@@ -342,7 +350,7 @@ class ApiService {
       Uri.parse('$baseUrl/items/$id'),
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token', // ✅ FIXED HERE
+        'Authorization': 'Bearer $token',
       },
     );
 
@@ -638,5 +646,22 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('user_email');
+  }
+
+  // Reset Password
+  static Future<void> resetPassword(String email) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/password/email'),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      final data = json.decode(response.body);
+      throw Exception(data['message'] ?? 'Failed to send reset password email');
+    }
   }
 }

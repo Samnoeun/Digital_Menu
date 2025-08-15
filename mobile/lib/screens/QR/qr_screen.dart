@@ -23,9 +23,10 @@ class _QrScreenState extends State<QrScreen> {
   void _generateQR() {
     if (_textController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter some text or URL'),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: const Text('Please enter some text or URL'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
@@ -47,11 +48,23 @@ class _QrScreenState extends State<QrScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final scaffoldBackgroundColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50;
+    // final cardBackgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
+    final primaryColor = isDarkMode ? Colors.deepPurple.shade300 : Colors.deepPurple.shade600;
+    // final inputBorderColor = isDarkMode ? Colors.grey[600] : Colors.deepPurple.shade200;
+    final Color inputBorderColor = isDarkMode ? Colors.grey[600]! : Colors.deepPurple.shade200;
+    // Change from Color? to Color by providing a default value
+final Color cardBackgroundColor = isDarkMode ? Colors.grey[800]! : Colors.white;
+
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50, // Added background color
+      backgroundColor: scaffoldBackgroundColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.deepPurple.shade600, // Changed to deep purple
+        backgroundColor: primaryColor,
         elevation: 0,
         titleSpacing: 0,
         title: Padding(
@@ -107,16 +120,24 @@ class _QrScreenState extends State<QrScreen> {
               decoration: InputDecoration(
                 labelText: 'Enter link or data',
                 hintText: 'https://example.com',
-                prefixIcon: const Icon(Icons.link, color: Colors.deepPurple), // Added icon color
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.deepPurple.shade200), // Added border color
-                ),
+                prefixIcon: Icon(Icons.link, color: primaryColor),
+              border: OutlineInputBorder(
+  borderRadius: BorderRadius.circular(12),
+  borderSide: BorderSide(color: inputBorderColor),
+),
+enabledBorder: OutlineInputBorder(
+  borderRadius: BorderRadius.circular(12),
+  borderSide: BorderSide(color: inputBorderColor),
+),
+
                 filled: true,
-                fillColor: Colors.white,
-                labelStyle: TextStyle(color: Colors.deepPurple.shade600), // Label color
-                hintStyle: TextStyle(color: Colors.deepPurple.shade400), // Hint color
+                fillColor: cardBackgroundColor,
+                labelStyle: TextStyle(color: primaryColor),
+                hintStyle: TextStyle(color: secondaryTextColor),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16.0, horizontal: 16.0),
               ),
+              style: TextStyle(color: textColor),
               maxLines: 3,
               onChanged: (val) {
                 if (showQR && val.trim() != qrText) {
@@ -132,7 +153,7 @@ class _QrScreenState extends State<QrScreen> {
                 label: const Text('Generate QR Code'),
                 onPressed: _generateQR,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple.shade600, // Changed to deep purple
+                  backgroundColor: primaryColor,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -148,30 +169,32 @@ class _QrScreenState extends State<QrScreen> {
                 style: TextStyle(
                   fontSize: 18, 
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple.shade600, // Added text color
+                  color: primaryColor,
                 ),
               ),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardBackgroundColor,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.deepPurple.withOpacity(0.1), // Changed shadow color
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                  border: Border.all(color: Colors.deepPurple.shade100), // Added border
+               boxShadow: [
+  BoxShadow(
+    color: Colors.black.withOpacity(isDarkMode ? 0.1 : 0.1),
+    blurRadius: 8,
+    offset: const Offset(0, 3),
+  ),
+],
+// border: Border.all(...)
+                  border: Border.all(
+                      color: isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade100),
                 ),
                 child: QrImageView(
                   data: qrText,
                   version: QrVersions.auto,
                   size: 250.0,
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.deepPurple.shade800, // Changed QR color
+                  backgroundColor: cardBackgroundColor,
+                  foregroundColor: isDarkMode ? Colors.white : Colors.deepPurple.shade800,
                   errorCorrectionLevel: QrErrorCorrectLevel.M,
                 ),
               ),
@@ -179,9 +202,10 @@ class _QrScreenState extends State<QrScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardBackgroundColor,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.deepPurple.shade100), // Added border
+                  border: Border.all(
+                      color: isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade100),
                 ),
                 child: Column(
                   children: [
@@ -189,7 +213,7 @@ class _QrScreenState extends State<QrScreen> {
                       'QR Code Data:',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple.shade600, // Added text color
+                        color: primaryColor,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -197,7 +221,7 @@ class _QrScreenState extends State<QrScreen> {
                       qrText,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.deepPurple.shade600, // Added text color
+                        color: textColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -208,7 +232,7 @@ class _QrScreenState extends State<QrScreen> {
               Text(
                 'Tip: You can scan this QR code with any QR scanner app or your camera.',
                 style: TextStyle(
-                  color: Colors.deepPurple.shade400, // Changed text color
+                  color: secondaryTextColor,
                   fontSize: 13,
                 ),
                 textAlign: TextAlign.center,
