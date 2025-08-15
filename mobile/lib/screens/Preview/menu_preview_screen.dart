@@ -296,10 +296,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           Stack(
             alignment: Alignment.topRight,
             children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                onPressed: _goToCartPage,
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.shopping_cart, color: Colors.white),
+              //   onPressed: _goToCartPage,
+              // ),
               if (_cart.isNotEmpty)
                 Positioned(
                   right: 8,

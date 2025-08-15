@@ -129,7 +129,7 @@ class _CartScreenState extends State<CartScreen> {
 
     // Color definitions
     final Color primaryColor = isDarkMode
-        ? Colors.deepPurple[300]!
+        ? Colors.deepPurple[600]!
         : Colors.deepPurple;
     final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.white;

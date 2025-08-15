@@ -30,7 +30,7 @@ class OrderConfirmationScreen extends StatelessWidget {
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
-    final successColor = isDarkMode ? Colors.green[300] : Colors.green;
+    final successColor = isDarkMode ? Colors.green[600] : Colors.green;
     final infoCardColor = isDarkMode ? Colors.blue[900] : Colors.blue.shade50;
    final Color infoBorderColor = isDarkMode ? Colors.blue[800]! : Colors.blue.shade100;
     final infoTextColor = isDarkMode ? Colors.blue[100] : Colors.blue.shade800;
@@ -246,7 +246,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      onClearCart();
+                      // onClearCart();
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(

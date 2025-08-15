@@ -82,9 +82,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
         ),
         backgroundColor: Colors.green.shade600,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -101,9 +99,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
         ),
         backgroundColor: Colors.red.shade600,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         action: error.contains('restaurant')
             ? SnackBarAction(
                 label: 'Create Restaurant',
@@ -120,12 +116,18 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final primaryColor = isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple;
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50;
+    final primaryColor = isDarkMode
+        ? Colors.deepPurple[600]
+        : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode
+        ? Colors.grey[900]
+        : Colors.deepPurple.shade50;
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.white;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
-    final inputFillColor = isDarkMode ? Colors.grey[700] : Colors.deepPurple.shade50;
+    final inputFillColor = isDarkMode
+        ? Colors.grey[700]
+        : Colors.deepPurple.shade50;
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
@@ -136,7 +138,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Colors.white),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Colors.white,
+                ),
                 onPressed: () => Navigator.pop(context),
                 constraints: const BoxConstraints(),
                 padding: EdgeInsets.zero,
@@ -160,7 +166,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
             gradient: LinearGradient(
               colors: [
                 primaryColor!,
-                isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
+                isDarkMode
+                    ? Colors.deepPurple.shade600
+                    : Colors.deepPurple.shade600,
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -179,7 +187,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                 padding: const EdgeInsets.all(20.0),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height -
+                    minHeight:
+                        MediaQuery.of(context).size.height -
                         MediaQuery.of(context).padding.top -
                         kToolbarHeight -
                         40,
@@ -195,9 +204,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.1),
+                                color: const Color.fromARGB(255, 71, 70, 70).withOpacity(
+                                  isDarkMode ? 0.2 : 0.1,
+                                ),
                                 blurRadius: 20,
-                                offset: const Offset(0, 10),
+                                offset: const Offset(0, 5),
                               ),
                             ],
                           ),
@@ -213,7 +224,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                     gradient: LinearGradient(
                                       colors: [
                                         primaryColor,
-                                        isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
+                                        isDarkMode
+                                            ? Colors.deepPurple.shade500
+                                            : Colors.deepPurple.shade400,
                                       ],
                                     ),
                                     shape: BoxShape.circle,
@@ -253,35 +266,53 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   decoration: InputDecoration(
                                     labelText: 'Category Name',
                                     labelStyle: TextStyle(
-                                      color: primaryColor,
-                                     fontWeight: FontWeight.w600
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : primaryColor, // White in dark, purple in light
+                                      fontWeight: FontWeight.w600,
                                     ),
                                     hintText: 'Enter category name',
+                                    hintStyle: TextStyle(
+                                      color: isDarkMode
+                                          ? Colors.white70
+                                          : Colors
+                                                .grey[600], // Lighter white in dark
+                                    ),
                                     prefixIcon: Icon(
                                       Icons.label_outline,
-                                      color: primaryColor,
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : primaryColor, // White in dark, purple in light
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: isDarkMode ? Colors.grey[600]! : Colors.deepPurple.shade300,
+                                        color: isDarkMode
+                                            ? Colors.grey[600]!
+                                            : Colors.deepPurple.shade300,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: primaryColor,
+                                        color: isDarkMode
+                                            ? Colors.white
+                                            : primaryColor, // White border in dark when focused
                                         width: 2,
                                       ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: isDarkMode ? Colors.grey[600]! : Colors.deepPurple.shade300,
+                                        color: isDarkMode
+                                            ? Colors.grey[600]!
+                                            : Colors.deepPurple.shade300,
                                       ),
                                     ),
                                     filled: true,
-                                    fillColor: inputFillColor,
+                                    fillColor: isDarkMode
+                                        ? Colors.grey[800]
+                                        : inputFillColor, // Darker fill in dark mode
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 14,
@@ -290,7 +321,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: textColor,
-                                    fontWeight: FontWeight.w600
+                                    fontWeight: FontWeight.w600,
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -306,7 +337,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                     gradient: LinearGradient(
                                       colors: [
                                         primaryColor,
-                                        isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
+                                        isDarkMode
+                                            ? Colors.deepPurple.shade500
+                                            : Colors.deepPurple.shade400,
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(12),
@@ -337,7 +370,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                             ),
                                           )
                                         : Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Icon(
                                                 widget.category == null
