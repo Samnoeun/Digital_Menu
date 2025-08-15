@@ -766,6 +766,9 @@ class _ItemListScreenState extends State<ItemListScreen>
                                             12,
                                           ),
                                         ),
+                                        color: isDarkMode
+                                            ? Colors.grey[800]
+                                            : Colors.grey[200],
                                         onSelected: (value) async {
                                           if (value == 'edit') {
                                             final result = await Navigator.push(
