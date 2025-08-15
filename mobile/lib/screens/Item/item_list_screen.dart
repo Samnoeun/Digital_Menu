@@ -758,6 +758,10 @@ class _ItemListScreenState extends State<ItemListScreen>
                                             ),
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(12),
+                                              side: BorderSide(
+                                                color: isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade300,
+                                                width: 1.0,
+                                              ),
                                             ),
                                             color: isDarkMode ? Colors.grey[850] : Colors.grey[200],
                                             elevation: 4,
