@@ -8,7 +8,6 @@ import '../models/user_model.dart';
 import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
 import '../models/restaurant_model.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb; // For web image storage
 import 'dart:typed_data';
 
@@ -631,15 +630,23 @@ class ApiService {
     await prefs.setString('user_email', email);
   }
 
-  static Future<Map<String, String>?> getLoginData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
-    final email = prefs.getString('user_email');
+  // static Future<Map<String, String>?> getLoginData() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final token = prefs.getString('auth_token');
+  //   final email = prefs.getString('user_email');
 
-    if (token != null && email != null) {
-      return {'token': token, 'email': email};
-    }
-    return null;
+  //   if (token != null && email != null) {
+  //     return {'token': token, 'email': email};
+  //   }
+  //   return null;
+  // }
+
+
+  static Future<Map<String, dynamic>?> getLoginData() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('loginData') != null
+        ? {'loginData': prefs.getString('loginData')}
+        : null;
   }
 
   static Future<void> clearLoginData() async {

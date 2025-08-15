@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:shared_preferences/shared_preferences.dart' show SharedPreferences;
 import 'screens/splash_screen.dart';
 import 'screens/taskbar_screen.dart';
 import 'screens/Preview/menu_preview_screen.dart';
@@ -8,8 +9,13 @@ import 'screens/Login/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  setUrlStrategy(PathUrlStrategy()); // Clean URLs without #
+  setUrlStrategy(PathUrlStrategy());
   runApp(const DigitalMenuApp());
+  // Test shared_preferences
+  SharedPreferences.getInstance().then((prefs) {
+    prefs.setString('test', 'value');
+    print('Test value: ${prefs.getString('test')}');
+  });
 }
 
 class DigitalMenuApp extends StatefulWidget {
@@ -85,10 +91,19 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
       initialRoute: '/splash',
       routes: {
         '/splash': (context) => SplashScreen(onThemeToggle: toggleTheme),
-        '/menu': (context) => MenuScreen(onThemeToggle: toggleTheme),
+        '/menu': (context) {
+          final onThemeToggle = ModalRoute.of(context)?.settings.arguments as Function(bool)?;
+          return MenuScreen(onThemeToggle: onThemeToggle ?? toggleTheme);
+        },
         '/preview': (context) => const MenuPreviewScreen(),
-        '/restaurant': (context) => RestaurantScreen(onThemeToggle: toggleTheme),
-        '/login': (context) => LoginScreen(onThemeToggle: toggleTheme),
+        '/restaurant': (context) {
+          final onThemeToggle = ModalRoute.of(context)?.settings.arguments as Function(bool)?;
+          return RestaurantScreen(onThemeToggle: onThemeToggle ?? toggleTheme);
+        },
+        '/login': (context) {
+          final onThemeToggle = ModalRoute.of(context)?.settings.arguments as Function(bool)?;
+          return LoginScreen(onThemeToggle: onThemeToggle ?? toggleTheme);
+        },
       },
     );
   }

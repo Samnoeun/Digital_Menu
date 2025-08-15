@@ -13,11 +13,14 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    // Delay auth check until the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthStatus();
+    });
   }
 
   Future<void> _checkAuthStatus() async {
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 2)); // Maintain delay for UI
 
     try {
       final authData = await ApiService.getLoginData();
@@ -28,11 +31,11 @@ class _SplashScreenState extends State<SplashScreen> {
             try {
               await ApiService.getRestaurant();
               if (mounted) {
-                Navigator.pushReplacementNamed(context, '/menu');
+                Navigator.pushReplacementNamed(context, '/menu', arguments: widget.onThemeToggle);
               }
             } catch (e) {
               if (mounted) {
-                Navigator.pushReplacementNamed(context, '/restaurant');
+                Navigator.pushReplacementNamed(context, '/restaurant', arguments: widget.onThemeToggle);
               }
             }
           } else {
@@ -41,17 +44,17 @@ class _SplashScreenState extends State<SplashScreen> {
         } catch (e) {
           await ApiService.clearLoginData();
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/login');
+            Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
           }
         }
       } else {
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/login');
+          Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
         }
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login');
+        Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
       }
     }
   }
