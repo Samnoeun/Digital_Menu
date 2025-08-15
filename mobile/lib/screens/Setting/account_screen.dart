@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:universal_html/html.dart' as html;
 import '../../services/api_services.dart';
 import '../../models/restaurant_model.dart';
 
@@ -17,6 +21,8 @@ class _AccountScreenState extends State<AccountScreen> {
   final TextEditingController _addressController = TextEditingController();
 
   File? _profileImage;
+  Uint8List? _webImageBytes;
+  String? _webImageName;
   Restaurant? _restaurant;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -51,12 +57,53 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedImage != null) {
-      setState(() {
-        _profileImage = File(pickedImage.path);
-      });
+    try {
+      if (kIsWeb) {
+        final uploadInput = html.FileUploadInputElement();
+        uploadInput.accept = 'image/*';
+        uploadInput.click();
+
+        final completer = Completer<void>();
+        
+        uploadInput.onChange.listen((e) {
+          final files = uploadInput.files;
+          if (files != null && files.isNotEmpty) {
+            final file = files[0];
+            final reader = html.FileReader();
+            
+            reader.onLoadEnd.listen((e) {
+              setState(() {
+                _webImageBytes = reader.result as Uint8List?;
+                _webImageName = file.name;
+                _profileImage = null;
+              });
+              completer.complete();
+            });
+            
+            reader.readAsArrayBuffer(file);
+          } else {
+            completer.complete();
+          }
+        });
+
+        await completer.future;
+      } else {
+        final picker = ImagePicker();
+        final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+        if (pickedImage != null) {
+          setState(() {
+            _profileImage = File(pickedImage.path);
+            _webImageBytes = null;
+            _webImageName = null;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
     }
   }
 
@@ -71,6 +118,8 @@ class _AccountScreenState extends State<AccountScreen> {
         restaurantName: _nameController.text.trim(),
         address: _addressController.text.trim(),
         profileImage: _profileImage,
+        webImageBytes: _webImageBytes,
+        webImageName: _webImageName,
       );
 
       await _loadRestaurantData();
@@ -97,7 +146,6 @@ class _AccountScreenState extends State<AccountScreen> {
       if (mounted) setState(() => _isSaving = false);
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -279,6 +327,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
   ImageProvider? _getProfileImage() {
     if (_profileImage != null) return FileImage(_profileImage!);
+    if (_webImageBytes != null) return MemoryImage(_webImageBytes!);
     if (_restaurant?.profile != null && _restaurant!.profile!.isNotEmpty) {
       return NetworkImage(ApiService.getImageUrl(_restaurant!.profile!));
     }
@@ -286,7 +335,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget? _showProfilePlaceholder(bool isDarkMode) {
-    if (_profileImage != null) return null;
+    if (_profileImage != null || _webImageBytes != null) return null;
     if (_restaurant?.profile == null || _restaurant!.profile!.isEmpty) {
       return Icon(
         Icons.restaurant, 
