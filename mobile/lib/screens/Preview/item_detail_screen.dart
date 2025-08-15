@@ -12,16 +12,17 @@ class ItemDetailBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'en', symbol: '\$');
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.6,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? Colors.grey[800] : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black26,
+            color: Colors.black.withOpacity(isDarkMode ? 0.1 : 0.2),
             blurRadius: 10,
             spreadRadius: 2,
           ),
@@ -37,7 +38,7 @@ class ItemDetailBottomSheet extends StatelessWidget {
               width: 40,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey[400],
+                color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -63,18 +64,26 @@ class ItemDetailBottomSheet extends StatelessWidget {
                               ? loadingProgress.cumulativeBytesLoaded /
                                   loadingProgress.expectedTotalBytes!
                               : null,
+                          color: Colors.deepPurple.shade700,
                         ),
                       ),
                     );
                   },
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.image_not_supported, size: 100),
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.image_not_supported,
+                    size: 100,
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  ),
                 ),
               ),
             )
           else
-            const Center(
-              child: Icon(Icons.image_not_supported, size: 100),
+            Center(
+              child: Icon(
+                Icons.image_not_supported,
+                size: 100,
+                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+              ),
             ),
 
           const SizedBox(height: 20),
@@ -91,6 +100,7 @@ class ItemDetailBottomSheet extends StatelessWidget {
                       item.name,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black87,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -99,13 +109,13 @@ class ItemDetailBottomSheet extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.withOpacity(0.1),
+                          color: Colors.deepPurple.shade700.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           item.category!.name,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.deepPurple,
+                            color: Colors.deepPurple.shade700,
                           ),
                         ),
                       ),
@@ -129,6 +139,7 @@ class ItemDetailBottomSheet extends StatelessWidget {
             'Description',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              color: isDarkMode ? Colors.white : Colors.black87,
             ),
           ),
           const SizedBox(height: 8),
@@ -136,7 +147,9 @@ class ItemDetailBottomSheet extends StatelessWidget {
             child: SingleChildScrollView(
               child: Text(
                 item.description ?? 'No description available.',
-                style: theme.textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
               ),
             ),
           ),

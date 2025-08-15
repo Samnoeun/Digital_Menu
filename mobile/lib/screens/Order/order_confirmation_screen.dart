@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../Preview/menu_preview_screen.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
   final int tableNumber;
@@ -15,14 +16,53 @@ class OrderConfirmationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final currencyFormat = NumberFormat.currency(symbol: '\$');
+
     final total = orderItems.fold(0.0, (sum, item) {
       return sum + ((item['price'] ?? 0.0) * (item['quantity'] ?? 1));
     });
 
+    // Color definitions
+    
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
+    final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
+    final successColor = isDarkMode ? Colors.green[300] : Colors.green;
+    final infoCardColor = isDarkMode ? Colors.blue[900] : Colors.blue.shade50;
+   final Color infoBorderColor = isDarkMode ? Colors.blue[800]! : Colors.blue.shade100;
+    final infoTextColor = isDarkMode ? Colors.blue[100] : Colors.blue.shade800;
+    final Color primaryColor = isDarkMode ? Colors.deepPurple[300]! : Colors.deepPurple;
+
     return Scaffold(
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
-        title: const Text('Order Confirmation'),
         automaticallyImplyLeading: false,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [primaryColor, isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        titleSpacing: 0,
+        title: const Row(
+          children: [
+            SizedBox(width: 30),
+            Text(
+              'Order Confirmation',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
       body: SafeArea(
         child: Padding(
@@ -37,17 +77,18 @@ class OrderConfirmationScreen extends StatelessWidget {
                       // Success icon and message
                       Center(
                         child: Column(
-                          children: const [
+                          children: [
                             Icon(
                               Icons.check_circle,
-                              color: Colors.green,
+                              color: successColor,
                               size: 80,
                             ),
-                            SizedBox(height: 16),
+                            const SizedBox(height: 16),
                             Text(
                               'Order Submitted Successfully!',
                               style: TextStyle(
                                 fontSize: 22,
+                                color: successColor,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -60,12 +101,9 @@ class OrderConfirmationScreen extends StatelessWidget {
                         margin: const EdgeInsets.symmetric(vertical: 24),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: infoCardColor,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.blue,
-                            width: 2,
-                          ),
+                          border: Border.all(color: infoBorderColor, width: 2),
                         ),
                         child: Center(
                           child: Column(
@@ -74,7 +112,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                                 'Your Table Number is',
                                 style: TextStyle(
                                   fontSize: 18,
-                                  color: Colors.blue.shade800,
+                                  color: infoTextColor,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -83,7 +121,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 48,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade900,
+                                  color: isDarkMode ? Colors.blue[100] : Colors.blue.shade900,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -91,7 +129,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                                 'Please remember this number',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Colors.blue.shade800,
+                                  color: infoTextColor,
                                 ),
                               ),
                             ],
@@ -103,7 +141,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                          color: cardColor,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -112,62 +150,75 @@ class OrderConfirmationScreen extends StatelessWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
+                                Text(
                                   'Order Summary',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
+                                    color: textColor,
                                   ),
                                 ),
                                 Text(
                                   DateFormat('hh:mm a').format(DateTime.now()),
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
-                                    color: Colors.grey,
+                                    color: secondaryTextColor,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            ...orderItems.map((item) => Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
-                                  child: Row(
-                                    children: [
-                                      Text(
-                                        '${item['quantity']}x',
-                                        style: const TextStyle(fontSize: 16),
+                            ...orderItems.map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      '${item['quantity']}x',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: textColor,
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          item['name'] ?? 'Unknown Item',
-                                          style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        item['name'] ?? 'Unknown Item',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: textColor,
                                         ),
                                       ),
-                                      Text(
-                                        '\$${((item['price'] ?? 0.0) * (item['quantity'] ?? 1)).toStringAsFixed(2)}',
-                                        style: const TextStyle(fontSize: 16),
+                                    ),
+                                    Text(
+                                      currencyFormat.format((item['price'] ?? 0.0) * (item['quantity'] ?? 1)),
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: textColor,
                                       ),
-                                    ],
-                                  ),
-                                )),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                             const Divider(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
+                                Text(
                                   'Total:',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
+                                    color: textColor,
                                   ),
                                 ),
                                 Text(
-                                  '\$${total.toStringAsFixed(2)}',
-                                  style: const TextStyle(
+                                  currencyFormat.format(total),
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.green,
+                                    color: successColor,
                                   ),
                                 ),
                               ],
@@ -175,13 +226,13 @@ class OrderConfirmationScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 24), // Added extra spacing
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
               ),
 
-              // Back to menu button - now properly spaced at bottom
+              // Back to menu button
               Padding(
                 padding: const EdgeInsets.only(bottom: 24, top: 16),
                 child: SizedBox(
@@ -189,21 +240,23 @@ class OrderConfirmationScreen extends StatelessWidget {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: isDarkMode ? Colors.blue[800] : Colors.blue.shade700,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     onPressed: () {
                       onClearCart();
-                      Navigator.popUntil(context, (route) => route.isFirst);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MenuPreviewScreen(),
+                        ),
+                      );
                     },
                     child: const Text(
                       'Back to Menu',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
                 ),

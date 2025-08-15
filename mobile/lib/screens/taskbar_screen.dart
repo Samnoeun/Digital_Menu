@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'Order/order_screen.dart';
-import 'item/item_list_screen.dart';
-import 'category/category_list_screen.dart';
+import 'item/item_list_screen.dart' as item_screen;
+// import 'category/category_list_screen.dart' as category_screen;
 import 'QR/qr_screen.dart';
 import 'Setting/settings_screen.dart';
 import 'Preview/menu_preview_screen.dart';
+import 'more_screen.dart';
+import 'Preview/item_detail_screen.dart';
+
+import 'category/category_list_screen.dart' as category_screen;
+
 
 class MenuScreen extends StatefulWidget {
-  const MenuScreen({super.key});
+  final Function(bool) onThemeToggle;
+  const MenuScreen({super.key, required this.onThemeToggle});
 
   @override
   State<MenuScreen> createState() => _MenuScreenState();
@@ -17,12 +23,19 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
+  late final List<Widget> _pages;
+
+  @override
+  @override
+void initState() {
+  super.initState();
+  _pages = [
     const HomeScreen(),
     const OrderScreen(),
-    const ItemListScreen(),
-    const CategoryListScreen(),
+    const item_screen.ItemListScreen(),
+    const category_screen.CategoryListScreen(),
   ];
+}
 
   void _onItemTapped(int index) {
     setState(() {
@@ -46,10 +59,10 @@ class _MenuScreenState extends State<MenuScreen> {
                 title: const Text('Menu Preview'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
+                  Navigator.pushNamed(
                     context,
-                    MaterialPageRoute(builder: (_) => const MenuPreviewScreen()),
-                  );
+                    '/preview',
+                  ); // Change to this for URL support
                 },
               ),
               ListTile(
@@ -70,7 +83,9 @@ class _MenuScreenState extends State<MenuScreen> {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => SettingsScreen(onThemeToggle: widget.onThemeToggle),
+                    ),
                   );
                 },
               ),
@@ -92,17 +107,26 @@ class _MenuScreenState extends State<MenuScreen> {
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
           if (index == 4) {
-            _openMoreMenu(context); // open popup for "More"
+            _openMoreMenu(context);
           } else {
             _onItemTapped(index);
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: 'Orders',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Menu'),
-          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Category'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'More'), // Hamburger style
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category),
+            label: 'Category',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu),
+            label: 'More',
+          ), // Hamburger style
         ],
       ),
     );

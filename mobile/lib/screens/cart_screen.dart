@@ -41,6 +41,19 @@ class _CartScreenState extends State<CartScreen> {
   void _updateQuantity(item.Item item, int newQuantity) {
     setState(() {
       if (newQuantity > 0) {
+        final currentQuantity = _itemQuantities[item] ?? 0;
+        final difference = newQuantity - currentQuantity;
+
+        if (difference > 0) {
+          for (int i = 0; i < difference; i++) {
+            widget.cart.add(item);
+          }
+        } else {
+          for (int i = 0; i < -difference; i++) {
+            widget.cart.remove(item);
+          }
+        }
+
         _itemQuantities[item] = newQuantity;
       } else {
         _removeItem(item);
@@ -50,7 +63,7 @@ class _CartScreenState extends State<CartScreen> {
 
   void _removeItem(item.Item itemToRemove) {
     setState(() {
-      widget.onDelete(itemToRemove);
+      widget.cart.removeWhere((item) => item.id == itemToRemove.id);
       _calculateQuantities();
       _specialNotes.remove(itemToRemove);
     });
@@ -110,43 +123,124 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    // Color definitions
+    final Color primaryColor = isDarkMode
+        ? Colors.deepPurple[300]!
+        : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
+    final cardColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
+    final emptyCartColor = isDarkMode
+        ? Colors.deepPurple[200]
+        : Colors.deepPurple.shade200;
+    final priceColor = isDarkMode
+        ? Colors.deepPurple[300]
+        : Colors.deepPurple.shade400;
+    final quantityBgColor = isDarkMode
+        ? Colors.grey[700]
+        : Colors.deepPurple.shade50;
+    final Color quantityBorderColor = isDarkMode
+        ? Colors.grey[600]!
+        : Colors.deepPurple.shade200;
+    final noteFieldColor = isDarkMode
+        ? Colors.grey[700]
+        : Colors.deepPurple.shade50;
+    final noteFieldBorderColor = isDarkMode
+        ? Colors.grey[500]
+        : Colors.deepPurple.shade400;
+    final noteTextColor = isDarkMode
+        ? Colors.white
+        : Colors.deepPurple.shade900;
+    final totalBgColor = isDarkMode ? Colors.grey[800] : Colors.white;
 
     return Scaffold(
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
-        title: const Text('Your Cart'),
-        centerTitle: true,
+        automaticallyImplyLeading: false,
         elevation: 0,
+        titleSpacing: 0,
+        title: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 20,
+                  color: Colors.white,
+                ),
+                onPressed: () => Navigator.pop(context),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Your Cart',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  fontSize: 22,
+                ),
+              ),
+            ],
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                primaryColor,
+                isDarkMode
+                    ? Colors.deepPurple.shade500
+                    : Colors.deepPurple.shade400,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
           Expanded(
             child: widget.cart.isEmpty
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.shopping_cart_outlined,
-                          size: 64,
-                          color: Colors.grey,
+                          size: 80,
+                          color: emptyCartColor,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         Text(
-                          'Your cart is empty',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                          'Cart is empty',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: emptyCartColor,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
                   )
                 : ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     children: [
                       Text(
-                        'Order Summary',
+                        'Summary',
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -155,33 +249,53 @@ class _CartScreenState extends State<CartScreen> {
                         final quantity = entry.value;
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16),
-                          elevation: 1,
+                          elevation: 3,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(16),
                           ),
+                          color: cardColor,
                           child: Padding(
-                            padding: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(14),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Item image
                                     if (item.imagePath != null &&
                                         item.imagePath!.isNotEmpty)
                                       ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(12),
                                         child: Image.network(
                                           ApiService.getImageUrl(
                                             item.imagePath,
                                           ),
-                                          width: 60,
-                                          height: 60,
+                                          width: 70,
+                                          height: 70,
                                           fit: BoxFit.cover,
                                         ),
+                                      )
+                                    else
+                                      Container(
+                                        width: 70,
+                                        height: 70,
+                                        decoration: BoxDecoration(
+                                          color: isDarkMode
+                                              ? Colors.grey[800]
+                                              : Colors.deepPurple.shade100,
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.fastfood,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.white70,
+                                          size: 40,
+                                        ),
                                       ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 16),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -189,16 +303,19 @@ class _CartScreenState extends State<CartScreen> {
                                         children: [
                                           Text(
                                             item.name,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 16,
+                                              fontSize: 18,
+                                              color: textColor,
                                             ),
                                           ),
+                                          const SizedBox(height: 4),
                                           Text(
                                             '\$${item.price.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                              color: Colors.grey,
-                                              fontSize: 14,
+                                            style: TextStyle(
+                                              color: priceColor,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w600,
                                             ),
                                           ),
                                         ],
@@ -206,21 +323,25 @@ class _CartScreenState extends State<CartScreen> {
                                     ),
                                     Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.grey[100],
-                                        borderRadius: BorderRadius.circular(20),
+                                        color: quantityBgColor,
+                                        borderRadius: BorderRadius.circular(24),
+                                        border: Border.all(
+                                          color: quantityBorderColor,
+                                        ),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           IconButton(
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons.remove,
-                                              size: 20,
+                                              size: 22,
+                                              color: isDarkMode
+                                                  ? Colors.white
+                                                  : Colors.deepPurple,
                                             ),
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
-                                            color: Colors
-                                                .red, // Red color for minus
                                             onPressed: () => _updateQuantity(
                                               item,
                                               quantity - 1,
@@ -228,25 +349,29 @@ class _CartScreenState extends State<CartScreen> {
                                           ),
                                           Padding(
                                             padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
+                                              horizontal: 12,
                                             ),
                                             child: Text(
                                               quantity.toString(),
-                                              style: const TextStyle(
-                                                fontSize: 16,
+                                              style: TextStyle(
+                                                fontSize: 18,
                                                 fontWeight: FontWeight.bold,
+                                                color: isDarkMode
+                                                    ? Colors.white
+                                                    : Colors.deepPurple,
                                               ),
                                             ),
                                           ),
                                           IconButton(
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons.add,
-                                              size: 20,
+                                              size: 22,
+                                              color: isDarkMode
+                                                  ? Colors.white
+                                                  : Colors.deepPurple,
                                             ),
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
-                                            color: Colors
-                                                .green, // Green color for plus
                                             onPressed: () => _updateQuantity(
                                               item,
                                               quantity + 1,
@@ -257,38 +382,44 @@ class _CartScreenState extends State<CartScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
-                                // Special note with example
+                                const SizedBox(height: 12),
                                 TextField(
                                   onChanged: (value) =>
                                       _updateSpecialNote(item, value),
                                   decoration: InputDecoration(
-                                    hintText: 'Special note(e.g.No chilli...)',
+                                    hintText:
+                                        'Special note (e.g. No chilli...)',
                                     hintStyle: TextStyle(
-                                      color: Colors
-                                          .grey[400], // Lighter grey color
-                                      fontSize: 14,
+                                      color: secondaryTextColor,
+                                      fontSize: 15,
                                     ),
                                     filled: true,
-                                    fillColor: Colors.grey[50],
+                                    fillColor: noteFieldColor,
                                     contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
+                                      horizontal: 14,
+                                      vertical: 10,
                                     ),
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(14),
                                       borderSide: BorderSide.none,
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                      borderSide: const BorderSide(
-                                        color: Colors.deepPurple,
-                                        width: 1,
+                                      borderRadius: BorderRadius.circular(14),
+                                      borderSide: BorderSide(
+                                        color:
+                                            noteFieldBorderColor ??
+                                            Colors
+                                                .deepPurple
+                                                .shade400, // Fallback
+                                        width: 2,
                                       ),
                                     ),
                                   ),
                                   maxLines: 1,
-                                  style: const TextStyle(fontSize: 14),
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: noteTextColor,
+                                  ),
                                 ),
                               ],
                             ),
@@ -300,21 +431,22 @@ class _CartScreenState extends State<CartScreen> {
           ),
           if (widget.cart.isNotEmpty)
             Container(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPadding),
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: totalBgColor,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
+                  top: Radius.circular(20),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -4),
+                    color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, -5),
                   ),
                 ],
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -323,44 +455,49 @@ class _CartScreenState extends State<CartScreen> {
                         'Total:',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: textColor,
                         ),
                       ),
                       Text(
                         '\$${_total.toStringAsFixed(2)}',
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
+                          fontSize: 20,
+                          color: priceColor,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   SizedBox(
                     width: double.infinity,
-                    height: 50,
+                    height: 52,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        elevation: 0,
+                        elevation: 3,
                       ),
                       onPressed: _isSubmitting ? null : _submitOrder,
                       child: _isSubmitting
                           ? const SizedBox(
-                              width: 20,
-                              height: 20,
+                              width: 24,
+                              height: 24,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                strokeWidth: 3,
                                 color: Colors.white,
                               ),
                             )
                           : const Text(
                               'SUBMIT ORDER',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                                color: Colors.white,
                               ),
                             ),
                     ),
