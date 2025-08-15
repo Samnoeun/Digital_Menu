@@ -1,9 +1,5 @@
-
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
-import 'Login/login_screen.dart';
-import 'taskbar_screen.dart';
-import 'Login/restaurant_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -32,21 +28,11 @@ class _SplashScreenState extends State<SplashScreen> {
             try {
               await ApiService.getRestaurant();
               if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MenuScreen(onThemeToggle: widget.onThemeToggle),
-                  ),
-                );
+                Navigator.pushReplacementNamed(context, '/menu');
               }
             } catch (e) {
               if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RestaurantScreen(onThemeToggle: widget.onThemeToggle),
-                  ),
-                );
+                Navigator.pushReplacementNamed(context, '/restaurant');
               }
             }
           } else {
@@ -55,32 +41,17 @@ class _SplashScreenState extends State<SplashScreen> {
         } catch (e) {
           await ApiService.clearLoginData();
           if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LoginScreen(onThemeToggle: widget.onThemeToggle),
-              ),
-            );
+            Navigator.pushReplacementNamed(context, '/login');
           }
         }
       } else {
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => LoginScreen(onThemeToggle: widget.onThemeToggle),
-            ),
-          );
+          Navigator.pushReplacementNamed(context, '/login');
         }
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => LoginScreen(onThemeToggle: widget.onThemeToggle),
-          ),
-        );
+        Navigator.pushReplacementNamed(context, '/login');
       }
     }
   }

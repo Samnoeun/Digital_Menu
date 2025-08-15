@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'screens/splash_screen.dart';
-import './screens/taskbar_screen.dart';
+import 'screens/taskbar_screen.dart';
+import 'screens/Preview/menu_preview_screen.dart';
+import 'screens/Login/restaurant_screen.dart';
+import 'screens/Login/login_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  setUrlStrategy(PathUrlStrategy()); // Clean URLs without #
   runApp(const DigitalMenuApp());
 }
 
@@ -77,9 +82,13 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
         ),
       ),
       themeMode: _themeMode,
-      home: SplashScreen(onThemeToggle: toggleTheme),
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => SplashScreen(onThemeToggle: toggleTheme),
         '/menu': (context) => MenuScreen(onThemeToggle: toggleTheme),
+        '/preview': (context) => const MenuPreviewScreen(),
+        '/restaurant': (context) => RestaurantScreen(onThemeToggle: toggleTheme),
+        '/login': (context) => LoginScreen(onThemeToggle: toggleTheme),
       },
     );
   }

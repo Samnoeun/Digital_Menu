@@ -8,7 +8,7 @@ import 'Setting/settings_screen.dart';
 import 'Preview/menu_preview_screen.dart';
 import 'more_screen.dart';
 import 'Preview/item_detail_screen.dart';
-// Option 1: With alias
+
 import 'category/category_list_screen.dart' as category_screen;
 
 
@@ -59,10 +59,10 @@ void initState() {
                 title: const Text('Menu Preview'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
+                  Navigator.pushNamed(
                     context,
-                    MaterialPageRoute(builder: (_) => const MenuPreviewScreen()),
-                  );
+                    '/preview',
+                  ); // Change to this for URL support
                 },
               ),
               ListTile(
@@ -114,10 +114,19 @@ void initState() {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: 'Orders',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Menu'),
-          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Category'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'More'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category),
+            label: 'Category',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu),
+            label: 'More',
+          ), // Hamburger style
         ],
       ),
     );
