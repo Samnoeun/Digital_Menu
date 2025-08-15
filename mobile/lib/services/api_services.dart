@@ -607,4 +607,7 @@ static Future<void> clearLoginData() async {
   await prefs.remove('auth_token');
   await prefs.remove('user_email');
 }
+
+  static Future<void> updateCategoryOrder(List<int> orderedIds) async {}
+
 }

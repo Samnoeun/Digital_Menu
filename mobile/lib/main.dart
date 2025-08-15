@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'screens/splash_screen.dart'; // Add this import
 import './screens/taskbar_screen.dart';
+import './screens/Preview/menu_preview_screen.dart'; // Add this import for MenuPreviewScreen
+import 'package:flutter_web_plugins/flutter_web_plugins.dart'; // Add this for clean URL strategy (optional)
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  setUrlStrategy(PathUrlStrategy()); // Add this for clean URLs without # (optional but recommended)
   runApp(const DigitalMenuApp());
 }
 
@@ -39,6 +42,7 @@ class DigitalMenuApp extends StatelessWidget {
       home: const SplashScreen(), // Changed from LoginScreen to SplashScreen
       routes: {
         '/menu': (context) => const MenuScreen(),
+        '/preview': (context) => const MenuPreviewScreen(), // Add this named route
       },
     );
   }

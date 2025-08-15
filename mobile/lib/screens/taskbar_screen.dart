@@ -46,10 +46,10 @@ class _MenuScreenState extends State<MenuScreen> {
                 title: const Text('Menu Preview'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
+                  Navigator.pushNamed(
                     context,
-                    MaterialPageRoute(builder: (_) => const MenuPreviewScreen()),
-                  );
+                    '/preview',
+                  ); // Change to this for URL support
                 },
               ),
               ListTile(
@@ -99,10 +99,19 @@ class _MenuScreenState extends State<MenuScreen> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: 'Orders',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Menu'),
-          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Category'),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'More'), // Hamburger style
+          BottomNavigationBarItem(
+            icon: Icon(Icons.category),
+            label: 'Category',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu),
+            label: 'More',
+          ), // Hamburger style
         ],
       ),
     );
