@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'Order/order_screen.dart';
-import 'item/item_list_screen.dart' as item_screen;
-// import 'category/category_list_screen.dart' as category_screen;
+import 'item/item_list_screen.dart';
+import 'category/category_list_screen.dart';
 import 'QR/qr_screen.dart';
 import 'Setting/settings_screen.dart';
 import 'Preview/menu_preview_screen.dart';
-import 'more_screen.dart';
-import 'Preview/item_detail_screen.dart';
-
-import 'category/category_list_screen.dart' as category_screen;
-
 
 class MenuScreen extends StatefulWidget {
-  final Function(bool) onThemeToggle;
-  const MenuScreen({super.key, required this.onThemeToggle});
+  const MenuScreen({super.key});
 
   @override
   State<MenuScreen> createState() => _MenuScreenState();
@@ -23,19 +17,12 @@ class MenuScreen extends StatefulWidget {
 class _MenuScreenState extends State<MenuScreen> {
   int _selectedIndex = 0;
 
-  late final List<Widget> _pages;
-
-  @override
-  @override
-void initState() {
-  super.initState();
-  _pages = [
+  final List<Widget> _pages = [
     const HomeScreen(),
     const OrderScreen(),
-    const item_screen.ItemListScreen(),
-    const category_screen.CategoryListScreen(),
+    const ItemListScreen(),
+    const CategoryListScreen(),
   ];
-}
 
   void _onItemTapped(int index) {
     setState(() {
@@ -59,10 +46,10 @@ void initState() {
                 title: const Text('Menu Preview'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.pushNamed(
+                  Navigator.push(
                     context,
-                    '/preview',
-                  ); // Change to this for URL support
+                    MaterialPageRoute(builder: (_) => const MenuPreviewScreen()),
+                  );
                 },
               ),
               ListTile(
@@ -83,9 +70,7 @@ void initState() {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => SettingsScreen(onThemeToggle: widget.onThemeToggle),
-                    ),
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
                   );
                 },
               ),
@@ -107,26 +92,17 @@ void initState() {
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
           if (index == 4) {
-            _openMoreMenu(context);
+            _openMoreMenu(context); // open popup for "More"
           } else {
             _onItemTapped(index);
           }
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
-            label: 'Orders',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Orders'),
           BottomNavigationBarItem(icon: Icon(Icons.menu_book), label: 'Menu'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.category),
-            label: 'Category',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: 'More',
-          ), // Hamburger style
+          BottomNavigationBarItem(icon: Icon(Icons.category), label: 'Category'),
+          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'More'), // Hamburger style
         ],
       ),
     );

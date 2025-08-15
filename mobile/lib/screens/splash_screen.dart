@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
+import 'Login/login_screen.dart';
+import 'taskbar_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  final Function(bool) onThemeToggle;
-  const SplashScreen({super.key, required this.onThemeToggle});
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -13,75 +14,60 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Delay auth check until the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAuthStatus();
-    });
+    _checkAuthStatus();
   }
 
   Future<void> _checkAuthStatus() async {
-    await Future.delayed(const Duration(seconds: 2)); // Maintain delay for UI
-
+    // Add a small delay for better UX
+    await Future.delayed(const Duration(milliseconds: 1500));
+    
     try {
       final authData = await ApiService.getLoginData();
+      
       if (authData != null) {
+        // Verify token is still valid
         try {
-          final user = await ApiService.getUser();
-          if (user != null) {
-            try {
-              await ApiService.getRestaurant();
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/menu', arguments: widget.onThemeToggle);
-              }
-            } catch (e) {
-              if (mounted) {
-                Navigator.pushReplacementNamed(context, '/restaurant', arguments: widget.onThemeToggle);
-              }
-            }
-          } else {
-            throw Exception('User not found');
+          await ApiService.getUser(); // This will throw if token is invalid
+          if (mounted) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const MenuScreen()),
+            );
           }
         } catch (e) {
+          // Token is invalid, clear it and go to login
           await ApiService.clearLoginData();
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+            );
           }
         }
       } else {
+        // No saved credentials, go to login
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginScreen()),
+          );
         }
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/login', arguments: widget.onThemeToggle);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/logo/app_logo.png',
-              color: isDark ? Colors.white : null,
-              height: 100,
-            ),
-            const SizedBox(height: 20),
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
-            Text(
-              'Loading...',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ],
-        ),
+        child: Image.asset('assets/logo/app_logo.png'), // Use your app logo
       ),
     );
   }

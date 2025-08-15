@@ -4,11 +4,9 @@ import '../../models/item_model.dart' as item;
 import '../../services/api_services.dart';
 import '../../screens/cart_screen.dart';
 import './item_detail_screen.dart';
-import '../../screens/home_screen.dart'; // Adjust the path as needed
 
 class MenuPreviewScreen extends StatefulWidget {
-  final Function(bool)? onThemeToggle;
-  const MenuPreviewScreen({Key? key, this.onThemeToggle}) : super(key: key);
+  const MenuPreviewScreen({super.key});
 
   @override
   State<MenuPreviewScreen> createState() => _MenuPreviewScreenState();
@@ -33,6 +31,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
     super.initState();
     _loadData();
 
+    // Listen to controller changes to update search text and UI
     _searchController.addListener(() {
       setState(() {
         _searchText = _searchController.text;
@@ -57,12 +56,6 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
         _error = e.toString();
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.deepPurple.shade700,
-        ),
-      );
     }
   }
 
@@ -140,11 +133,9 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.grey[800]
-                : Colors.white,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: ItemDetailBottomSheet(item: item),
         );
@@ -170,8 +161,6 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   }
 
   Widget _buildSearchBar() {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -185,7 +174,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
         child: Container(
           height: 45,
           decoration: BoxDecoration(
-            color: isDarkMode ? Colors.grey[800] : Colors.white,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -199,27 +188,22 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             controller: _searchController,
             decoration: InputDecoration(
               hintText: 'Search items...',
-              hintStyle: TextStyle(
-                color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
-                fontSize: 14,
-              ),
+              hintStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
               prefixIcon: Icon(
                 Icons.search_rounded,
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors
-                          .white // White in dark mode
-                    : Colors.deepPurple.shade600, // Purple in light mode
+                color: Colors.deepPurple.shade600,
                 size: 20,
               ),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
                       icon: Icon(
                         Icons.clear_rounded,
-                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        color: Colors.grey.shade600,
                         size: 18,
                       ),
                       onPressed: () {
                         _searchController.clear();
+                        // _onSearchChanged(''); // not needed since listener will handle
                       },
                     )
                   : null,
@@ -228,17 +212,14 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                 borderSide: BorderSide.none,
               ),
               filled: true,
-              fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+              fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 8,
               ),
               isDense: true,
             ),
-            style: TextStyle(
-              fontSize: 14,
-              color: isDarkMode ? Colors.white : Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 14),
           ),
         ),
       ),
@@ -247,12 +228,8 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? Colors.grey[900]
-          : Colors.deepPurple.shade50,
+      backgroundColor: Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.deepPurple.shade700,
@@ -263,11 +240,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  size: 18,
-                  color: Color.fromARGB(255, 255, 255, 255),
-                ),
+                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Color.fromARGB(255, 255, 255, 255)),
                 onPressed: () => Navigator.of(context).pop(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
@@ -284,16 +257,6 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           ),
         ),
         actions: [
-          if (widget.onThemeToggle != null)
-            IconButton(
-              icon: Icon(
-                isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                widget.onThemeToggle!(isDarkMode);
-              },
-            ),
           Stack(
             alignment: Alignment.topRight,
             children: [
@@ -330,9 +293,11 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           ),
         ),
       ),
+
       body: Column(
         children: [
           _buildSearchBar(),
+
           SizedBox(
             width: double.infinity,
             child: SingleChildScrollView(
@@ -350,14 +315,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                     ),
                     selected: _selectedCategoryId == null,
                     selectedColor: Colors.deepPurple.shade600,
-                    backgroundColor: isDarkMode
-                        ? Colors.grey[700]
-                        : Colors.deepPurple.shade100,
+                    backgroundColor: Colors.deepPurple.shade100,
                     labelStyle: TextStyle(
                       color: _selectedCategoryId == null
                           ? Colors.white
-                          : isDarkMode
-                          ? Colors.grey[400]
                           : Colors.deepPurple.shade700,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
@@ -382,14 +343,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                         ),
                         selected: _selectedCategoryId == cat.id,
                         selectedColor: Colors.deepPurple.shade600,
-                        backgroundColor: isDarkMode
-                            ? Colors.grey[700]
-                            : Colors.deepPurple.shade100,
+                        backgroundColor: Colors.deepPurple.shade100,
                         labelStyle: TextStyle(
                           color: _selectedCategoryId == cat.id
                               ? Colors.white
-                              : isDarkMode
-                              ? Colors.grey[400]
                               : Colors.deepPurple.shade700,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
@@ -409,20 +366,9 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           const SizedBox(height: 10),
           Expanded(
             child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.deepPurple.shade700,
-                    ),
-                  )
+                ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                ? Center(
-                    child: Text(
-                      'Error: $_error',
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.grey[400] : Colors.black87,
-                      ),
-                    ),
-                  )
+                ? Center(child: Text('Error: $_error'))
                 : ListView(
                     padding: const EdgeInsets.all(12),
                     children: _categories.map((category.Category cat) {
@@ -437,30 +383,16 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                         children: [
                           Text(
                             cat.name,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors
-                                        .white // White text in dark mode
-                                  : Colors
-                                        .deepPurple
-                                        .shade700, // Deep purple in light mode
+                              color: Colors.deepPurple,
                             ),
                           ),
                           const SizedBox(height: 10),
                           ...itemsInCategory.map((item.Item item) {
                             final quantity = _selectedItems[item] ?? 0;
                             return Card(
-                              color: isDarkMode
-                                  ? Colors.grey[800]
-                                  : Colors.white,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
                               child: ListTile(
                                 onTap: () => _showItemDetail(item),
                                 leading: item.imagePath != null
@@ -471,34 +403,12 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                         fit: BoxFit.cover,
                                         errorBuilder:
                                             (context, error, stackTrace) =>
-                                                Icon(
-                                                  Icons.broken_image,
-                                                  color: isDarkMode
-                                                      ? Colors.grey[400]
-                                                      : Colors.grey[600],
-                                                ),
+                                                const Icon(Icons.broken_image),
                                       )
-                                    : Icon(
-                                        Icons.image_not_supported,
-                                        color: isDarkMode
-                                            ? Colors.grey[400]
-                                            : Colors.grey[600],
-                                      ),
-                                title: Text(
-                                  item.name,
-                                  style: TextStyle(
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                ),
+                                    : const Icon(Icons.image_not_supported),
+                                title: Text(item.name),
                                 subtitle: Text(
                                   '\$${item.price.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    color: isDarkMode
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                                  ),
                                 ),
                                 trailing: quantity > 0
                                     ? Container(
@@ -506,8 +416,9 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                           horizontal: 8,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.deepPurple.shade700
-                                              .withOpacity(0.1),
+                                          color: Colors.deepPurple.withOpacity(
+                                            0.1,
+                                          ),
                                           borderRadius: BorderRadius.circular(
                                             20,
                                           ),
@@ -516,11 +427,9 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             IconButton(
-                                              icon: Icon(
+                                              icon: const Icon(
                                                 Icons.remove,
                                                 size: 18,
-                                                color:
-                                                    Colors.deepPurple.shade700,
                                               ),
                                               onPressed: () =>
                                                   _decrementQuantity(item),
@@ -529,20 +438,15 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                                   const BoxConstraints(),
                                             ),
                                             Text(
-                                              '$quantity',
-                                              style: TextStyle(
+                                              '${quantity}',
+                                              style: const TextStyle(
                                                 fontSize: 14,
-                                                color: isDarkMode
-                                                    ? Colors.white
-                                                    : Colors.black87,
                                               ),
                                             ),
                                             IconButton(
-                                              icon: Icon(
+                                              icon: const Icon(
                                                 Icons.add,
                                                 size: 18,
-                                                color:
-                                                    Colors.deepPurple.shade700,
                                               ),
                                               onPressed: () =>
                                                   _incrementQuantity(item),
@@ -554,15 +458,11 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                         ),
                                       )
                                     : IconButton(
-                                        icon: const Icon(
-                                          Icons.add,
-                                          color: Colors.white,
-                                        ),
+                                        icon: const Icon(Icons.add),
                                         onPressed: () =>
                                             _incrementQuantity(item),
                                         style: IconButton.styleFrom(
-                                          backgroundColor:
-                                              Colors.deepPurple.shade700,
+                                          backgroundColor: Colors.deepPurple,
                                           foregroundColor: Colors.white,
                                         ),
                                       ),
@@ -584,7 +484,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                 height: 55,
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.deepPurple.shade700,
+                  color: Colors.deepPurple,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(

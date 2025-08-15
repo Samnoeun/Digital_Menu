@@ -5,8 +5,7 @@ import '../../../services/api_services.dart';
 import '../taskbar_screen.dart';
 
 class RestaurantScreen extends StatefulWidget {
-  final Function(bool) onThemeToggle;
-  const RestaurantScreen({super.key, required this.onThemeToggle});
+  const RestaurantScreen({super.key});
 
   @override
   State<RestaurantScreen> createState() => _RestaurantScreenState();
@@ -41,9 +40,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         if (context.mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (_) => MenuScreen(onThemeToggle: widget.onThemeToggle),
-            ),
+            MaterialPageRoute(builder: (_) => const MenuScreen()),
           );
         }
       } catch (e) {
@@ -58,16 +55,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Setup Restaurant',
-          style: Theme.of(context).appBarTheme.titleTextStyle,
-        ),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+        title: const Text('Setup Restaurant'),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -80,17 +72,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   onTap: _pickImage,
                   child: CircleAvatar(
                     radius: 60,
-                    backgroundColor: isDark
-                        ? Colors.deepPurple.shade700
-                        : Colors.deepPurple.shade100,
+                    backgroundColor: Colors.deepPurple.shade100,
                     backgroundImage:
                         _profileImage != null ? FileImage(_profileImage!) : null,
                     child: _profileImage == null
-                        ? Icon(
-                            Icons.camera_alt,
-                            size: 40,
-                            color: isDark ? Colors.white70 : Colors.deepPurple,
-                          )
+                        ? const Icon(Icons.camera_alt, size: 40, color: Colors.deepPurple)
                         : null,
                   ),
                 ),
@@ -98,16 +84,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               const SizedBox(height: 24),
               TextFormField(
                 controller: _nameController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Restaurant Name',
-                  prefixIcon: Icon(
-                    Icons.restaurant,
-                    color: isDark ? Colors.black : Colors.deepPurple,
-                  ),
-                  border: const OutlineInputBorder(),
-                  labelStyle: Theme.of(context).textTheme.bodyMedium,
+                  prefixIcon: Icon(Icons.restaurant),
+                  border: OutlineInputBorder(),
                 ),
-                style: Theme.of(context).textTheme.bodyLarge,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter restaurant name';
@@ -118,16 +99,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _addressController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Address',
-                  prefixIcon: Icon(
-                    Icons.location_on,
-                    color: isDark ? Colors.black : Colors.deepPurple,
-                  ),
-                  border: const OutlineInputBorder(),
-                  labelStyle: Theme.of(context).textTheme.bodyMedium,
+                  prefixIcon: Icon(Icons.location_on),
+                  border: OutlineInputBorder(),
                 ),
-                style: Theme.of(context).textTheme.bodyLarge,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter address';
@@ -138,7 +114,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submit,
-                style: Theme.of(context).elevatedButtonTheme.style,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(50),
+                ),
                 child: const Text('Save Restaurant'),
               ),
             ],
