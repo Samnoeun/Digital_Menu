@@ -120,10 +120,17 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final primaryColor = isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
+    final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final iconColor = isDarkMode ? Colors.white : Colors.deepPurple;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         titleSpacing: 0,
         title: Padding(
@@ -136,7 +143,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 splashRadius: 22,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Edit Restaurant',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
@@ -148,6 +155,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
         ),
       ),
+      backgroundColor: scaffoldBgColor,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -174,20 +182,24 @@ class _AccountScreenState extends State<AccountScreen> {
                           children: [
                             CircleAvatar(
                               radius: 80,
-                              backgroundColor: Colors.deepPurple.shade50,
+                              backgroundColor: isDarkMode 
+                                  ? Colors.grey[700] 
+                                  : Colors.deepPurple.shade50,
                               backgroundImage: _getProfileImage(),
-                              child: _showProfilePlaceholder(),
+                              child: _showProfilePlaceholder(isDarkMode),
                             ),
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: isDarkMode ? Colors.grey[800] : Colors.white,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.deepPurple, width: 2),
+                                border: Border.all(
+                                  color: primaryColor!, 
+                                  width: 2),
                               ),
                               padding: const EdgeInsets.all(6),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.edit,
-                                color: Colors.deepPurple,
+                                color: primaryColor,
                                 size: 24,
                               ),
                             ),
@@ -201,12 +213,14 @@ class _AccountScreenState extends State<AccountScreen> {
                       decoration: InputDecoration(
                         labelText: 'Restaurant Name',
                         hintText: 'Enter restaurant name',
-                        prefixIcon: const Icon(Icons.restaurant),
+                        prefixIcon: Icon(Icons.restaurant, color: iconColor),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: cardColor,
+                        labelStyle: TextStyle(color: textColor),
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.7)),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
@@ -214,7 +228,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         }
                         return null;
                       },
-                      style: theme.textTheme.bodyLarge,
+                      style: TextStyle(color: textColor),
                     ),
                     const SizedBox(height: 28),
                     TextFormField(
@@ -223,12 +237,14 @@ class _AccountScreenState extends State<AccountScreen> {
                       decoration: InputDecoration(
                         labelText: 'Address',
                         hintText: 'Enter restaurant address',
-                        prefixIcon: const Icon(Icons.location_on),
+                        prefixIcon: Icon(Icons.location_on, color: iconColor),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: cardColor,
+                        labelStyle: TextStyle(color: textColor),
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.7)),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
@@ -236,7 +252,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         }
                         return null;
                       },
-                      style: theme.textTheme.bodyLarge,
+                      style: TextStyle(color: textColor),
                     ),
                     const SizedBox(height: 36),
                     SizedBox(
@@ -245,7 +261,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       child: ElevatedButton(
                         onPressed: _isSaving ? null : _saveChanges,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
+                          backgroundColor: primaryColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -261,6 +277,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
                                   letterSpacing: 1.2,
+                                  color: Colors.white,
                                 ),
                               ),
                       ),
@@ -281,10 +298,14 @@ class _AccountScreenState extends State<AccountScreen> {
     return null;
   }
 
-  Widget? _showProfilePlaceholder() {
-    if (_profileImage != null || _imageBytes != null) return null;
+  Widget? _showProfilePlaceholder(bool isDarkMode) {
+    if (_profileImage != null) return null;
     if (_restaurant?.profile == null || _restaurant!.profile!.isEmpty) {
-      return const Icon(Icons.restaurant, size: 60, color: Colors.deepPurple);
+      return Icon(
+        Icons.restaurant, 
+        size: 60, 
+        color: isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple,
+      );
     }
     return null;
   }

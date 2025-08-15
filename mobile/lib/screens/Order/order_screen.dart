@@ -4,7 +4,8 @@ import '../../services/api_services.dart';
 import '../../models/order_model.dart';
 
 class OrderScreen extends StatefulWidget {
-  const OrderScreen({Key? key}) : super(key: key);
+  final Function(bool)? onThemeToggle;
+  const OrderScreen({Key? key, this.onThemeToggle}) : super(key: key);
 
   @override
   State<OrderScreen> createState() => _OrderScreenState();
@@ -107,23 +108,22 @@ class _OrderScreenState extends State<OrderScreen> {
       });
     } catch (e) {
       debugPrint('Failed to update status: ${e.toString()}');
-      // Consider showing an error message to the user
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         titleSpacing: 0,
         title: Padding(
-          padding: const EdgeInsets.only(
-            left: 24,
-            right: 0,
-          ), // Adjusted padding
-          child: const Text(
+          padding: const EdgeInsets.only(left: 24),
+          child: Text(
             'Orders',
             style: TextStyle(
               fontWeight: FontWeight.w700,
@@ -143,15 +143,28 @@ class _OrderScreenState extends State<OrderScreen> {
             ),
           ),
         ),
+        actions: widget.onThemeToggle != null
+            ? [
+                IconButton(
+                  icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+                  onPressed: () {
+                    widget.onThemeToggle!(isDarkMode);
+                  },
+                ),
+              ]
+            : [],
       ),
-
-      body: _buildBody(),
+      body: _buildBody(theme),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(ThemeData theme) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(
+          color: theme.colorScheme.primary,
+        ),
+      );
     }
 
     if (_error != null) {
@@ -159,28 +172,32 @@ class _OrderScreenState extends State<OrderScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Error: $_error'),
+            Text('Error: $_error', style: theme.textTheme.bodyMedium),
             const SizedBox(height: 8),
-            TextButton(onPressed: _loadOrders, child: const Text('Retry')),
+            TextButton(
+              onPressed: _loadOrders,
+              child: Text('Retry', style: theme.textTheme.bodyMedium),
+            ),
           ],
         ),
       );
     }
 
+    final filteredOrders = _filteredOrders;
     return Column(
       children: [
-        _buildFilterDropdown(),
+        _buildFilterDropdown(theme),
         Expanded(
-          child: _filteredOrders.isEmpty
-              ? const Center(child: Text('No orders found'))
+          child: filteredOrders.isEmpty
+              ? Center(child: Text('No orders found', style: theme.textTheme.bodyMedium))
               : RefreshIndicator(
                   onRefresh: _loadOrders,
                   child: ListView.builder(
                     padding: const EdgeInsets.all(8),
-                    itemCount: _filteredOrders.length,
+                    itemCount: filteredOrders.length,
                     itemBuilder: (context, index) {
-                      final order = _filteredOrders[index];
-                      return _buildOrderCard(order);
+                      final order = filteredOrders[index];
+                      return _buildOrderCard(order, theme);
                     },
                   ),
                 ),
@@ -189,9 +206,8 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildOrderCard(Order order) {
-    final theme = Theme.of(context);
-    final statusColor = _getStatusColor(order.status);
+  Widget _buildOrderCard(Order order, ThemeData theme) {
+    final statusColor = _getStatusColor(order.status, theme);
     final expanded = _expandedOrders[order.id] ?? false;
     final time = DateFormat('MMM d · h:mm a').format(order.createdAt.toLocal());
     final totalStr = _calculateTotal(order.items).toStringAsFixed(2);
@@ -235,8 +251,7 @@ class _OrderScreenState extends State<OrderScreen> {
     }
 
     return Semantics(
-      label:
-          'Order for table ${order.tableNumber}, ${order.items.length} items, status ${order.status}',
+      label: 'Order for table ${order.tableNumber}, ${order.items.length} items, status ${order.status}',
       child: Card(
         margin: const EdgeInsets.only(bottom: 10),
         elevation: 2,
@@ -245,13 +260,11 @@ class _OrderScreenState extends State<OrderScreen> {
         clipBehavior: Clip.antiAlias,
         child: Container(
           decoration: BoxDecoration(
-            color: const Color.fromRGBO(249, 248, 250, 1),
+            color: theme.colorScheme.surface,
           ),
-
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Table header
               Container(
                 padding: const EdgeInsets.all(14),
                 color: theme.colorScheme.surfaceVariant.withOpacity(0.9),
@@ -260,9 +273,7 @@ class _OrderScreenState extends State<OrderScreen> {
                   children: [
                     CircleAvatar(
                       radius: 22,
-                      backgroundColor: theme.colorScheme.primary.withOpacity(
-                        0.12,
-                      ),
+                      backgroundColor: theme.colorScheme.primary.withOpacity(0.12),
                       child: Icon(
                         Icons.restaurant,
                         color: theme.colorScheme.primary,
@@ -300,15 +311,13 @@ class _OrderScreenState extends State<OrderScreen> {
                         ],
                       ),
                     ),
-                    // Status badge
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: order.status.toLowerCase() == 'pending'
-                            ? const Color.fromARGB(255, 246, 222, 152)
+                            ? (theme.brightness == Brightness.dark
+                                ? Colors.orange.withOpacity(0.3)
+                                : const Color.fromARGB(255, 246, 222, 152))
                             : statusColor.withOpacity(0.12),
                         borderRadius: BorderRadius.circular(999),
                       ),
@@ -337,8 +346,6 @@ class _OrderScreenState extends State<OrderScreen> {
                   ],
                 ),
               ),
-
-              // Body
               Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(
@@ -347,23 +354,18 @@ class _OrderScreenState extends State<OrderScreen> {
                       children: [
                         Text(
                           'Total',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(width: 6),
                         countBadge(order.items.length),
                         const Spacer(),
                         Text(
                           '\$$totalStr',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-
                     InkWell(
                       borderRadius: BorderRadius.circular(8),
                       onTap: () {
@@ -392,25 +394,21 @@ class _OrderScreenState extends State<OrderScreen> {
                         ),
                       ),
                     ),
-
                     AnimatedCrossFade(
                       firstChild: const SizedBox.shrink(),
                       secondChild: Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: Column(
                           children: [
-                            ..._buildOrderItemsList(order.items),
+                            ..._buildOrderItemsList(order.items, theme),
                             const SizedBox(height: 8),
                           ],
                         ),
                       ),
-                      crossFadeState: expanded
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
+                      crossFadeState: expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
                       duration: const Duration(milliseconds: 200),
                     ),
-
-                    _buildStatusButton(order),
+                    _buildStatusButton(order, theme),
                   ],
                 ),
               ),
@@ -421,26 +419,24 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  List<Widget> _buildOrderItemsList(List<OrderItem> items) {
+  List<Widget> _buildOrderItemsList(List<OrderItem> items, ThemeData theme) {
     return items
         .map(
           (item) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
               children: [
-                Text('${item.quantity}x', style: const TextStyle(fontSize: 14)),
+                Text('${item.quantity}x', style: theme.textTheme.bodySmall),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name, style: const TextStyle(fontSize: 14)),
+                      Text(item.name, style: theme.textTheme.bodySmall),
                       if (item.specialNote.isNotEmpty)
                         Text(
                           'Note: ${item.specialNote}',
-                          style: TextStyle(
-                            fontSize: 12,
-
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.orange[700],
                             fontStyle: FontStyle.italic,
                           ),
@@ -450,7 +446,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
                 Text(
                   '\$${(item.price * item.quantity).toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 14),
+                  style: theme.textTheme.bodySmall,
                 ),
               ],
             ),
@@ -459,7 +455,7 @@ class _OrderScreenState extends State<OrderScreen> {
         .toList();
   }
 
-  Widget _buildStatusButton(Order order) {
+  Widget _buildStatusButton(Order order, ThemeData theme) {
     final nextStatus = _getNextStatus(order.status);
     if (nextStatus == null) return const SizedBox();
 
@@ -468,15 +464,14 @@ class _OrderScreenState extends State<OrderScreen> {
       child: TextButton(
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          backgroundColor: Color.fromARGB(255, 241, 238, 245),
+          backgroundColor: theme.colorScheme.surfaceVariant,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () => _updateOrderStatus(order, nextStatus),
         child: Text(
           'Mark as ${nextStatus.toUpperCase()}',
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 14,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -484,7 +479,7 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildFilterDropdown() {
+  Widget _buildFilterDropdown(ThemeData theme) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -495,25 +490,21 @@ class _OrderScreenState extends State<OrderScreen> {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Theme(
-        data: Theme.of(context).copyWith(
-          canvasColor: Colors.white, // White background for dropdown popup
+        data: theme.copyWith(
+          canvasColor: theme.brightness == Brightness.dark ? Colors.grey[800] : Colors.white,
         ),
         child: DropdownButtonFormField<String>(
           value: _filterStatus,
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(18)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: theme.brightness == Brightness.dark ? Colors.grey[800] : Colors.white,
           ),
-          dropdownColor: Colors.white, // White dropdown popup background
-          iconEnabledColor:
-              Colors.deepPurple.shade700, // Icon color to contrast
+          dropdownColor: theme.brightness == Brightness.dark ? Colors.grey[800] : Colors.white,
+          iconEnabledColor: theme.brightness == Brightness.dark ? Colors.white : Colors.deepPurple.shade700,
           style: TextStyle(
-            color: Colors.deepPurple.shade700, // Text color for dropdown items
+            color: theme.brightness == Brightness.dark ? Colors.white : Colors.deepPurple.shade700,
             fontWeight: FontWeight.w500,
           ),
           items: const [
@@ -550,16 +541,16 @@ class _OrderScreenState extends State<OrderScreen> {
     }
   }
 
-  Color _getStatusColor(String status) {
+  Color _getStatusColor(String status, ThemeData theme) {
     switch (status) {
       case 'pending':
         return Colors.orange;
       case 'preparing':
-        return Colors.blue;
+        return theme.colorScheme.primary;
       case 'ready':
         return Colors.green;
       default:
-        return Colors.grey;
+        return theme.colorScheme.onSurface.withOpacity(0.6);
     }
   }
 }
