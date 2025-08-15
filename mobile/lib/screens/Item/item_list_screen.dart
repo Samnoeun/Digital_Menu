@@ -821,9 +821,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                               children: [
                                                 Icon(
                                                   Icons.edit_rounded,
-                                                  color: Colors
-                                                      .deepPurple
-                                                      .shade600,
+                                                  color: const Color.fromARGB(255, 240, 240, 240),
                                                   size: 18,
                                                 ),
                                                 const SizedBox(width: 8),
