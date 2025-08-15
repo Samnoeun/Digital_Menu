@@ -636,9 +636,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                         },
                                         activeColor: Colors.deepPurple.shade600,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
+                                          borderRadius: BorderRadius.circular(4),
                                         ),
                                       )
                                     : ClipRRect(
@@ -656,12 +654,8 @@ class _ItemListScreenState extends State<ItemListScreen>
                                                           Colors.grey,
                                                     ]
                                                   : [
-                                                      Colors
-                                                          .deepPurple
-                                                          .shade200,
-                                                      Colors
-                                                          .deepPurple
-                                                          .shade100,
+                                                      Colors.deepPurple.shade200,
+                                                      Colors.deepPurple.shade100,
                                                     ],
                                             ),
                                           ),
@@ -673,24 +667,18 @@ class _ItemListScreenState extends State<ItemListScreen>
                                                   fit: BoxFit.cover,
                                                   errorBuilder: (_, __, ___) =>
                                                       Icon(
-                                                        Icons
-                                                            .broken_image_rounded,
+                                                        Icons.broken_image_rounded,
                                                         color: isDarkMode
                                                             ? Colors.grey[400]
-                                                            : Colors
-                                                                  .deepPurple
-                                                                  .shade600,
+                                                            : Colors.deepPurple.shade600,
                                                         size: 30,
                                                       ),
                                                 )
                                               : Icon(
-                                                  Icons
-                                                      .image_not_supported_rounded,
+                                                  Icons.image_not_supported_rounded,
                                                   color: isDarkMode
                                                       ? Colors.grey[400]
-                                                      : Colors
-                                                            .deepPurple
-                                                            .shade600,
+                                                      : Colors.deepPurple.shade600,
                                                   size: 30,
                                                 ),
                                         ),
@@ -734,9 +722,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                           color: isDarkMode
                                               ? Colors.grey[600]
                                               : Colors.deepPurple.shade700.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
+                                          borderRadius: BorderRadius.circular(20),
                                         ),
                                         child: Text(
                                           '\$${item.price.toStringAsFixed(2)}',
@@ -762,9 +748,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                               : Colors.deepPurple.shade600,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
                                         color: isDarkMode
                                             ? Colors.grey[800]
@@ -774,39 +758,19 @@ class _ItemListScreenState extends State<ItemListScreen>
                                             final result = await Navigator.push(
                                               context,
                                               PageRouteBuilder(
-                                                pageBuilder:
-                                                    (
-                                                      context,
-                                                      animation,
-                                                      secondaryAnimation,
-                                                    ) => AddItemScreen(
-                                                      item: item,
+                                                pageBuilder: (context, animation, secondaryAnimation) =>
+                                                    AddItemScreen(item: item),
+                                                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                  return SlideTransition(
+                                                    position: animation.drive(
+                                                      Tween(
+                                                        begin: const Offset(1.0, 0.0),
+                                                        end: Offset.zero,
+                                                      ).chain(CurveTween(curve: Curves.easeInOut)),
                                                     ),
-                                                transitionsBuilder:
-                                                    (
-                                                      context,
-                                                      animation,
-                                                      secondaryAnimation,
-                                                      child,
-                                                    ) {
-                                                      return SlideTransition(
-                                                        position: animation.drive(
-                                                          Tween(
-                                                            begin: const Offset(
-                                                              1.0,
-                                                              0.0,
-                                                            ),
-                                                            end: Offset.zero,
-                                                          ).chain(
-                                                            CurveTween(
-                                                              curve: Curves
-                                                                  .easeInOut,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        child: child,
-                                                      );
-                                                    },
+                                                    child: child,
+                                                  );
+                                                },
                                               ),
                                             );
                                             if (result == true) _loadData();
@@ -821,7 +785,9 @@ class _ItemListScreenState extends State<ItemListScreen>
                                               children: [
                                                 Icon(
                                                   Icons.edit_rounded,
-                                                  color: const Color.fromARGB(255, 240, 240, 240),
+                                                  color: isDarkMode
+                                                      ? Colors.white
+                                                      : Colors.deepPurple.shade600,
                                                   size: 18,
                                                 ),
                                                 const SizedBox(width: 8),
