@@ -55,11 +55,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
   }
 
   @override
@@ -209,12 +209,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: Colors.deepPurple.shade700,
-                  onPrimary: Colors.white,
-                  surface: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.white,
-                ),
+              primary: Colors.deepPurple.shade700,
+              onPrimary: Colors.white,
+              surface: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.white,
+            ),
           ),
           child: child!,
         );
@@ -250,7 +250,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+                  colors: [
+                    Colors.deepPurple.shade700,
+                    Colors.deepPurple.shade500,
+                  ],
                 ),
               ),
               child: SafeArea(
@@ -277,8 +280,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                                 child: CircleAvatar(
                                   radius: 28,
-                                  backgroundColor:
-                                      isDarkMode ? Colors.grey[800] : Colors.white,
+                                  backgroundColor: isDarkMode
+                                      ? Colors.grey[800]
+                                      : Colors.white,
                                   backgroundImage: restaurant!.profile != null
                                       ? NetworkImage(
                                           ApiService.getImageUrl(
@@ -290,7 +294,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ? Icon(
                                           Icons.restaurant,
                                           size: 28,
-                                          color: Colors.deepPurple.shade700,
+                                          color:
+                                              Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.white
+                                              : Colors.deepPurple.shade700,
                                         )
                                       : null,
                                 ),
@@ -571,7 +579,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               },
               decoration: InputDecoration(
                 labelText: 'Filter by',
-                labelStyle: TextStyle(color: Colors.deepPurple.shade700),
+                labelStyle: TextStyle(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.deepPurple.shade700,
+                ),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
@@ -580,8 +592,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
-              iconEnabledColor:
-                  isDarkMode ? Colors.white : Colors.deepPurple.shade700,
+              iconEnabledColor: isDarkMode
+                  ? Colors.white
+                  : Colors.deepPurple.shade700,
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.deepPurple.shade700,
                 fontWeight: FontWeight.w500,
@@ -725,8 +738,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             child: Column(
               children: [
-                Icon(Icons.inbox_outlined,
-                    size: 64, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+                Icon(
+                  Icons.inbox_outlined,
+                  size: 64,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
                 const SizedBox(height: 16),
                 Text(
                   "No orders found for selected period",
@@ -815,7 +831,9 @@ class ModernSummaryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(0.1),
+                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(
+                  0.1,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -933,13 +951,17 @@ class ModernTopItemTile extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Icon(
-                                  Icons.fastfood,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                ),
+                                      Icons.fastfood,
+                                      color: isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
                               )
                             : Icon(
                                 Icons.fastfood,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                       ),
                     ),
@@ -984,7 +1006,9 @@ class ModernTopItemTile extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: isDarkMode ? Colors.white : const Color(0xFF2D2D2D),
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF2D2D2D),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
