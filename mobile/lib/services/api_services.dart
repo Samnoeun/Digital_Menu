@@ -12,7 +12,7 @@ import 'dart:typed_data';
 
 class ApiService {
   static const String baseUrl =
-      'https://qrmenu.zapto.org/api'; // Update with your preferred base URL
+      'http://192.168.108.40:8080/api'; // Update with your preferred base URL
 
   static String? _token;
 
@@ -604,25 +604,18 @@ class ApiService {
 
   // Image Upload
   // Reusable helper to construct full image URLs
-  static String getImageUrl(String? path) {
+ static String getImageUrl(String? path) {
     if (path == null || path.isEmpty) return '';
 
-    // Debug print to check what path you're receiving
-    print('Original image path: $path');
-
-    // If it's already a full URL, return as-is
-    if (path.startsWith('http')) {
-      return path;
+    // Case 1: Return with '/storage/profiles/' prefix
+    if (!path.startsWith('http') && !path.contains('/')) {
+      return '${baseUrl.replaceFirst('/api', '')}/storage/profiles/$path';
     }
 
-    // If it's a relative path from AWS
-    if (path.startsWith('/')) {
-      return 'https://your-aws-bucket.s3.your-region.amazonaws.com$path';
-    }
-
-    // Default case
-    return '${baseUrl.replaceFirst('/api', '')}/storage/$path';
+    // Case 2: Return with direct path concatenation
+    return baseUrl.replaceFirst('/api', '') + path;
   }
+
 
   static Future<void> saveLoginData(String token, String email) async {
     final prefs = await SharedPreferences.getInstance();
