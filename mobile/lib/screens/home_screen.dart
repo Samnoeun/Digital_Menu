@@ -55,11 +55,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOutCubic,
-          ),
-        );
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
   }
 
   @override
@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: Colors.deepPurple.shade700,
           ),
         );
       }
@@ -208,9 +208,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(
-              context,
-            ).colorScheme.copyWith(primary: Colors.deepPurple),
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+                  primary: Colors.deepPurple.shade700,
+                  onPrimary: Colors.white,
+                  surface: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.white,
+                ),
           ),
           child: child!,
         );
@@ -227,28 +231,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 75,
-            collapsedHeight: 75, // Add this to maintain consistent height
+            collapsedHeight: 75,
             floating: false,
             pinned: true,
             automaticallyImplyLeading: false,
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: Colors.deepPurple.shade700,
             flexibleSpace: Container(
-              // Remove FlexibleSpaceBar and use Container directly
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.deepPurple,
-                    Color(0xFF7B1FA2),
-                    Color(0xFF4A148C),
-                  ],
+                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
                 ),
               ),
               child: SafeArea(
@@ -275,7 +277,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                                 child: CircleAvatar(
                                   radius: 28,
-                                  backgroundColor: Colors.white,
+                                  backgroundColor:
+                                      isDarkMode ? Colors.grey[800] : Colors.white,
                                   backgroundImage: restaurant!.profile != null
                                       ? NetworkImage(
                                           ApiService.getImageUrl(
@@ -284,10 +287,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         )
                                       : null,
                                   child: restaurant!.profile == null
-                                      ? const Icon(
+                                      ? Icon(
                                           Icons.restaurant,
                                           size: 28,
-                                          color: Colors.deepPurple,
+                                          color: Colors.deepPurple.shade700,
                                         )
                                       : null,
                                 ),
@@ -353,13 +356,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildWelcomeBanner(),
+                            _buildWelcomeBanner(theme),
                             const SizedBox(height: 24),
-                            _buildDateFilter(),
+                            _buildDateFilter(theme),
                             const SizedBox(height: 24),
-                            _buildSummaryCards(),
+                            _buildSummaryCards(theme),
                             const SizedBox(height: 32),
-                            _buildTopItemsSection(),
+                            _buildTopItemsSection(theme),
                           ],
                         ),
                       ),
@@ -392,10 +395,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       height: 140,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Colors.grey[300],
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.grey[800]
+            : Colors.grey[300],
       ),
       child: const Center(
-        child: CircularProgressIndicator(color: Colors.deepPurple),
+        child: CircularProgressIndicator(color: Colors.white),
       ),
     );
   }
@@ -410,7 +415,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           height: 120,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.grey[300],
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]
+                : Colors.grey[300],
           ),
         );
       }),
@@ -425,27 +432,30 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           height: 80,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.grey[300],
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.grey[800]
+                : Colors.grey[300],
           ),
         );
       }),
     );
   }
 
-  Widget _buildWelcomeBanner() {
+  Widget _buildWelcomeBanner(ThemeData theme) {
+    final isDarkMode = theme.brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       height: 140,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.deepPurple, Color(0xFF7B1FA2), Color(0xFF4A148C)],
+          colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.deepPurple.withOpacity(0.3),
+            color: Colors.deepPurple.shade700.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -461,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withOpacity(isDarkMode ? 0.05 : 0.1),
               ),
             ),
           ),
@@ -473,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               height: 100,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withOpacity(isDarkMode ? 0.03 : 0.05),
               ),
             ),
           ),
@@ -522,11 +532,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildDateFilter() {
+  Widget _buildDateFilter(ThemeData theme) {
+    final isDarkMode = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -558,29 +569,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _loadData();
                 }
               },
-              // decoration: InputDecoration(
-              //   labelText: 'Filter by',
-              //   labelStyle: const TextStyle(color: Colors.deepPurple),
-              //   border: OutlineInputBorder(
-              //     borderRadius: BorderRadius.circular(12),
-              //     borderSide: const BorderSide(color: Colors.deepPurple),
-              //   ),
-              //   focusedBorder: OutlineInputBorder(
-              //     borderRadius: BorderRadius.circular(12),
-              //     borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
-              //   ),
-              //   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              // ),
               decoration: InputDecoration(
                 labelText: 'Filter by',
-                labelStyle: const TextStyle(color: Colors.deepPurple),
-                border: InputBorder.none, // <- remove the visible border
-                focusedBorder:
-                    InputBorder.none, // <- no border even when focused
+                labelStyle: TextStyle(color: Colors.deepPurple.shade700),
+                border: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
+              ),
+              dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
+              iconEnabledColor:
+                  isDarkMode ? Colors.white : Colors.deepPurple.shade700,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.deepPurple.shade700,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -594,7 +598,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     DateFormat('MMM d, yyyy').format(customDate!),
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
-                  backgroundColor: Colors.deepPurple,
+                  backgroundColor: Colors.deepPurple.shade700,
                   deleteIconColor: Colors.white,
                   onDeleted: () {
                     setState(() {
@@ -611,31 +615,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSummaryCards() {
+  Widget _buildSummaryCards(ThemeData theme) {
+    final isDarkMode = theme.brightness == Brightness.dark;
     final cards = [
       {
         'title': 'Total Items',
         'value': totalItems.toString(),
         'icon': Icons.restaurant_menu,
-        'color': Colors.deepPurple,
+        'color': Colors.deepPurple.shade700,
       },
       {
         'title': 'Total Categories',
         'value': totalCategories.toString(),
         'icon': Icons.category,
-        'color': const Color(0xFF7B1FA2),
+        'color': Colors.deepPurple.shade600,
       },
       {
         'title': 'Orders (${selectedFilter.toLowerCase()})',
         'value': totalOrders.toString(),
         'icon': Icons.receipt_long,
-        'color': const Color(0xFF4A148C),
+        'color': Colors.deepPurple.shade500,
       },
       {
         'title': 'Top Item',
         'value': topItem.isNotEmpty ? topItem : "No data",
         'icon': Icons.star,
-        'color': const Color(0xFF6A1B9A),
+        'color': Colors.deepPurple.shade400,
       },
     ];
 
@@ -659,7 +664,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   value: card['value'] as String,
                   icon: card['icon'] as IconData,
                   iconColor: card['color'] as Color,
-                  backgroundColor: Colors.white,
+                  backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
                 ),
               ),
             );
@@ -669,32 +674,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildTopItemsSection() {
+  Widget _buildTopItemsSection(ThemeData theme) {
+    final isDarkMode = theme.brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               "🏆 Top 5 Ordered Items",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple,
+                color: Colors.deepPurple.shade700,
               ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.withOpacity(0.1),
+                color: Colors.deepPurple.shade700.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 selectedFilter.toLowerCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Colors.deepPurple,
+                  color: Colors.deepPurple.shade700,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -707,7 +713,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             width: double.infinity,
             padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDarkMode ? Colors.grey[800] : Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -719,13 +725,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             child: Column(
               children: [
-                Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
+                Icon(Icons.inbox_outlined,
+                    size: 64, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
                 const SizedBox(height: 16),
                 Text(
                   "No orders found for selected period",
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey[600],
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -790,18 +797,17 @@ class ModernSummaryCard extends StatelessWidget {
       width: cardWidth,
       height: 110,
       decoration: BoxDecoration(
-        color: backgroundColor ?? Colors.white,
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: (iconColor ?? Colors.deepPurple).withOpacity(0.1),
+            color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Padding(
-        // Remove Stack and Positioned circle, use Padding directly
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -809,13 +815,13 @@ class ModernSummaryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: (iconColor ?? Colors.deepPurple).withOpacity(0.1),
+                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
                 size: 20,
-                color: iconColor ?? Colors.deepPurple,
+                color: iconColor ?? Colors.deepPurple.shade700,
               ),
             ),
             const Spacer(),
@@ -823,7 +829,9 @@ class ModernSummaryCard extends StatelessWidget {
               title,
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.grey[600],
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[400]
+                    : Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
               maxLines: 2,
@@ -835,7 +843,7 @@ class ModernSummaryCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: iconColor ?? Colors.deepPurple,
+                color: iconColor ?? Colors.deepPurple.shade700,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -867,18 +875,20 @@ class ModernTopItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
     final rankColors = [
       const Color(0xFFFFD700), // Gold
       const Color(0xFFC0C0C0), // Silver
       const Color(0xFFCD7F32), // Bronze
-      Colors.deepPurple, // Default
-      Colors.deepPurple, // Default
+      Colors.deepPurple.shade700, // Default
+      Colors.deepPurple.shade700, // Default
     ];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDarkMode ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -913,7 +923,7 @@ class ModernTopItemTile extends StatelessWidget {
                       height: 60,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
-                        color: Colors.grey[100],
+                        color: isDarkMode ? Colors.grey[700] : Colors.grey[100],
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
@@ -923,11 +933,14 @@ class ModernTopItemTile extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Icon(
-                                      Icons.fastfood,
-                                      color: Colors.grey[400],
-                                    ),
+                                  Icons.fastfood,
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                ),
                               )
-                            : Icon(Icons.fastfood, color: Colors.grey[400]),
+                            : Icon(
+                                Icons.fastfood,
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              ),
                       ),
                     ),
                     Positioned(
@@ -968,10 +981,10 @@ class ModernTopItemTile extends StatelessWidget {
                     children: [
                       Text(
                         name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: Color(0xFF2D2D2D),
+                          color: isDarkMode ? Colors.white : const Color(0xFF2D2D2D),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -983,14 +996,14 @@ class ModernTopItemTile extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.withOpacity(0.1),
+                          color: Colors.deepPurple.shade700.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           categoryName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Colors.deepPurple,
+                            color: Colors.deepPurple.shade700,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1003,15 +1016,18 @@ class ModernTopItemTile extends StatelessWidget {
                   children: [
                     Text(
                       '$count',
-                      style: const TextStyle(
-                        color: Colors.deepPurple,
+                      style: TextStyle(
+                        color: Colors.deepPurple.shade700,
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
                     ),
-                    const Text(
+                    Text(
                       'orders',
-                      style: TextStyle(color: Colors.deepPurple, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.deepPurple.shade700,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

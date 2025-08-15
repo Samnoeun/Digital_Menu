@@ -1,15 +1,20 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/material.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'dart:io';
 import '../models/user_model.dart';
 import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
 import '../models/restaurant_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // For web image storage
+import 'dart:typed_data';
 
 class ApiService {
   static const String baseUrl = 'https://qrmenu.zapto.org/api'; // Update with your preferred base URL
+
 
 
   static String? _token;
@@ -36,65 +41,71 @@ class ApiService {
   }
 
   // User Authentication
-  static Future<UserModel?> register(
-  String name,
-  String email,
-  String password,
-  String confirmPassword,
-) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$baseUrl/register'),
-      headers: {'Accept': 'application/json'},
-      body: {
-        'name': name,
-        'email': email,
-        'password': password,
-        'password_confirmation': confirmPassword,
-      },
-    );
+  static Future<UserModel?> register({
+    required String name,
+    required String email,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/register'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'name': name,
+          'email': email,
+          'password': password,
+          'password_confirmation': confirmPassword,
+        }),
+      );
 
-    final data = json.decode(response.body);
-    
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final token = data['token'] ?? data['data']['token'];
-      if (token != null) await saveAuthToken(token);
-      return UserModel.fromJson(data['user'] ?? data['data']['user']);
-    } else {
-      throw data['message'] ?? 'Registration failed';
+      final data = json.decode(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final token = data['token'] ?? data['data']['token'];
+        if (token != null) await saveAuthToken(token);
+        return UserModel.fromJson(data['user'] ?? data['data']['user']);
+      } else {
+        throw data['message'] ?? 'Registration failed';
+      }
+    } catch (e) {
+      debugPrint('Registration error: $e');
+      throw 'Registration failed: ${e.toString()}';
     }
-  } catch (e) {
-    debugPrint('Registration error: $e');
-    throw 'Registration failed: ${e.toString()}';
   }
-}
 
   // User Login
-static Future<Map<String, dynamic>> login(String email, String password) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$baseUrl/login'),
-      headers: {'Accept': 'application/json'},
-      body: {'email': email, 'password': password},
-    );
+  static Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/login'),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'email': email, 'password': password}),
+      );
 
-    final data = json.decode(response.body);
-    if (response.statusCode == 200) {
-      // Save the token immediately
-      final token = data['token'] as String;
-      await saveLoginData(token, email);
-      
-      return {
-        'user': UserModel.fromJson(data['user']),
-        'token': token,
-      };
-    } else {
-      throw data['message'] ?? 'Login failed';
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        // Save the token immediately
+        final token = data['token'] as String;
+        await saveLoginData(token, email);
+
+        return {
+          'user': UserModel.fromJson(data['user']),
+          'token': token,
+        };
+      } else {
+        throw data['message'] ?? 'Login failed';
+      }
+    } catch (e) {
+      throw Exception('Login error: ${e.toString()}');
     }
-  } catch (e) {
-    throw Exception('Login error: ${e.toString()}');
   }
-}
 
   // User Logout
   static Future<void> logout() async {
@@ -140,6 +151,7 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
       throw Exception('Error getting user: $e');
     }
   }
+
   // Category Services
   static Future<List<category.Category>> getCategories() async {
     final token = await getAuthToken();
@@ -200,7 +212,6 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      // Sometimes Laravel returns 201 on successful PUT
       throw Exception(
         'Failed to update category: ${response.statusCode} ${response.body}',
       );
@@ -253,11 +264,11 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
     required double price,
     required int categoryId,
     File? imageFile,
+    Uint8List? imageBytes,
+    String? imageName,
   }) async {
     final token = await getAuthToken();
-    if (token == null) {
-      throw Exception('Please login first');
-    }
+    if (token == null) throw Exception('Please login first');
 
     var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/items'));
     request.headers['Authorization'] = 'Bearer $token';
@@ -268,7 +279,11 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
     request.fields['price'] = price.toString();
     request.fields['category_id'] = categoryId.toString();
 
-    if (imageFile != null) {
+    if (imageBytes != null && imageName != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes('image', imageBytes, filename: imageName),
+      );
+    } else if (imageFile != null) {
       request.files.add(
         await http.MultipartFile.fromPath('image', imageFile.path),
       );
@@ -289,12 +304,12 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
     required double price,
     required int categoryId,
     File? imageFile,
+    Uint8List? imageBytes, // Add this for web
   }) async {
     final token = await getAuthToken();
     if (token == null) throw Exception('Please login first');
 
     final uri = Uri.parse('$baseUrl/items/$id?_method=PUT');
-
     final request = http.MultipartRequest('POST', uri)
       ..headers['Authorization'] = 'Bearer $token'
       ..headers['Accept'] = 'application/json'
@@ -303,14 +318,17 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
       ..fields['price'] = price.toString()
       ..fields['category_id'] = categoryId.toString();
 
-    if (imageFile != null) {
-      final fileName = imageFile.path.split('/').last;
+    if (kIsWeb && imageBytes != null) {
       request.files.add(
-        await http.MultipartFile.fromPath(
+        http.MultipartFile.fromBytes(
           'image',
-          imageFile.path,
-          filename: fileName,
+          imageBytes,
+          filename: 'upload_${DateTime.now().millisecondsSinceEpoch}.jpg',
         ),
+      );
+    } else if (!kIsWeb && imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('image', imageFile.path),
       );
     }
 
@@ -332,7 +350,7 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
       Uri.parse('$baseUrl/items/$id'),
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token', // ✅ FIXED HERE
+        'Authorization': 'Bearer $token',
       },
     );
 
@@ -461,21 +479,37 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
     required String restaurantName,
     required String address,
     File? profileImage,
+    Uint8List? profileImageBytes,
+    String? profileImageName,
   }) async {
     final token = await getAuthToken();
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/restaurants'),
+    );
 
-    var uri = Uri.parse('$baseUrl/restaurants');
-    var request = http.MultipartRequest('POST', uri);
     request.headers.addAll({
       'Accept': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     });
+
     request.fields['restaurant_name'] = restaurantName;
     request.fields['address'] = address;
-    if (profileImage != null)
+
+    if (profileImageBytes != null && profileImageName != null) {
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'profile',
+          profileImageBytes,
+          filename: profileImageName,
+        ),
+      );
+    } else if (profileImage != null) {
       request.files.add(
         await http.MultipartFile.fromPath('profile', profileImage.path),
       );
+    }
+
     final response = await request.send();
     if (response.statusCode != 201 && response.statusCode != 200) {
       throw Exception(await response.stream.bytesToString());
@@ -496,49 +530,53 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
   }
 
   static Future<void> updateRestaurant({
-    required int id,
-    required String restaurantName,
-    required String address,
-    File? profileImage,
-  }) async {
-    final token = await getAuthToken();
+  required int id,
+  required String restaurantName,
+  required String address,
+  File? profileImage,
+  Uint8List? profileImageBytes,
+  String? profileImageName,
+}) async {
+  final token = await getAuthToken();
+  if (token == null) throw Exception('Please login first');
 
-    // Create multipart request
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/restaurants/$id?_method=PUT'),
-    );
+  final uri = Uri.parse('$baseUrl/restaurants/$id?_method=PUT');
+  final request = http.MultipartRequest('POST', uri)
+    ..headers['Authorization'] = 'Bearer $token'
+    ..headers['Accept'] = 'application/json'
+    ..fields['restaurant_name'] = restaurantName
+    ..fields['address'] = address;
 
-    // Add headers
-    request.headers.addAll({
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    });
-
-    // Add fields
-    request.fields['restaurant_name'] = restaurantName;
-    request.fields['address'] = address;
-
-    // Add image if exists
-    if (profileImage != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'profile',
-          profileImage.path,
-          filename:
-              'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        ),
-      );
+  // Platform-specific image handling
+  if (kIsWeb) {
+    if (profileImageBytes != null && profileImageName != null) {
+      request.files.add(http.MultipartFile.fromBytes(
+        'profile',
+        profileImageBytes,
+        filename: profileImageName,
+      ));
     }
-
-    // Send request
-    final response = await request.send();
-    final responseString = await response.stream.bytesToString();
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update restaurant: $responseString');
+  } else {
+    if (profileImage != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'profile',
+        profileImage.path,
+        filename: 'restaurant_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      ));
     }
   }
+
+  final response = await request.send();
+  final responseBody = await response.stream.bytesToString();
+
+  if (response.statusCode != 200) {
+    throw Exception(
+      responseBody.isNotEmpty
+        ? jsonDecode(responseBody)['message'] ?? 'Failed to update restaurant'
+        : 'Failed to update restaurant (Status ${response.statusCode})'
+    );
+  }
+}
 
   static Future<Restaurant> getRestaurant() async {
     try {
@@ -577,37 +615,60 @@ static Future<Map<String, dynamic>> login(String email, String password) async {
   static String getImageUrl(String? path) {
     if (path == null || path.isEmpty) return '';
 
-    // Case 1: Return with '/storage/profiles/' prefix
-    if (!path.startsWith('http') && !path.contains('/')) {
-      return '${baseUrl.replaceFirst('/api', '')}/storage/profiles/$path';
+    // Debug print to check what path you're receiving
+    print('Original image path: $path');
+
+    // If it's already a full URL, return as-is
+    if (path.startsWith('http')) {
+      return path;
     }
 
-    // Case 2: Return with direct path concatenation
-    return baseUrl.replaceFirst('/api', '') + path;
+    // If it's a relative path from AWS
+    if (path.startsWith('/')) {
+      return 'https://your-aws-bucket.s3.your-region.amazonaws.com$path';
+    }
+
+    // Default case
+    return '${baseUrl.replaceFirst('/api', '')}/storage/$path';
   }
+
   static Future<void> saveLoginData(String token, String email) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('auth_token', token);
-  await prefs.setString('user_email', email);
-}
-
-static Future<Map<String, String>?> getLoginData() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
-  final email = prefs.getString('user_email');
-  
-  if (token != null && email != null) {
-    return {'token': token, 'email': email};
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token', token);
+    await prefs.setString('user_email', email);
   }
-  return null;
-}
 
-static Future<void> clearLoginData() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.remove('auth_token');
-  await prefs.remove('user_email');
-}
+  static Future<Map<String, String>?> getLoginData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final email = prefs.getString('user_email');
 
-  static Future<void> updateCategoryOrder(List<int> orderedIds) async {}
+    if (token != null && email != null) {
+      return {'token': token, 'email': email};
+    }
+    return null;
+  }
 
+  static Future<void> clearLoginData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('user_email');
+  }
+
+  // Reset Password
+  static Future<void> resetPassword(String email) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/password/email'),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      final data = json.decode(response.body);
+      throw Exception(data['message'] ?? 'Failed to send reset password email');
+    }
+  }
 }

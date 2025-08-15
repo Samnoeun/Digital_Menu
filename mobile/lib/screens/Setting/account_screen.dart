@@ -1,8 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
 import '../../services/api_services.dart';
 import '../../models/restaurant_model.dart';
+import '../../services/image_picker_service.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -16,7 +17,9 @@ class _AccountScreenState extends State<AccountScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
-  File? _profileImage;
+  // Platform-specific image storage
+  Uint8List? _imageBytes; // For web
+  dynamic _profileImage;   // For mobile (File) or web (null)
   Restaurant? _restaurant;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -51,12 +54,26 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedImage != null) {
-      setState(() {
-        _profileImage = File(pickedImage.path);
-      });
+    try {
+      final result = await ImagePickerService.pickImage();
+      if (result != null) {
+        setState(() {
+          if (kIsWeb) {
+            _imageBytes = result.webBytes;
+            _profileImage = null;
+          } else {
+            _profileImage = result.mobileFile;
+            _imageBytes = null;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Image picker error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
     }
   }
 
@@ -70,9 +87,10 @@ class _AccountScreenState extends State<AccountScreen> {
         id: _restaurant?.id ?? 1,
         restaurantName: _nameController.text.trim(),
         address: _addressController.text.trim(),
-        profileImage: _profileImage,
+        profileImage: kIsWeb ? null : _profileImage,
+        profileImageBytes: _imageBytes,
+        profileImageName: 'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
       );
-
 
       await _loadRestaurantData();
 
@@ -102,16 +120,22 @@ class _AccountScreenState extends State<AccountScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final primaryColor = isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
+    final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final iconColor = isDarkMode ? Colors.white : Colors.deepPurple;
+
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         titleSpacing: 0,
         title: Padding(
           padding: const EdgeInsets.only(left: 12),
           child: Row(
-
             children: [
               IconButton(
                 icon: const Icon(Icons.arrow_back_ios, size: 20),
@@ -119,7 +143,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 splashRadius: 22,
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Edit Restaurant',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
@@ -131,7 +155,7 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
         ),
       ),
-
+      backgroundColor: scaffoldBgColor,
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -140,7 +164,6 @@ class _AccountScreenState extends State<AccountScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Profile image with shadow and border
                     GestureDetector(
                       onTap: _pickImage,
                       child: Container(
@@ -159,20 +182,24 @@ class _AccountScreenState extends State<AccountScreen> {
                           children: [
                             CircleAvatar(
                               radius: 80,
-                              backgroundColor: Colors.deepPurple.shade50,
+                              backgroundColor: isDarkMode 
+                                  ? Colors.grey[700] 
+                                  : Colors.deepPurple.shade50,
                               backgroundImage: _getProfileImage(),
-                              child: _showProfilePlaceholder(),
+                              child: _showProfilePlaceholder(isDarkMode),
                             ),
                             Container(
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: isDarkMode ? Colors.grey[800] : Colors.white,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.deepPurple, width: 2),
+                                border: Border.all(
+                                  color: primaryColor!, 
+                                  width: 2),
                               ),
                               padding: const EdgeInsets.all(6),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.edit,
-                                color: Colors.deepPurple,
+                                color: primaryColor,
                                 size: 24,
                               ),
                             ),
@@ -181,19 +208,19 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                     const SizedBox(height: 36),
-
-                    // Restaurant Name field
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
                         labelText: 'Restaurant Name',
                         hintText: 'Enter restaurant name',
-                        prefixIcon: const Icon(Icons.restaurant),
+                        prefixIcon: Icon(Icons.restaurant, color: iconColor),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: cardColor,
+                        labelStyle: TextStyle(color: textColor),
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.7)),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
@@ -201,23 +228,23 @@ class _AccountScreenState extends State<AccountScreen> {
                         }
                         return null;
                       },
-                      style: theme.textTheme.bodyLarge,
+                      style: TextStyle(color: textColor),
                     ),
                     const SizedBox(height: 28),
-
-                    // Address field
                     TextFormField(
                       controller: _addressController,
                       maxLines: 3,
                       decoration: InputDecoration(
                         labelText: 'Address',
                         hintText: 'Enter restaurant address',
-                        prefixIcon: const Icon(Icons.location_on),
+                        prefixIcon: Icon(Icons.location_on, color: iconColor),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: cardColor,
+                        labelStyle: TextStyle(color: textColor),
+                        hintStyle: TextStyle(color: textColor.withOpacity(0.7)),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
@@ -225,19 +252,16 @@ class _AccountScreenState extends State<AccountScreen> {
                         }
                         return null;
                       },
-                      style: theme.textTheme.bodyLarge,
+                      style: TextStyle(color: textColor),
                     ),
                     const SizedBox(height: 36),
-
-                    // Save button
                     SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
                         onPressed: _isSaving ? null : _saveChanges,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepPurple,
-
+                          backgroundColor: primaryColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -253,6 +277,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
                                   letterSpacing: 1.2,
+                                  color: Colors.white,
                                 ),
                               ),
                       ),
@@ -266,16 +291,21 @@ class _AccountScreenState extends State<AccountScreen> {
 
   ImageProvider? _getProfileImage() {
     if (_profileImage != null) return FileImage(_profileImage!);
+    if (_imageBytes != null) return MemoryImage(_imageBytes!);
     if (_restaurant?.profile != null && _restaurant!.profile!.isNotEmpty) {
       return NetworkImage(ApiService.getImageUrl(_restaurant!.profile!));
     }
     return null;
   }
 
-  Widget? _showProfilePlaceholder() {
+  Widget? _showProfilePlaceholder(bool isDarkMode) {
     if (_profileImage != null) return null;
     if (_restaurant?.profile == null || _restaurant!.profile!.isEmpty) {
-      return const Icon(Icons.restaurant, size: 60, color: Colors.deepPurple);
+      return Icon(
+        Icons.restaurant, 
+        size: 60, 
+        color: isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple,
+      );
     }
     return null;
   }

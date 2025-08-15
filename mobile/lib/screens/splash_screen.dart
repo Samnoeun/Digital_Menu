@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
-import 'Login/login_screen.dart';
-import 'taskbar_screen.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final Function(bool) onThemeToggle;
+  const SplashScreen({super.key, required this.onThemeToggle});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -18,56 +17,68 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkAuthStatus() async {
-    // Add a small delay for better UX
-    await Future.delayed(const Duration(milliseconds: 1500));
-    
+    await Future.delayed(const Duration(seconds: 2));
+
     try {
       final authData = await ApiService.getLoginData();
-      
       if (authData != null) {
-        // Verify token is still valid
         try {
-          await ApiService.getUser(); // This will throw if token is invalid
-          if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const MenuScreen()),
-            );
+          final user = await ApiService.getUser();
+          if (user != null) {
+            try {
+              await ApiService.getRestaurant();
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/menu');
+              }
+            } catch (e) {
+              if (mounted) {
+                Navigator.pushReplacementNamed(context, '/restaurant');
+              }
+            }
+          } else {
+            throw Exception('User not found');
           }
         } catch (e) {
-          // Token is invalid, clear it and go to login
           await ApiService.clearLoginData();
           if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-            );
+            Navigator.pushReplacementNamed(context, '/login');
           }
         }
       } else {
-        // No saved credentials, go to login
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const LoginScreen()),
-          );
+          Navigator.pushReplacementNamed(context, '/login');
         }
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-        );
+        Navigator.pushReplacementNamed(context, '/login');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: Center(
-        child: Image.asset('assets/logo/app_logo.png'), // Use your app logo
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/logo/app_logo.png',
+              color: isDark ? Colors.white : null,
+              height: 100,
+            ),
+            const SizedBox(height: 20),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 20),
+            Text(
+              'Loading...',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ],
+        ),
       ),
     );
   }

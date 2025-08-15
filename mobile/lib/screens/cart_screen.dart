@@ -41,17 +41,14 @@ class _CartScreenState extends State<CartScreen> {
   void _updateQuantity(item.Item item, int newQuantity) {
     setState(() {
       if (newQuantity > 0) {
-        // Calculate how many items to add/remove
         final currentQuantity = _itemQuantities[item] ?? 0;
         final difference = newQuantity - currentQuantity;
 
         if (difference > 0) {
-          // Add more items
           for (int i = 0; i < difference; i++) {
             widget.cart.add(item);
           }
         } else {
-          // Remove items
           for (int i = 0; i < -difference; i++) {
             widget.cart.remove(item);
           }
@@ -126,15 +123,47 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    // Color definitions
+    final Color primaryColor = isDarkMode
+        ? Colors.deepPurple[300]!
+        : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
+    final cardColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
+    final emptyCartColor = isDarkMode
+        ? Colors.deepPurple[200]
+        : Colors.deepPurple.shade200;
+    final priceColor = isDarkMode
+        ? Colors.deepPurple[300]
+        : Colors.deepPurple.shade400;
+    final quantityBgColor = isDarkMode
+        ? Colors.grey[700]
+        : Colors.deepPurple.shade50;
+    final Color quantityBorderColor = isDarkMode
+        ? Colors.grey[600]!
+        : Colors.deepPurple.shade200;
+    final noteFieldColor = isDarkMode
+        ? Colors.grey[700]
+        : Colors.deepPurple.shade50;
+    final noteFieldBorderColor = isDarkMode
+        ? Colors.grey[500]
+        : Colors.deepPurple.shade400;
+    final noteTextColor = isDarkMode
+        ? Colors.white
+        : Colors.deepPurple.shade900;
+    final totalBgColor = isDarkMode ? Colors.grey[800] : Colors.white;
 
     return Scaffold(
+      backgroundColor: scaffoldBgColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         elevation: 0,
         titleSpacing: 0,
-        // Remove backgroundColor property because flexibleSpace will handle it
         title: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
@@ -151,7 +180,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
               const SizedBox(width: 8),
               const Text(
-                'Your Card',
+                'Your Cart',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -164,14 +193,18 @@ class _CartScreenState extends State<CartScreen> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+              colors: [
+                primaryColor,
+                isDarkMode
+                    ? Colors.deepPurple.shade500
+                    : Colors.deepPurple.shade400,
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
       ),
-
       body: Column(
         children: [
           Expanded(
@@ -183,14 +216,14 @@ class _CartScreenState extends State<CartScreen> {
                         Icon(
                           Icons.shopping_cart_outlined,
                           size: 80,
-                          color: Colors.deepPurple.shade200,
+                          color: emptyCartColor,
                         ),
                         const SizedBox(height: 20),
                         Text(
                           'Cart is empty',
                           style: TextStyle(
                             fontSize: 20,
-                            color: Colors.deepPurple.shade300,
+                            color: emptyCartColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -207,7 +240,7 @@ class _CartScreenState extends State<CartScreen> {
                         'Summary',
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple.shade700,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -220,6 +253,7 @@ class _CartScreenState extends State<CartScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
+                          color: cardColor,
                           child: Padding(
                             padding: const EdgeInsets.all(14),
                             child: Column(
@@ -246,14 +280,18 @@ class _CartScreenState extends State<CartScreen> {
                                         width: 70,
                                         height: 70,
                                         decoration: BoxDecoration(
-                                          color: Colors.deepPurple.shade100,
+                                          color: isDarkMode
+                                              ? Colors.grey[800]
+                                              : Colors.deepPurple.shade100,
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
                                         ),
-                                        child: const Icon(
+                                        child: Icon(
                                           Icons.fastfood,
-                                          color: Colors.white70,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.white70,
                                           size: 40,
                                         ),
                                       ),
@@ -265,16 +303,17 @@ class _CartScreenState extends State<CartScreen> {
                                         children: [
                                           Text(
                                             item.name,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 18,
+                                              color: textColor,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
                                             '\$${item.price.toStringAsFixed(2)}',
                                             style: TextStyle(
-                                              color: Colors.deepPurple.shade400,
+                                              color: priceColor,
                                               fontSize: 15,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -284,23 +323,25 @@ class _CartScreenState extends State<CartScreen> {
                                     ),
                                     Container(
                                       decoration: BoxDecoration(
-                                        color: Colors.deepPurple.shade50,
+                                        color: quantityBgColor,
                                         borderRadius: BorderRadius.circular(24),
                                         border: Border.all(
-                                          color: Colors.deepPurple.shade200,
+                                          color: quantityBorderColor,
                                         ),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           IconButton(
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons.remove,
                                               size: 22,
+                                              color: isDarkMode
+                                                  ? Colors.white
+                                                  : Colors.deepPurple,
                                             ),
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
-                                            color: Colors.deepPurple,
                                             onPressed: () => _updateQuantity(
                                               item,
                                               quantity - 1,
@@ -312,21 +353,25 @@ class _CartScreenState extends State<CartScreen> {
                                             ),
                                             child: Text(
                                               quantity.toString(),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
-                                                color: Colors.deepPurple,
+                                                color: isDarkMode
+                                                    ? Colors.white
+                                                    : Colors.deepPurple,
                                               ),
                                             ),
                                           ),
                                           IconButton(
-                                            icon: const Icon(
+                                            icon: Icon(
                                               Icons.add,
                                               size: 22,
+                                              color: isDarkMode
+                                                  ? Colors.white
+                                                  : Colors.deepPurple,
                                             ),
                                             padding: EdgeInsets.zero,
                                             constraints: const BoxConstraints(),
-                                            color: Colors.deepPurple,
                                             onPressed: () => _updateQuantity(
                                               item,
                                               quantity + 1,
@@ -345,11 +390,11 @@ class _CartScreenState extends State<CartScreen> {
                                     hintText:
                                         'Special note (e.g. No chilli...)',
                                     hintStyle: TextStyle(
-                                      color: Colors.deepPurple.shade200,
+                                      color: secondaryTextColor,
                                       fontSize: 15,
                                     ),
                                     filled: true,
-                                    fillColor: Colors.deepPurple.shade50,
+                                    fillColor: noteFieldColor,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14,
                                       vertical: 10,
@@ -361,7 +406,11 @@ class _CartScreenState extends State<CartScreen> {
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(14),
                                       borderSide: BorderSide(
-                                        color: Colors.deepPurple.shade400,
+                                        color:
+                                            noteFieldBorderColor ??
+                                            Colors
+                                                .deepPurple
+                                                .shade400, // Fallback
                                         width: 2,
                                       ),
                                     ),
@@ -369,7 +418,7 @@ class _CartScreenState extends State<CartScreen> {
                                   maxLines: 1,
                                   style: TextStyle(
                                     fontSize: 15,
-                                    color: Colors.deepPurple.shade900,
+                                    color: noteTextColor,
                                   ),
                                 ),
                               ],
@@ -384,13 +433,13 @@ class _CartScreenState extends State<CartScreen> {
             Container(
               padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: totalBgColor,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.08),
                     blurRadius: 12,
                     offset: const Offset(0, -5),
                   ),
@@ -407,6 +456,7 @@ class _CartScreenState extends State<CartScreen> {
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
+                          color: textColor,
                         ),
                       ),
                       Text(
@@ -414,7 +464,7 @@ class _CartScreenState extends State<CartScreen> {
                         style: theme.textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
-                          color: Colors.deepPurple,
+                          color: priceColor,
                         ),
                       ),
                     ],
@@ -425,7 +475,7 @@ class _CartScreenState extends State<CartScreen> {
                     height: 52,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -447,6 +497,7 @@ class _CartScreenState extends State<CartScreen> {
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
+                                color: Colors.white,
                               ),
                             ),
                     ),
