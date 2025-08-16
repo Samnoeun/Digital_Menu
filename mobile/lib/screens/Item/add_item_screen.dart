@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import '../../models/category_model.dart';
+import '../../models/category_model.dart' as my_models;
 import '../../models/item_model.dart' as item_model;
 import '../../services/api_services.dart';
+import 'dart:typed_data'; // For Uint8List
+import 'package:flutter/foundation.dart'; // For kIsWeb
+import '../../services/image_picker_service.dart'; // For ImagePickerService
 
 class AddItemScreen extends StatefulWidget {
   final item_model.Item? item;
@@ -21,10 +26,12 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
   final _descController = TextEditingController();
   final _priceController = TextEditingController();
   bool _isLoading = false;
-  List<Category> _categories = [];
-  Category? _selectedCategory;
+  List<my_models.Category> _categories = [];
+  my_models.Category? _selectedCategory;
   File? _imageFile;
+  Uint8List? _webImageBytes;
   String? _imagePath;
+  String? _webImageName;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -69,7 +76,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
         _categories = cats;
         if (widget.item != null && cats.isNotEmpty) {
           _selectedCategory = cats.firstWhere(
-            (c) => c.id == widget.item!.categoryId,
+            (my_models.Category c) => c.id == widget.item!.categoryId,
             orElse: () => cats.first,
           );
         } else if (cats.isNotEmpty) {
@@ -85,12 +92,26 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
 
   Future<void> _pickImage() async {
     try {
-      final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (picked != null) {
-        setState(() {
-          _imageFile = File(picked.path);
-          _imagePath = null;
-        });
+      if (kIsWeb) {
+        final result = await ImagePickerService.pickImage();
+        if (result != null && result.webBytes != null) {
+          setState(() {
+            _webImageBytes = result.webBytes;
+            _webImageName = result.fileName;
+            _imageFile = null;
+            _imagePath = null;
+          });
+        }
+      } else {
+        final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+        if (picked != null) {
+          setState(() {
+            _imageFile = File(picked.path);
+            _webImageBytes = null;
+            _webImageName = null;
+            _imagePath = null;
+          });
+        }
       }
     } catch (e) {
       _showErrorSnackbar('Failed to pick image: $e');
@@ -117,6 +138,8 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           price: price,
           categoryId: categoryId,
           imageFile: _imageFile,
+          webImageBytes: _webImageBytes,
+          webImageName: _webImageName,
         );
         _showSuccessSnackbar('Item created successfully');
       } else {
@@ -127,6 +150,8 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           price: price,
           categoryId: categoryId,
           imageFile: _imageFile,
+          webImageBytes: _webImageBytes,
+          webImageName: _webImageName,
         );
         _showSuccessSnackbar('Item updated successfully');
       }
@@ -135,65 +160,6 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
       _showErrorSnackbar('Error: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _createItem({
-    required String name,
-    required String description,
-    required double price,
-    required int categoryId,
-  }) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('${ApiService.baseUrl}/items'),
-    );
-    request.headers['Accept'] = 'application/json';
-    request.fields['name'] = name;
-    request.fields['description'] = description;
-    request.fields['price'] = price.toString();
-    request.fields['category_id'] = categoryId.toString();
-
-    if (_imageFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('image', _imageFile!.path),
-      );
-    }
-
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
-    if (response.statusCode != 201) {
-      throw Exception('Failed to create item: $responseBody');
-    }
-  }
-
-  Future<void> _updateItem({
-    required int id,
-    required String name,
-    required String description,
-    required double price,
-    required int categoryId,
-  }) async {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('${ApiService.baseUrl}/items/$id?_method=PUT'),
-    );
-    request.headers['Accept'] = 'application/json';
-    request.fields['name'] = name;
-    request.fields['description'] = description;
-    request.fields['price'] = price.toString();
-    request.fields['category_id'] = categoryId.toString();
-
-    if (_imageFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('image', _imageFile!.path),
-      );
-    }
-
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update item: $responseBody');
     }
   }
 
@@ -432,44 +398,52 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                                       fit: BoxFit.cover,
                                     ),
                                   )
-                                : _imagePath != null
+                                : _webImageBytes != null
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(18),
-                                        child: Image.network(
-                                          ApiService.getImageUrl(_imagePath!),
+                                        child: Image.memory(
+                                          _webImageBytes!,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) => Icon(
-                                            Icons.broken_image_rounded,
-                                            size: 50,
-                                            color: isDarkMode
-                                                ? Colors.grey[400]
-                                                : Colors.deepPurple.shade400,
-                                          ),
                                         ),
                                       )
-                                    : Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.add_photo_alternate_rounded,
-                                            size: 50,
-                                            color: isDarkMode
-                                                ? Colors.grey[400]
-                                                : Colors.deepPurple.shade600,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            'Add Image',
-                                            style: TextStyle(
-                                              color: isDarkMode
-                                                  ? Colors.grey[400]
-                                                  : Colors.deepPurple.shade600,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 16,
+                                    : _imagePath != null
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(18),
+                                            child: Image.network(
+                                              ApiService.getImageUrl(_imagePath!),
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => Icon(
+                                                Icons.broken_image_rounded,
+                                                size: 50,
+                                                color: isDarkMode
+                                                    ? Colors.grey[400]
+                                                    : Colors.deepPurple.shade400,
+                                              ),
                                             ),
+                                          )
+                                        : Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.add_photo_alternate_rounded,
+                                                size: 50,
+                                                color: isDarkMode
+                                                    ? Colors.grey[400]
+                                                    : Colors.deepPurple.shade600,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'Add Image',
+                                                style: TextStyle(
+                                                  color: isDarkMode
+                                                      ? Colors.grey[400]
+                                                      : Colors.deepPurple.shade600,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
                           ),
                         ),
                       ),
@@ -600,10 +574,10 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                       // Category Dropdown
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 700),
-                        child: DropdownButtonFormField<Category>(
+                        child: DropdownButtonFormField<my_models.Category>(
                           value: _selectedCategory,
-                          items: _categories.map((category) {
-                            return DropdownMenuItem<Category>(
+                          items: _categories.map((my_models.Category category) {
+                            return DropdownMenuItem<my_models.Category>(
                               value: category,
                               child: Text(
                                 category.name,
@@ -613,7 +587,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             );
                           }).toList(),
-                          onChanged: (category) {
+                          onChanged: (my_models.Category? category) {
                             setState(() {
                               _selectedCategory = category;
                             });

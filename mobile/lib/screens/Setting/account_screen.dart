@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:universal_html/html.dart' as html;
 import '../../services/api_services.dart';
 import '../../models/restaurant_model.dart';
-import '../../services/image_picker_service.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -17,9 +20,9 @@ class _AccountScreenState extends State<AccountScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
-  // Platform-specific image storage
-  Uint8List? _imageBytes; // For web
-  dynamic _profileImage;   // For mobile (File) or web (null)
+  File? _profileImage;
+  Uint8List? _webImageBytes;
+  String? _webImageName;
   Restaurant? _restaurant;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -55,20 +58,47 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Future<void> _pickImage() async {
     try {
-      final result = await ImagePickerService.pickImage();
-      if (result != null) {
-        setState(() {
-          if (kIsWeb) {
-            _imageBytes = result.webBytes;
-            _profileImage = null;
+      if (kIsWeb) {
+        final uploadInput = html.FileUploadInputElement();
+        uploadInput.accept = 'image/*';
+        uploadInput.click();
+
+        final completer = Completer<void>();
+        
+        uploadInput.onChange.listen((e) {
+          final files = uploadInput.files;
+          if (files != null && files.isNotEmpty) {
+            final file = files[0];
+            final reader = html.FileReader();
+            
+            reader.onLoadEnd.listen((e) {
+              setState(() {
+                _webImageBytes = reader.result as Uint8List?;
+                _webImageName = file.name;
+                _profileImage = null;
+              });
+              completer.complete();
+            });
+            
+            reader.readAsArrayBuffer(file);
           } else {
-            _profileImage = result.mobileFile;
-            _imageBytes = null;
+            completer.complete();
           }
         });
+
+        await completer.future;
+      } else {
+        final picker = ImagePicker();
+        final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+        if (pickedImage != null) {
+          setState(() {
+            _profileImage = File(pickedImage.path);
+            _webImageBytes = null;
+            _webImageName = null;
+          });
+        }
       }
     } catch (e) {
-      debugPrint('Image picker error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to pick image: $e')),
@@ -87,9 +117,9 @@ class _AccountScreenState extends State<AccountScreen> {
         id: _restaurant?.id ?? 1,
         restaurantName: _nameController.text.trim(),
         address: _addressController.text.trim(),
-        profileImage: kIsWeb ? null : _profileImage,
-        profileImageBytes: _imageBytes,
-        profileImageName: 'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+        profileImage: _profileImage,
+        webImageBytes: _webImageBytes,
+        webImageName: _webImageName,
       );
 
       await _loadRestaurantData();
@@ -116,7 +146,6 @@ class _AccountScreenState extends State<AccountScreen> {
       if (mounted) setState(() => _isSaving = false);
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -164,6 +193,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
+                    // Profile image with shadow and border
                     GestureDetector(
                       onTap: _pickImage,
                       child: Container(
@@ -208,6 +238,8 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                     ),
                     const SizedBox(height: 36),
+
+                    // Restaurant Name field
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
@@ -231,6 +263,8 @@ class _AccountScreenState extends State<AccountScreen> {
                       style: TextStyle(color: textColor),
                     ),
                     const SizedBox(height: 28),
+
+                    // Address field
                     TextFormField(
                       controller: _addressController,
                       maxLines: 3,
@@ -255,6 +289,8 @@ class _AccountScreenState extends State<AccountScreen> {
                       style: TextStyle(color: textColor),
                     ),
                     const SizedBox(height: 36),
+
+                    // Save button
                     SizedBox(
                       width: double.infinity,
                       height: 52,
@@ -291,7 +327,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
   ImageProvider? _getProfileImage() {
     if (_profileImage != null) return FileImage(_profileImage!);
-    if (_imageBytes != null) return MemoryImage(_imageBytes!);
+    if (_webImageBytes != null) return MemoryImage(_webImageBytes!);
     if (_restaurant?.profile != null && _restaurant!.profile!.isNotEmpty) {
       return NetworkImage(ApiService.getImageUrl(_restaurant!.profile!));
     }
@@ -299,7 +335,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget? _showProfilePlaceholder(bool isDarkMode) {
-    if (_profileImage != null) return null;
+    if (_profileImage != null || _webImageBytes != null) return null;
     if (_restaurant?.profile == null || _restaurant!.profile!.isEmpty) {
       return Icon(
         Icons.restaurant, 

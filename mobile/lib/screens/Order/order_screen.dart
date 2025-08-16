@@ -267,7 +267,7 @@ class _OrderScreenState extends State<OrderScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(14),
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.9),
+                color: theme.brightness == Brightness.dark ? const Color.fromARGB(255, 53, 41, 65) : const Color.fromARGB(95, 155, 109, 255),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -464,7 +464,7 @@ class _OrderScreenState extends State<OrderScreen> {
       child: TextButton(
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          backgroundColor: theme.colorScheme.surfaceVariant,
+          backgroundColor: theme.brightness == Brightness.dark ? const Color.fromARGB(194, 53, 41, 65) : const Color.fromARGB(34, 132, 75, 255),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: () => _updateOrderStatus(order, nextStatus),
@@ -546,7 +546,7 @@ class _OrderScreenState extends State<OrderScreen> {
       case 'pending':
         return Colors.orange;
       case 'preparing':
-        return theme.colorScheme.primary;
+        return const Color.fromARGB(255, 103, 106, 255);
       case 'ready':
         return Colors.green;
       default:

@@ -278,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 child: CircleAvatar(
                                   radius: 28,
                                   backgroundColor:
-                                      isDarkMode ? Colors.grey[800] : Colors.white,
+                                      isDarkMode ? const Color.fromARGB(255, 246, 246, 246) : Colors.white,
                                   backgroundImage: restaurant!.profile != null
                                       ? NetworkImage(
                                           ApiService.getImageUrl(
@@ -571,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               },
               decoration: InputDecoration(
                 labelText: 'Filter by',
-                labelStyle: TextStyle(color: Colors.deepPurple.shade700),
+                labelStyle: TextStyle(color: const Color.fromARGB(255, 162, 122, 255)),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
@@ -622,25 +622,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         'title': 'Total Items',
         'value': totalItems.toString(),
         'icon': Icons.restaurant_menu,
-        'color': Colors.deepPurple.shade700,
+        'color': const Color.fromARGB(255, 151, 106, 255),
       },
       {
         'title': 'Total Categories',
         'value': totalCategories.toString(),
         'icon': Icons.category,
-        'color': Colors.deepPurple.shade600,
+        'color': const Color.fromARGB(255, 151, 106, 255),
       },
       {
         'title': 'Orders (${selectedFilter.toLowerCase()})',
         'value': totalOrders.toString(),
         'icon': Icons.receipt_long,
-        'color': Colors.deepPurple.shade500,
+        'color': const Color.fromARGB(255, 151, 106, 255),
       },
       {
         'title': 'Top Item',
         'value': topItem.isNotEmpty ? topItem : "No data",
         'icon': Icons.star,
-        'color': Colors.deepPurple.shade400,
+        'color': const Color.fromARGB(255, 151, 106, 255),
       },
     ];
 
@@ -687,20 +687,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple.shade700,
+                color: const Color.fromARGB(255, 131, 78, 255),
               ),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.shade700.withOpacity(0.1),
+                color: const Color.fromARGB(255, 138, 88, 255).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 selectedFilter.toLowerCase(),
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.deepPurple.shade700,
+                  color: const Color.fromARGB(255, 133, 81, 255),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -996,14 +996,14 @@ class ModernTopItemTile extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.shade700.withOpacity(0.1),
+                          color: const Color.fromARGB(255, 126, 74, 248).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           categoryName,
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.deepPurple.shade700,
+                            color: const Color.fromARGB(255, 126, 71, 255),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -1017,7 +1017,7 @@ class ModernTopItemTile extends StatelessWidget {
                     Text(
                       '$count',
                       style: TextStyle(
-                        color: Colors.deepPurple.shade700,
+                        color: const Color.fromARGB(255, 119, 65, 246),
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
@@ -1025,7 +1025,7 @@ class ModernTopItemTile extends StatelessWidget {
                     Text(
                       'orders',
                       style: TextStyle(
-                        color: Colors.deepPurple.shade700,
+                        color: const Color.fromARGB(255, 129, 75, 255),
                         fontSize: 12,
                       ),
                     ),
