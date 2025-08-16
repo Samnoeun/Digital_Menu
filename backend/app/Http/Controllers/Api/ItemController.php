@@ -14,10 +14,11 @@ use Illuminate\Support\Facades\Storage;
 
 class ItemController extends Controller
 {
+
     public function index()
     {
         $user = auth()->user();
-        
+
         if (!$user->restaurant) {
             return response()->json(['data' => []]);
         }
@@ -26,10 +27,12 @@ class ItemController extends Controller
             Item::whereHas('category', function ($query) use ($user) {
                 $query->where('restaurant_id', $user->restaurant->id);
             })
-            ->with('category')
-            ->get()
+                ->with('category')
+                ->orderBy('created_at', 'desc') // <<< add this line to show latest first
+                ->get()
         );
     }
+
 
     public function store(StoreItemRequest $request)
     {
@@ -47,7 +50,7 @@ class ItemController extends Controller
             ->firstOrFail();
 
         $validated = $request->validated();
-        
+
         try {
             if ($request->hasFile('image')) {
                 $imagePath = $request->file('image')->store('items', 'public');
@@ -55,18 +58,17 @@ class ItemController extends Controller
             }
 
             $item = Item::create($validated);
-            
+
             return response()->json([
                 'message' => 'Item created successfully',
                 'data' => new ItemResource($item)
             ], 201);
-            
         } catch (\Exception $e) {
             // Delete the uploaded image if item creation fails
             if (isset($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
-            
+
             Log::error('Item creation failed: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to create item'
@@ -93,10 +95,10 @@ class ItemController extends Controller
                     'original_name' => $request->file('image')->getClientOriginalName(),
                     'size' => $request->file('image')->getSize(),
                 ]);
-                
+
                 $path = $request->file('image')->store('items', 'public');
                 $validated['image_path'] = $path;
-                
+
                 // Delete old image after successful upload
                 if ($oldImagePath) {
                     Storage::disk('public')->delete($oldImagePath);
@@ -104,18 +106,17 @@ class ItemController extends Controller
             }
 
             $item->update($validated);
-            
+
             return response()->json([
                 'message' => 'Item updated successfully',
                 'data' => new ItemResource($item)
             ]);
-            
         } catch (\Exception $e) {
             // Delete the new uploaded image if update fails
             if (isset($path)) {
                 Storage::disk('public')->delete($path);
             }
-            
+
             Log::error('Item update failed: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Failed to update item'
@@ -126,18 +127,17 @@ class ItemController extends Controller
     public function destroy(Item $item)
     {
         $this->authorizeItemAccess($item);
-        
+
         try {
             $imagePath = $item->image_path;
             $item->delete();
-            
+
             // Delete associated image
             if ($imagePath) {
                 Storage::disk('public')->delete($imagePath);
             }
-            
+
             return response()->noContent();
-            
         } catch (\Exception $e) {
             Log::error('Item deletion failed: ' . $e->getMessage());
             return response()->json([
@@ -152,7 +152,7 @@ class ItemController extends Controller
     protected function authorizeItemAccess(Item $item)
     {
         $user = auth()->user();
-        
+
         if (!$user->restaurant || $item->category->restaurant_id !== $user->restaurant->id) {
             abort(403, 'Unauthorized action.');
         }

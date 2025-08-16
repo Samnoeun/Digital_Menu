@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:universal_html/html.dart' as html;
 import '../../../services/api_services.dart';
 import '../taskbar_screen.dart';
 
@@ -18,14 +22,57 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
   final TextEditingController _addressController = TextEditingController();
 
   File? _profileImage;
+  Uint8List? _webImageBytes;
+  String? _webImageName;
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedImage != null) {
-      setState(() {
-        _profileImage = File(pickedImage.path);
-      });
+    try {
+      if (kIsWeb) {
+        final uploadInput = html.FileUploadInputElement();
+        uploadInput.accept = 'image/*';
+        uploadInput.click();
+
+        final completer = Completer<void>();
+        
+        uploadInput.onChange.listen((e) {
+          final files = uploadInput.files;
+          if (files != null && files.isNotEmpty) {
+            final file = files[0];
+            final reader = html.FileReader();
+            
+            reader.onLoadEnd.listen((e) {
+              setState(() {
+                _webImageBytes = reader.result as Uint8List?;
+                _webImageName = file.name;
+                _profileImage = null;
+              });
+              completer.complete();
+            });
+            
+            reader.readAsArrayBuffer(file);
+          } else {
+            completer.complete();
+          }
+        });
+
+        await completer.future;
+      } else {
+        final picker = ImagePicker();
+        final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+        if (pickedImage != null) {
+          setState(() {
+            _profileImage = File(pickedImage.path);
+            _webImageBytes = null;
+            _webImageName = null;
+          });
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: $e')),
+        );
+      }
     }
   }
 
@@ -36,6 +83,8 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
           restaurantName: _nameController.text.trim(),
           address: _addressController.text.trim(),
           profileImage: _profileImage,
+          webImageBytes: _webImageBytes,
+          webImageName: _webImageName,
         );
 
         if (context.mounted) {
@@ -83,9 +132,8 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                     backgroundColor: isDark
                         ? Colors.deepPurple.shade700
                         : Colors.deepPurple.shade100,
-                    backgroundImage:
-                        _profileImage != null ? FileImage(_profileImage!) : null,
-                    child: _profileImage == null
+                    backgroundImage: _getProfileImage(),
+                    child: _profileImage == null && _webImageBytes == null
                         ? Icon(
                             Icons.camera_alt,
                             size: 40,
@@ -146,5 +194,11 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         ),
       ),
     );
+  }
+
+  ImageProvider? _getProfileImage() {
+    if (_profileImage != null) return FileImage(_profileImage!);
+    if (_webImageBytes != null) return MemoryImage(_webImageBytes!);
+    return null;
   }
 }

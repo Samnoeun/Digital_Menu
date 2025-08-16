@@ -1,4 +1,3 @@
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -8,7 +7,8 @@ import '../models/user_model.dart';
 import '../models/category_model.dart' as category;
 import '../models/item_model.dart' as item;
 import '../models/restaurant_model.dart';
-
+import 'dart:typed_data'; // For Uint8List
+import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class ApiService {
   static const String baseUrl = 'https://qrmenu.zapto.org/api';
@@ -255,81 +255,101 @@ class ApiService {
   }
 
   static Future<void> createItem({
-    required String name,
-    String? description,
-    required double price,
-    required int categoryId,
-    File? imageFile,
-  }) async {
-    final token = await getAuthToken();
-    if (token == null) {
-      throw Exception('Please login first');
-    }
-
-    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/items'));
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
-
-    request.fields['name'] = name;
-    request.fields['description'] = description ?? '';
-    request.fields['price'] = price.toString();
-    request.fields['category_id'] = categoryId.toString();
-
-    if (imageFile != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath('image', imageFile.path),
-      );
-    }
-
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
-
-    if (response.statusCode != 201) {
-      throw Exception('Failed to create item: $responseBody');
-    }
+  required String name,
+  String? description,
+  required double price,
+  required int categoryId,
+  File? imageFile,
+  Uint8List? webImageBytes,
+  String? webImageName,
+}) async {
+  final token = await getAuthToken();
+  if (token == null) {
+    throw Exception('Please login first');
   }
 
-  static Future<void> updateItem(
-    int id, {
-    required String name,
-    String? description,
-    required double price,
-    required int categoryId,
-    File? imageFile,
-  }) async {
-    final token = await getAuthToken();
-    if (token == null) throw Exception('Please login first');
+  var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/items'));
+  request.headers['Authorization'] = 'Bearer $token';
+  request.headers['Accept'] = 'application/json';
 
-    final uri = Uri.parse('$baseUrl/items/$id?_method=PUT');
+  request.fields['name'] = name;
+  request.fields['description'] = description ?? '';
+  request.fields['price'] = price.toString();
+  request.fields['category_id'] = categoryId.toString();
 
-    final request = http.MultipartRequest('POST', uri)
-      ..headers['Authorization'] = 'Bearer $token'
-      ..headers['Accept'] = 'application/json'
-      ..fields['name'] = name
-      ..fields['description'] = description ?? ''
-      ..fields['price'] = price.toString()
-      ..fields['category_id'] = categoryId.toString();
-
-    if (imageFile != null) {
-      final fileName = imageFile.path.split('/').last;
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          imageFile.path,
-          filename: fileName,
-        ),
-      );
-    }
-
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(
-        'Failed to update item: ${response.statusCode} $responseBody',
-      );
-    }
+  if (imageFile != null) {
+    request.files.add(
+      await http.MultipartFile.fromPath('image', imageFile.path),
+    );
+  } else if (kIsWeb && webImageBytes != null && webImageName != null) {
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'image',
+        webImageBytes,
+        filename: webImageName,
+      ),
+    );
   }
+
+  final response = await request.send();
+  final responseBody = await response.stream.bytesToString();
+
+  if (response.statusCode != 201) {
+    throw Exception('Failed to create item: $responseBody');
+  }
+}
+
+static Future<void> updateItem(
+  int id, {
+  required String name,
+  String? description,
+  required double price,
+  required int categoryId,
+  File? imageFile,
+  Uint8List? webImageBytes,
+  String? webImageName,
+}) async {
+  final token = await getAuthToken();
+  if (token == null) throw Exception('Please login first');
+
+  final uri = Uri.parse('$baseUrl/items/$id?_method=PUT');
+
+  final request = http.MultipartRequest('POST', uri)
+    ..headers['Authorization'] = 'Bearer $token'
+    ..headers['Accept'] = 'application/json'
+    ..fields['name'] = name
+    ..fields['description'] = description ?? ''
+    ..fields['price'] = price.toString()
+    ..fields['category_id'] = categoryId.toString();
+
+  if (imageFile != null) {
+    final fileName = imageFile.path.split('/').last;
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'image',
+        imageFile.path,
+        filename: fileName,
+      ),
+    );
+  } else if (kIsWeb && webImageBytes != null && webImageName != null) {
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'image',
+        webImageBytes,
+        filename: webImageName,
+      ),
+    );
+  }
+
+  final response = await request.send();
+  final responseBody = await response.stream.bytesToString();
+
+  if (response.statusCode != 200 && response.statusCode != 201) {
+    throw Exception(
+      'Failed to update item: ${response.statusCode} $responseBody',
+    );
+  }
+}
 
   static Future<void> deleteItem(int id) async {
     final token = await getAuthToken();
@@ -465,29 +485,47 @@ class ApiService {
 
   // Restaurant Services
   static Future<void> createRestaurant({
-    required String restaurantName,
-    required String address,
-    File? profileImage,
-  }) async {
-    final token = await getAuthToken();
+  required String restaurantName,
+  required String address,
+  File? profileImage,
+  Uint8List? webImageBytes,
+  String? webImageName,
+}) async {
+  final token = await getAuthToken();
+  if (token == null) throw Exception('Please login first');
 
-    var uri = Uri.parse('$baseUrl/restaurants');
-    var request = http.MultipartRequest('POST', uri);
-    request.headers.addAll({
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    });
-    request.fields['restaurant_name'] = restaurantName;
-    request.fields['address'] = address;
-    if (profileImage != null)
-      request.files.add(
-        await http.MultipartFile.fromPath('profile', profileImage.path),
-      );
-    final response = await request.send();
-    if (response.statusCode != 201 && response.statusCode != 200) {
-      throw Exception(await response.stream.bytesToString());
-    }
+  final uri = Uri.parse('$baseUrl/restaurants');
+  final request = http.MultipartRequest('POST', uri)
+    ..headers['Authorization'] = 'Bearer $token'
+    ..headers['Accept'] = 'application/json'
+    ..fields['restaurant_name'] = restaurantName
+    ..fields['address'] = address;
+
+  if (profileImage != null) {
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'profile',
+        profileImage.path,
+        filename: 'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      ),
+    );
+  } else if (kIsWeb && webImageBytes != null && webImageName != null) {
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'profile',
+        webImageBytes,
+        filename: webImageName,
+      ),
+    );
   }
+
+  final response = await request.send();
+  final responseBody = await response.stream.bytesToString();
+
+  if (response.statusCode != 201) {
+    throw Exception('Failed to create restaurant: $responseBody');
+  }
+}
 
   static Future<Map<String, dynamic>> getRestaurantByUserId(int userId) async {
     final response = await http.get(
@@ -502,50 +540,49 @@ class ApiService {
     }
   }
 
-  static Future<void> updateRestaurant({
-    required int id,
-    required String restaurantName,
-    required String address,
-    File? profileImage,
-  }) async {
-    final token = await getAuthToken();
+static Future<void> updateRestaurant({
+  required int id,
+  required String restaurantName,
+  required String address,
+  File? profileImage,
+  Uint8List? webImageBytes,
+  String? webImageName,
+}) async {
+  final token = await getAuthToken();
+  if (token == null) throw Exception('Please login first');
 
-    // Create multipart request
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/restaurants/$id?_method=PUT'),
+  final uri = Uri.parse('$baseUrl/restaurants/$id?_method=PUT');
+  final request = http.MultipartRequest('POST', uri)
+    ..headers['Authorization'] = 'Bearer $token'
+    ..headers['Accept'] = 'application/json'
+    ..fields['restaurant_name'] = restaurantName
+    ..fields['address'] = address;
+
+  if (profileImage != null) {
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'profile',
+        profileImage.path,
+        filename: 'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      ),
     );
-
-    // Add headers
-    request.headers.addAll({
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    });
-
-    // Add fields
-    request.fields['restaurant_name'] = restaurantName;
-    request.fields['address'] = address;
-
-    // Add image if exists
-    if (profileImage != null) {
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'profile',
-          profileImage.path,
-          filename:
-              'restaurant_profile_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        ),
-      );
-    }
-
-    // Send request
-    final response = await request.send();
-    final responseString = await response.stream.bytesToString();
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update restaurant: $responseString');
-    }
+  } else if (kIsWeb && webImageBytes != null && webImageName != null) {
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'profile',
+        webImageBytes,
+        filename: webImageName,
+      ),
+    );
   }
+
+  final response = await request.send();
+  final responseBody = await response.stream.bytesToString();
+
+  if (response.statusCode != 200) {
+    throw Exception('Failed to update restaurant: $responseBody');
+  }
+}
 
   static Future<Restaurant> getRestaurant() async {
     try {
