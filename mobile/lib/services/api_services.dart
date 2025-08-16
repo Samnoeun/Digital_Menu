@@ -11,7 +11,7 @@ import '../models/restaurant_model.dart';
 
 
 class ApiService {
-  static const String baseUrl = 'https://192.168.108.191:8000/api';
+  static const String baseUrl = 'https://qrmenu.zapto.org/api';
 
   static String? _token;
 

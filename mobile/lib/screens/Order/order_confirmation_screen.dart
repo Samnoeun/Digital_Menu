@@ -26,7 +26,7 @@ class OrderConfirmationScreen extends StatelessWidget {
 
     // Color definitions
 
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] :    Colors.grey[50];
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];

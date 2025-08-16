@@ -159,7 +159,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = localization[selectedLanguage]!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple[50];
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] :    Colors.grey[50];
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
