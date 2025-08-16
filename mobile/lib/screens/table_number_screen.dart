@@ -20,6 +20,7 @@ class _TableNumberScreenState extends State<TableNumberScreen> {
   final _formKey = GlobalKey<FormState>();
   final _tableNumberController = TextEditingController();
   bool _isSubmitting = false;
+  
 
   @override
   void dispose() {

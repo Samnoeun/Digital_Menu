@@ -102,8 +102,8 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final primaryColor = isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple;
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
+    final primaryColor = isDarkMode ? Colors.deepPurple[600] : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple[50];
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final iconColor = isDarkMode ? Colors.white : Colors.deepPurple;
@@ -153,9 +153,9 @@ class _AccountScreenState extends State<AccountScreen> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.deepPurple.withOpacity(0.2),
+                              color: const Color.fromARGB(255, 80, 55, 127).withOpacity(0.2),
                               blurRadius: 12,
-                              offset: const Offset(0, 8),
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
@@ -166,7 +166,7 @@ class _AccountScreenState extends State<AccountScreen> {
                               radius: 80,
                               backgroundColor: isDarkMode 
                                   ? Colors.grey[700] 
-                                  : Colors.deepPurple.shade50,
+                                  : Colors.white,
                               backgroundImage: _getProfileImage(),
                               child: _showProfilePlaceholder(isDarkMode),
                             ),
