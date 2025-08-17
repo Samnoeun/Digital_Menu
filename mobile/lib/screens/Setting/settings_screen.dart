@@ -149,8 +149,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       color: isGray
           ? Theme.of(context).textTheme.bodyMedium!.color
           : isSubtitle
-          ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
-          : Theme.of(context).textTheme.bodyLarge!.color,
+              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+              : Theme.of(context).textTheme.bodyLarge!.color,
       fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
     );
   }
@@ -159,12 +159,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = localization[selectedLanguage]!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    TextStyle getTextStyle() {
-      return TextStyle(
-        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -176,7 +170,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         elevation: 0,
         automaticallyImplyLeading: false,
-
         title: Padding(
           padding: const EdgeInsets.only(left: 0, right: 0),
           child: Row(
@@ -187,24 +180,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Icons.arrow_back_ios,
                   size: 18,
                   color: Colors.white,
-                ), // Added color here
+                ),
                 onPressed: () => Navigator.pop(context),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(
-                width: 0,
-              ), 
+              const SizedBox(width: 0),
               Text(
                 lang['settings']!,
                 style: const TextStyle(
                   color: Colors.white,
-                ), 
+                ),
               ),
             ],
           ),
         ),
-
         backgroundColor: Colors.deepPurple.shade700,
         flexibleSpace: Container(
           decoration: BoxDecoration(
