@@ -15,6 +15,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   bool _isLoading = false;
+  bool _isDuplicateName = false;
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
@@ -51,7 +52,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      setState(() => _isLoading = true);
+      setState(() {
+        _isLoading = true;
+        _isDuplicateName = false;
+      });
+
       if (widget.category == null) {
         await ApiService.createCategory(_nameController.text);
         _showSuccessSnackbar('Category added successfully');
@@ -64,7 +69,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
       }
       Navigator.pop(context, true);
     } catch (e) {
-      _showErrorSnackbar(e.toString());
+      if (e.toString().contains('Duplicate entry') ||
+          e.toString().contains('categories_name_unique')) {
+        setState(() {
+          _isDuplicateName = true;
+        });
+        _formKey.currentState!.validate();
+      }
+      _showErrorSnackbar('Category "${_nameController.text}" already exists');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -128,6 +140,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     final inputFillColor = isDarkMode
         ? Colors.grey[700]
         : Colors.deepPurple.shade50;
+    final errorColor = Colors.red.shade400;
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
@@ -204,9 +217,12 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color.fromARGB(255, 71, 70, 70).withOpacity(
-                                  isDarkMode ? 0.2 : 0.1,
-                                ),
+                                color: const Color.fromARGB(
+                                  255,
+                                  71,
+                                  70,
+                                  70,
+                                ).withOpacity(isDarkMode ? 0.2 : 0.1),
                                 blurRadius: 20,
                                 offset: const Offset(0, 5),
                               ),
@@ -266,56 +282,86 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   decoration: InputDecoration(
                                     labelText: 'Category Name',
                                     labelStyle: TextStyle(
-                                      color: isDarkMode
-                                          ? Colors.white
-                                          : primaryColor, // White in dark, purple in light
+                                      color: _isDuplicateName
+                                          ? errorColor
+                                          : (isDarkMode
+                                                ? Colors.white
+                                                : primaryColor),
                                       fontWeight: FontWeight.w600,
                                     ),
                                     hintText: 'Enter category name',
                                     hintStyle: TextStyle(
                                       color: isDarkMode
                                           ? Colors.white70
-                                          : Colors
-                                                .grey[600], // Lighter white in dark
+                                          : Colors.grey[600],
                                     ),
                                     prefixIcon: Icon(
                                       Icons.label_outline,
-                                      color: isDarkMode
-                                          ? Colors.white
-                                          : primaryColor, // White in dark, purple in light
+                                      color: _isDuplicateName
+                                          ? errorColor
+                                          : (isDarkMode
+                                                ? Colors.white
+                                                : primaryColor),
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: isDarkMode
-                                            ? Colors.grey[600]!
-                                            : Colors.deepPurple.shade300,
+                                        color: _isDuplicateName
+                                            ? errorColor
+                                            : (isDarkMode
+                                                  ? Colors.grey[600]!
+                                                  : Colors.deepPurple.shade300),
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: isDarkMode
-                                            ? Colors.white
-                                            : primaryColor, // White border in dark when focused
+                                        color: _isDuplicateName
+                                            ? errorColor
+                                            : (isDarkMode
+                                                  ? Colors.white
+                                                  : primaryColor),
                                         width: 2,
                                       ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: isDarkMode
-                                            ? Colors.grey[600]!
-                                            : Colors.deepPurple.shade300,
+                                        color: _isDuplicateName
+                                            ? errorColor
+                                            : (isDarkMode
+                                                  ? Colors.grey[600]!
+                                                  : Colors.deepPurple.shade300),
                                       ),
                                     ),
                                     filled: true,
                                     fillColor: isDarkMode
                                         ? Colors.grey[800]
-                                        : inputFillColor, // Darker fill in dark mode
+                                        : inputFillColor,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 14,
+                                    ),
+                                    errorText: _isDuplicateName
+                                        ? 'Category name already exists'
+                                        : null,
+                                    errorStyle: TextStyle(
+                                      color: errorColor,
+                                      fontSize: 14,
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: errorColor,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: errorColor,
+                                        width: 2,
+                                      ),
                                     ),
                                   ),
                                   style: TextStyle(
@@ -327,7 +373,18 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                     if (value == null || value.isEmpty) {
                                       return 'Please enter a category name';
                                     }
+                                    if (_isDuplicateName) {
+                                      return '"$value" already exists. Please use a different name.';
+                                    }
                                     return null;
+                                  },
+                                  onChanged: (value) {
+                                    if (_isDuplicateName) {
+                                      setState(() {
+                                        _isDuplicateName = false;
+                                      });
+                                      _formKey.currentState?.validate();
+                                    }
                                   },
                                 ),
                                 const SizedBox(height: 24),
@@ -359,6 +416,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
+                                      padding: const EdgeInsets.all(0),
                                     ),
                                     child: _isLoading
                                         ? const SizedBox(

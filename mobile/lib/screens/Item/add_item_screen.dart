@@ -14,13 +14,15 @@ import '../../services/image_picker_service.dart'; // For ImagePickerService
 class AddItemScreen extends StatefulWidget {
   final item_model.Item? item;
   final Function(bool)? onThemeToggle;
-  const AddItemScreen({Key? key, this.item, this.onThemeToggle}) : super(key: key);
+  const AddItemScreen({Key? key, this.item, this.onThemeToggle})
+    : super(key: key);
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
 }
 
-class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateMixin {
+class _AddItemScreenState extends State<AddItemScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
@@ -34,6 +36,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
   String? _webImageName;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  bool _isDuplicateName = false;
 
   @override
   void initState() {
@@ -66,6 +69,27 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     }
     await _fetchCategories();
     _animationController.forward();
+  }
+
+  Future<void> _checkDuplicateName(String name) async {
+    if (name.isEmpty) return;
+
+    try {
+      final items = await ApiService.getItems();
+      final exists = items.any(
+        (item) =>
+            item.name.toLowerCase() == name.toLowerCase() &&
+            (widget.item == null || item.id != widget.item!.id),
+      );
+
+      if (mounted) {
+        setState(() {
+          _isDuplicateName = exists;
+        });
+      }
+    } catch (e) {
+      // Handle error if needed
+    }
   }
 
   Future<void> _fetchCategories() async {
@@ -103,7 +127,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           });
         }
       } else {
-        final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+        final picked = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
+        );
         if (picked != null) {
           setState(() {
             _imageFile = File(picked.path);
@@ -243,7 +269,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.deepPurple.shade700,
+        backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
@@ -276,17 +302,15 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50,
+      backgroundColor: isDarkMode
+          ? Colors.grey[900]
+          : Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Row(
           children: [
             IconButton(
-              icon: const Icon(
-                Icons.close,
-                size: 20,
-                color: Colors.white,
-              ),
+              icon: const Icon(Icons.close, size: 20, color: Colors.white),
               onPressed: () => Navigator.pop(context),
               constraints: const BoxConstraints(),
               padding: EdgeInsets.zero,
@@ -346,7 +370,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                   Text(
                     'Loading...',
                     style: TextStyle(
-                      color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                      color: isDarkMode
+                          ? Colors.grey[400]
+                          : Colors.deepPurple.shade600,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                     ),
@@ -374,8 +400,14 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: isDarkMode
-                                    ? [Colors.grey.shade700, Colors.grey.shade800]
-                                    : [Colors.deepPurple.shade100, Colors.deepPurple.shade50],
+                                    ? [
+                                        Colors.grey.shade700,
+                                        Colors.grey.shade800,
+                                      ]
+                                    : [
+                                        Colors.deepPurple.shade100,
+                                        Colors.deepPurple.shade50,
+                                      ],
                               ),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
@@ -399,57 +431,57 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                                     ),
                                   )
                                 : _webImageBytes != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(18),
-                                        child: Image.memory(
-                                          _webImageBytes!,
-                                          fit: BoxFit.cover,
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(18),
+                                    child: Image.memory(
+                                      _webImageBytes!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : _imagePath != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(18),
+                                    child: Image.network(
+                                      ApiService.getImageUrl(_imagePath!),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Icon(
+                                        Icons.broken_image_rounded,
+                                        size: 50,
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.deepPurple.shade400,
+                                      ),
+                                    ),
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_photo_alternate_rounded,
+                                        size: 50,
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.deepPurple.shade600,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Add Image',
+                                        style: TextStyle(
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.deepPurple.shade600,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
                                         ),
-                                      )
-                                    : _imagePath != null
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(18),
-                                            child: Image.network(
-                                              ApiService.getImageUrl(_imagePath!),
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => Icon(
-                                                Icons.broken_image_rounded,
-                                                size: 50,
-                                                color: isDarkMode
-                                                    ? Colors.grey[400]
-                                                    : Colors.deepPurple.shade400,
-                                              ),
-                                            ),
-                                          )
-                                        : Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.add_photo_alternate_rounded,
-                                                size: 50,
-                                                color: isDarkMode
-                                                    ? Colors.grey[400]
-                                                    : Colors.deepPurple.shade600,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                'Add Image',
-                                                style: TextStyle(
-                                                  color: isDarkMode
-                                                      ? Colors.grey[400]
-                                                      : Colors.deepPurple.shade600,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 16,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 30),
 
-                      // Name Field
+                      // Modify the Name TextFormField to include the duplicate check:
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 400),
                         child: TextFormField(
@@ -457,11 +489,15 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           decoration: InputDecoration(
                             labelText: 'Item Name',
                             labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade600,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -471,11 +507,16 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             ),
                             filled: true,
-                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            fillColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.white,
                             prefixIcon: Icon(
                               Icons.restaurant_menu,
                               color: Colors.deepPurple.shade600,
                             ),
+                            errorText: _isDuplicateName
+                                ? '"${_nameController.text}" already exists'
+                                : null,
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
@@ -484,7 +525,19 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             if (value == null || value.isEmpty) {
                               return 'Please enter item name';
                             }
+                            if (_isDuplicateName) {
+                              return '"$value" already exists. Please use a different name.';
+                            }
                             return null;
+                          },
+                          onChanged: (value) async {
+                            if (_isDuplicateName) {
+                              setState(() {
+                                _isDuplicateName = false;
+                              });
+                              _formKey.currentState?.validate();
+                            }
+                            await _checkDuplicateName(value);
                           },
                         ),
                       ),
@@ -498,11 +551,15 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           decoration: InputDecoration(
                             labelText: 'Description (Optional)',
                             labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade600,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -512,7 +569,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             ),
                             filled: true,
-                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            fillColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.white,
                             prefixIcon: Icon(
                               Icons.description_rounded,
                               color: Colors.deepPurple.shade600,
@@ -534,11 +593,15 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           decoration: InputDecoration(
                             labelText: 'Price',
                             labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade600,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -548,7 +611,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             ),
                             filled: true,
-                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            fillColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.white,
                             prefixIcon: Icon(
                               Icons.attach_money_rounded,
                               color: Colors.deepPurple.shade600,
@@ -557,7 +622,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter price';
@@ -582,7 +649,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               child: Text(
                                 category.name,
                                 style: TextStyle(
-                                  color: isDarkMode ? Colors.white : Colors.black87,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Colors.black87,
                                 ),
                               ),
                             );
@@ -595,11 +664,15 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           decoration: InputDecoration(
                             labelText: 'Category',
                             labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade600,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -609,13 +682,17 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             ),
                             filled: true,
-                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            fillColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.white,
                             prefixIcon: Icon(
                               Icons.category_rounded,
                               color: Colors.deepPurple.shade600,
                             ),
                           ),
-                          dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                          dropdownColor: isDarkMode
+                              ? Colors.grey[800]
+                              : Colors.white,
                           validator: (value) {
                             if (value == null) {
                               return 'Please select category';
@@ -642,7 +719,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             shadowColor: Colors.deepPurple.withOpacity(0.4),
                           ),
                           child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
                               : Text(
                                   isEdit ? 'Update Item' : 'Create Item',
                                   style: const TextStyle(
