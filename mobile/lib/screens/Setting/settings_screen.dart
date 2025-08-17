@@ -255,7 +255,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.arrow_forward_ios, size: 18),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const AccountScreen()),
+              MaterialPageRoute(
+                builder: (_) => AccountScreen(
+                  selectedLanguage: selectedLanguage,
+                  onThemeToggle: widget.onThemeToggle,
+                ),
+              ),
             ),
           ),
           const Divider(indent: 24, endIndent: 24, thickness: 1, height: 32),
