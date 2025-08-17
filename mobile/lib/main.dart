@@ -1,12 +1,27 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'screens/Login/login_screen.dart';
-import './screens/web_menu_screen.dart';
+import 'screens/splash_screen.dart';
+import './screens/taskbar_screen.dart';
 
-void main() => runApp(const DigitalMenuApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const DigitalMenuApp());
+}
 
-class DigitalMenuApp extends StatelessWidget {
+class DigitalMenuApp extends StatefulWidget {
   const DigitalMenuApp({super.key});
+
+  @override
+  _DigitalMenuAppState createState() => _DigitalMenuAppState();
+}
+
+class _DigitalMenuAppState extends State<DigitalMenuApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void toggleTheme(bool isDarkMode) {
+    setState(() {
+      _themeMode = isDarkMode ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +29,10 @@ class DigitalMenuApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Digital Menu',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple.shade100),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple.shade100,
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
         scaffoldBackgroundColor: Colors.white,
         appBarTheme: const AppBarTheme(
@@ -34,12 +52,34 @@ class DigitalMenuApp extends StatelessWidget {
           ),
         ),
       ),
-      // If running on web, show the web menu directly
-      // If running on mobile, show the login screen
-      home: kIsWeb ? const WebMenuScreen() : const LoginScreen(),
-      // Add routing for web
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple.shade100,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+        scaffoldBackgroundColor: Colors.grey.shade900,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.deepPurple.shade800,
+          foregroundColor: Colors.white,
+        ),
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white70),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.deepPurpleAccent,
+            foregroundColor: Colors.white,
+            textStyle: const TextStyle(fontSize: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+        ),
+      ),
+      themeMode: _themeMode,
+      home: SplashScreen(onThemeToggle: toggleTheme),
       routes: {
-        '/menu': (context) => const WebMenuScreen(),
+        '/menu': (context) => MenuScreen(onThemeToggle: toggleTheme),
       },
     );
   }

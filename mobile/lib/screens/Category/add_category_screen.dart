@@ -53,120 +53,121 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     try {
       setState(() => _isLoading = true);
       if (widget.category == null) {
-        // ✅ CREATE new category
         await ApiService.createCategory(_nameController.text);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_outline, color: Colors.white),
-                const SizedBox(width: 8),
-                const Expanded(child: Text('Category added successfully')),
-              ],
-            ),
-            backgroundColor: Colors.green.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        _showSuccessSnackbar('Category added successfully');
       } else {
-        // ✅ UPDATE existing category
         await ApiService.updateCategory(
           widget.category!.id,
           _nameController.text,
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_outline, color: Colors.white),
-                const SizedBox(width: 8),
-                const Expanded(child: Text('Category updated successfully')),
-              ],
-            ),
-            backgroundColor: Colors.green.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
+        _showSuccessSnackbar('Category updated successfully');
       }
-      Navigator.pop(context, true); // Signal success
+      Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(child: Text(e.toString())),
-            ],
-          ),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          action: e.toString().contains('restaurant')
-              ? SnackBarAction(
-                  label: 'Create Restaurant',
-                  textColor: Colors.white,
-                  onPressed: () =>
-                      Navigator.pushNamed(context, '/create-restaurant'),
-                )
-              : null,
-        ),
-      );
+      _showErrorSnackbar(e.toString());
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
-      appBar: AppBar(
-        automaticallyImplyLeading: false, // Disable default back button
-        title: Row(
+  void _showSuccessSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
           children: [
-            IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                size: 18,
-                color: Colors.white,
-              ),
-              onPressed: () => Navigator.pop(context),
-              constraints: const BoxConstraints(),
-              padding: EdgeInsets.zero,
-            ),
-            const SizedBox(width: 0), // Adjust spacing between icon and text
-            Text(
-              widget.category == null ? 'Add Category' : 'Edit Category',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 22,
-                color: Colors.white,
-              ),
-            ),
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
           ],
         ),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  void _showErrorSnackbar(String error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text(error)),
+          ],
+        ),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        action: error.contains('restaurant')
+            ? SnackBarAction(
+                label: 'Create Restaurant',
+                textColor: Colors.white,
+                onPressed: () =>
+                    Navigator.pushNamed(context, '/create-restaurant'),
+              )
+            : null,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final primaryColor = isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50;
+    final cardColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
+    final inputFillColor = isDarkMode ? Colors.grey[700] : Colors.deepPurple.shade50;
+
+    return Scaffold(
+      backgroundColor: scaffoldBgColor,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Padding(
+          padding: const EdgeInsets.only(left: 2, right: 0),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+              ),
+              const SizedBox(width: 0),
+              Text(
+                widget.category == null ? 'Add Category' : 'Edit Category',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 22,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
         elevation: 0,
-        backgroundColor: Colors.deepPurple.shade700,
+        backgroundColor: primaryColor,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+              colors: [
+                primaryColor!,
+                isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -178,11 +179,10 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                 padding: const EdgeInsets.all(20.0),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight:
-                        MediaQuery.of(context).size.height -
+                    minHeight: MediaQuery.of(context).size.height -
                         MediaQuery.of(context).padding.top -
                         kToolbarHeight -
-                        40, // Account for padding and app bar
+                        40,
                   ),
                   child: IntrinsicHeight(
                     child: Column(
@@ -191,11 +191,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: cardColor,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.deepPurple.withOpacity(0.1),
+                                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.1),
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
@@ -212,8 +212,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.deepPurple.shade600,
-                                        Colors.deepPurple.shade400,
+                                        primaryColor,
+                                        isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
                                       ],
                                     ),
                                     shape: BoxShape.circle,
@@ -232,7 +232,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w700,
-                                    color: Colors.deepPurple.shade800,
+                                    color: textColor,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -243,7 +243,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                       : 'Update the category information',
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Colors.grey.shade600,
+                                    color: secondaryTextColor,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -253,34 +253,35 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   decoration: InputDecoration(
                                     labelText: 'Category Name',
                                     labelStyle: TextStyle(
-                                      color: Colors.deepPurple.shade600,
+                                      color: primaryColor,
+                                     fontWeight: FontWeight.w600
                                     ),
                                     hintText: 'Enter category name',
                                     prefixIcon: Icon(
                                       Icons.label_outline,
-                                      color: Colors.deepPurple.shade600,
+                                      color: primaryColor,
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: Colors.deepPurple.shade300,
+                                        color: isDarkMode ? Colors.grey[600]! : Colors.deepPurple.shade300,
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: Colors.deepPurple.shade600,
+                                        color: primaryColor,
                                         width: 2,
                                       ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: Colors.deepPurple.shade300,
+                                        color: isDarkMode ? Colors.grey[600]! : Colors.deepPurple.shade300,
                                       ),
                                     ),
                                     filled: true,
-                                    fillColor: Colors.deepPurple.shade50,
+                                    fillColor: inputFillColor,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 14,
@@ -288,7 +289,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   ),
                                   style: TextStyle(
                                     fontSize: 16,
-                                    color: Colors.deepPurple.shade800,
+                                    color: textColor,
+                                    fontWeight: FontWeight.w600
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -303,16 +305,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
-                                        Colors.deepPurple.shade600,
-                                        Colors.deepPurple.shade400,
+                                        primaryColor,
+                                        isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.deepPurple.withOpacity(
-                                          0.3,
-                                        ),
+                                        color: primaryColor.withOpacity(0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -337,8 +337,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                             ),
                                           )
                                         : Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
+                                            mainAxisAlignment: MainAxisAlignment.center,
                                             children: [
                                               Icon(
                                                 widget.category == null

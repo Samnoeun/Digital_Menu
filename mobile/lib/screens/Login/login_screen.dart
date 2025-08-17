@@ -1,11 +1,11 @@
-import 'package:digital_menu/screens/taskbar_screen.dart';
 import 'package:flutter/material.dart';
 import '../../services/api_services.dart';
 import 'register_screen.dart';
-
+import '../taskbar_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final Function(bool) onThemeToggle;
+  const LoginScreen({super.key, required this.onThemeToggle});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -15,23 +15,18 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool isLoading = false;
-
-  // Error message variables
   String? emailError;
   String? passwordError;
   String? generalError;
 
-  // Email validation
   bool isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
   }
 
-  // Password validation
   bool isValidPassword(String password) {
-    return password.length >= 6; // Minimum 6 characters
+    return password.length >= 6;
   }
 
-  // Validate form
   bool validateForm() {
     setState(() {
       emailError = null;
@@ -41,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     bool isValid = true;
 
-    // Email validation
     if (emailController.text.trim().isEmpty) {
       setState(() {
         emailError = 'Email is required';
@@ -54,7 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
       isValid = false;
     }
 
-    // Password validation
     if (passwordController.text.isEmpty) {
       setState(() {
         passwordError = 'Password is required';
@@ -79,37 +72,41 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await ApiService.login(
+      final response = await ApiService.login(
         emailController.text.trim(),
         passwordController.text.trim(),
       );
 
+      final user = response['user'];
+      final token = response['token'] as String;
+
       if (context.mounted) {
-        ScaffoldMessenger.of(
+        Navigator.pushReplacement(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Login successful")));
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const MenuScreen()),
+          MaterialPageRoute(
+            builder: (_) => MenuScreen(onThemeToggle: widget.onThemeToggle),
+          ),
         );
       }
     } catch (e) {
       setState(() {
         generalError = e.toString();
       });
+    } finally {
+      if (context.mounted) {
+        setState(() => isLoading = false);
+      }
     }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Background with clippy shapes
           ClipPath(
             clipper: TopWaveClipper(),
             child: Container(
@@ -126,7 +123,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          // Bottom decorative shape
           Positioned(
             bottom: 0,
             left: 0,
@@ -148,7 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          // Main content
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -157,14 +152,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 60),
-                    // App title with better styling
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
+                        color: isDark ? Colors.grey.shade800 : Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(25),
                         boxShadow: [
                           BoxShadow(
@@ -174,24 +168,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      child: const Text(
+                      child: Text(
                         'QR Menu App',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
-                          letterSpacing: 1.2,
-                        ),
+                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.deepPurple,
+                              letterSpacing: 1.2,
+                            ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                     const SizedBox(height: 40),
-
-                    // Login form container
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? Colors.grey.shade800 : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
@@ -203,25 +195,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: Column(
                         children: [
-                          const Text(
+                          Text(
                             'Welcome Back',
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.deepPurple,
-                            ),
+                            style: Theme.of(context).textTheme.bodyLarge!.copyWith(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.deepPurple,
+                                ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'Sign in to your account',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey.shade600,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 24),
-
-                          // General error message
                           if (generalError != null)
                             Container(
                               width: double.infinity,
@@ -241,27 +228,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
-
-                          // Email field
                           _buildStyledTextField(
                             controller: emailController,
                             label: 'Email',
                             icon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
                             errorText: emailError,
+                            isDark: isDark,
                           ),
                           const SizedBox(height: 16),
-
-                          // Password field
                           _buildStyledTextField(
                             controller: passwordController,
                             label: 'Password',
                             icon: Icons.lock_outline,
                             isPassword: true,
                             errorText: passwordError,
+                            isDark: isDark,
                           ),
-
-                          // Forgot password link
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
@@ -271,16 +254,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Text(
                                 'Forgot Password?',
                                 style: TextStyle(
-                                  color: Colors.deepPurple.shade600,
+                                  color: isDark ? Colors.white70 : Colors.deepPurple.shade600,
                                   fontSize: 14,
                                 ),
                               ),
                             ),
                           ),
-
                           const SizedBox(height: 16),
-
-                          // Login button
                           Container(
                             width: double.infinity,
                             height: 55,
@@ -323,36 +303,29 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                             ),
                           ),
-
                           const SizedBox(height: 24),
-
-                          // Divider
                           Row(
                             children: [
                               Expanded(
-                                child: Divider(color: Colors.grey.shade300),
+                                child: Divider(
+                                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                                ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
                                   'Or continue with',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 14,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ),
                               Expanded(
-                                child: Divider(color: Colors.grey.shade300),
+                                child: Divider(
+                                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                                ),
                               ),
                             ],
                           ),
-
                           const SizedBox(height: 24),
-
-                          // Social login buttons
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
@@ -363,33 +336,29 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onTap: () {
                                   // Add Google sign-in logic
                                 },
+                                isDark: isDark,
                               ),
                               _buildSocialButton(
                                 icon: Icons.apple,
                                 label: 'Apple',
-                                color: Colors.black,
+                                color: isDark ? Colors.white70 : Colors.black,
                                 onTap: () {
                                   // Add Apple sign-in logic
                                 },
+                                isDark: isDark,
                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
-                    // Register link
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           'Don\'t have an account?',
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 16,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium,
                           textAlign: TextAlign.center,
                         ),
                         TextButton(
@@ -397,14 +366,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const RegisterScreen(),
+                                builder: (_) => RegisterScreen(
+                                  onThemeToggle: widget.onThemeToggle,
+                                ),
                               ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             'Create account',
                             style: TextStyle(
-                              color: Colors.deepPurple,
+                              color: isDark ? Colors.white70 : Colors.deepPurple,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),
@@ -430,18 +401,21 @@ class _LoginScreenState extends State<LoginScreen> {
     bool isPassword = false,
     TextInputType? keyboardType,
     String? errorText,
+    required bool isDark,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
               color: errorText != null
                   ? Colors.red.shade300
-                  : Colors.grey.shade200,
+                  : isDark
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade200,
               width: errorText != null ? 2 : 1,
             ),
           ),
@@ -450,7 +424,6 @@ class _LoginScreenState extends State<LoginScreen> {
             obscureText: isPassword,
             keyboardType: keyboardType,
             onChanged: (value) {
-              // Clear error when user starts typing
               if (errorText != null) {
                 setState(() {
                   if (controller == emailController) {
@@ -467,7 +440,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 icon,
                 color: errorText != null
                     ? Colors.red.shade400
-                    : Colors.deepPurple.shade400,
+                    : isDark
+                        ? Colors.white70
+                        : Colors.deepPurple.shade400,
               ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
@@ -477,12 +452,14 @@ class _LoginScreenState extends State<LoginScreen> {
               labelStyle: TextStyle(
                 color: errorText != null
                     ? Colors.red.shade600
-                    : Colors.grey.shade600,
+                    : isDark
+                        ? Colors.white70
+                        : Colors.grey.shade600,
               ),
             ),
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
         ),
-        // Error message
         if (errorText != null)
           Padding(
             padding: const EdgeInsets.only(top: 8, left: 16),
@@ -504,6 +481,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required String label,
     required Color color,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -511,9 +489,11 @@ class _LoginScreenState extends State<LoginScreen> {
         width: 120,
         height: 50,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? Colors.grey.shade800 : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
+          border: Border.all(
+            color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.05),
@@ -528,15 +508,14 @@ class _LoginScreenState extends State<LoginScreen> {
             Icon(
               icon,
               color: color,
-              size: 28, // Bigger icon size
+              size: 28,
             ),
             const SizedBox(width: 8),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ],
         ),
@@ -545,13 +524,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-// Custom clipper for top wave (same as registration)
 class TopWaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     var path = Path();
     path.lineTo(0, size.height - 50);
-
     var firstControlPoint = Offset(size.width / 4, size.height);
     var firstEndPoint = Offset(size.width / 2, size.height - 30);
     path.quadraticBezierTo(
@@ -560,7 +537,6 @@ class TopWaveClipper extends CustomClipper<Path> {
       firstEndPoint.dx,
       firstEndPoint.dy,
     );
-
     var secondControlPoint = Offset(size.width * 3 / 4, size.height - 60);
     var secondEndPoint = Offset(size.width, size.height - 20);
     path.quadraticBezierTo(
@@ -569,7 +545,6 @@ class TopWaveClipper extends CustomClipper<Path> {
       secondEndPoint.dx,
       secondEndPoint.dy,
     );
-
     path.lineTo(size.width, 0);
     path.close();
     return path;
@@ -579,13 +554,11 @@ class TopWaveClipper extends CustomClipper<Path> {
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
 
-// Custom clipper for bottom left wave
 class BottomLeftWaveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     var path = Path();
     path.moveTo(size.width, 30);
-
     var firstControlPoint = Offset(size.width * 2 / 3, 0);
     var firstEndPoint = Offset(size.width / 2, 20);
     path.quadraticBezierTo(
@@ -594,7 +567,6 @@ class BottomLeftWaveClipper extends CustomClipper<Path> {
       firstEndPoint.dx,
       firstEndPoint.dy,
     );
-
     var secondControlPoint = Offset(size.width / 4, 40);
     var secondEndPoint = Offset(0, 10);
     path.quadraticBezierTo(
@@ -603,7 +575,6 @@ class BottomLeftWaveClipper extends CustomClipper<Path> {
       secondEndPoint.dx,
       secondEndPoint.dy,
     );
-
     path.lineTo(0, size.height);
     path.lineTo(size.width, size.height);
     path.close();

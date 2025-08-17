@@ -5,7 +5,7 @@ import '../../models/category_model.dart';
 import '../../services/api_services.dart';
 
 class CategoryListScreen extends StatefulWidget {
-  const CategoryListScreen({Key? key}) : super(key: key);
+  const CategoryListScreen({super.key});
 
   @override
   State<CategoryListScreen> createState() => _CategoryListScreenState();
@@ -44,6 +44,58 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     super.dispose();
   }
 
+  // Helper function to get restaurant/food related icons
+  IconData _getCategoryIcon(String categoryName) {
+    final name = categoryName.toLowerCase();
+
+    // Food categories
+    if (name.contains('pizza')) return Icons.local_pizza;
+    if (name.contains('burger') || name.contains('sandwich'))
+      return Icons.lunch_dining;
+    if (name.contains('coffee') || name.contains('cafe'))
+      return Icons.local_cafe;
+    if (name.contains('drink') ||
+        name.contains('beverage') ||
+        name.contains('juice'))
+      return Icons.local_drink;
+    if (name.contains('dessert') ||
+        name.contains('cake') ||
+        name.contains('sweet'))
+      return Icons.cake;
+    if (name.contains('salad') ||
+        name.contains('vegetable') ||
+        name.contains('healthy'))
+      return Icons.eco;
+    if (name.contains('pasta') || name.contains('noodle'))
+      return Icons.ramen_dining;
+    if (name.contains('chicken') ||
+        name.contains('meat') ||
+        name.contains('grill'))
+      return Icons.outdoor_grill;
+    if (name.contains('seafood') ||
+        name.contains('fish') ||
+        name.contains('sushi'))
+      return Icons.set_meal;
+    if (name.contains('bread') || name.contains('bakery'))
+      return Icons.bakery_dining;
+    if (name.contains('ice cream') || name.contains('frozen'))
+      return Icons.icecream;
+    if (name.contains('wine') ||
+        name.contains('alcohol') ||
+        name.contains('bar'))
+      return Icons.wine_bar;
+    if (name.contains('breakfast') || name.contains('morning'))
+      return Icons.free_breakfast;
+    if (name.contains('soup')) return Icons.soup_kitchen;
+    if (name.contains('snack') || name.contains('appetizer'))
+      return Icons.tapas;
+    if (name.contains('fast food') || name.contains('quick'))
+      return Icons.fastfood;
+
+    // Default restaurant icon
+    return Icons.restaurant;
+  }
+
   void _onSearchChanged() {
     setState(() {
       _searchQuery = _searchController.text.trim().toLowerCase();
@@ -75,6 +127,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
   Future<void> _deleteSelectedCategories() async {
     if (_selectedCategoryIds.isEmpty) return;
 
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -83,18 +138,29 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
-            const Text('Confirm Delete'),
+            Text(
+              'Confirm Delete',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+            ),
           ],
         ),
         content: Text(
           'Delete ${_selectedCategoryIds.length} selected ${_selectedCategoryIds.length == 1 ? 'category' : 'categories'}? This will also delete all items in them.',
+          style: TextStyle(
+            color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+          ),
         ),
+        backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+              ),
             ),
           ),
           ElevatedButton(
@@ -114,12 +180,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     if (confirmed == true) {
       try {
         setState(() => _isLoading = true);
-
         // Delete all selected categories
         for (int categoryId in _selectedCategoryIds) {
           await ApiService.deleteCategory(categoryId);
         }
-
         _selectedCategoryIds.clear();
         _isSelectionMode = false;
         _fetchCategories();
@@ -135,7 +199,6 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     try {
       setState(() => _isLoading = true);
       final categories = await ApiService.getCategories();
-
       if (mounted) {
         setState(() {
           _categories = categories;
@@ -164,6 +227,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
   }
 
   Future<void> _deleteCategory(int id, String name) async {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -172,18 +238,29 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
-            const Text('Confirm Delete'),
+            Text(
+              'Confirm Delete',
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+            ),
           ],
         ),
         content: Text(
           'Delete category "$name"? This will also delete all items in it.',
+          style: TextStyle(
+            color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+          ),
         ),
+        backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'Cancel',
-              style: TextStyle(color: Colors.grey.shade600),
+              style: TextStyle(
+                color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+              ),
             ),
           ),
           ElevatedButton(
@@ -236,8 +313,8 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 8),
+            const Icon(Icons.check_circle_outline),
+            const SizedBox(width: 12),
             Expanded(child: Text(message)),
           ],
         ),
@@ -251,8 +328,13 @@ class _CategoryListScreenState extends State<CategoryListScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.deepPurple.shade50,
+      backgroundColor: isDarkMode
+          ? Colors.grey[900]
+          : Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false, // Disable default leading button
         title: Row(
@@ -265,25 +347,18 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 padding: EdgeInsets.zero,
               )
             else
-              IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  size: 18,
+              const SizedBox(width: 0), // Tight spacing between icon and text
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: Text(
+                _isSelectionMode
+                    ? '${_selectedCategoryIds.length} Selected'
+                    : 'Categories',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 24,
                   color: Colors.white,
                 ),
-                onPressed: () => Navigator.pop(context),
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-              ),
-            const SizedBox(width: 0), // Tight spacing between icon and text
-            Text(
-              _isSelectionMode
-                  ? '${_selectedCategoryIds.length} Selected'
-                  : 'Categories',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 24,
-                color: Colors.white,
               ),
             ),
           ],
@@ -323,9 +398,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           const SizedBox(width: 8),
         ],
       ),
-
       body: Column(
         children: [
+          // Search Bar in CategoryListScreen
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -340,8 +415,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
               child: Container(
+                height: 45, // Set fixed height for shorter search bar
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.grey[800] : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -355,16 +431,27 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Search categories...',
-                    hintStyle: TextStyle(color: Colors.grey.shade500),
+                    hintStyle: TextStyle(
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
+                      fontSize: 14,
+                    ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: Colors.deepPurple.shade600,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors
+                                .white // White in dark mode
+                          : Colors.deepPurple.shade600, // Purple in light mode
+                      size: 20,
                     ),
+
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(
                               Icons.clear_rounded,
-                              color: Colors.grey.shade600,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                              size: 18,
                             ),
                             onPressed: () => _searchController.clear(),
                           )
@@ -374,12 +461,17 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 16,
+                      vertical: 8, // Reduced vertical padding
                     ),
+                    isDense: true, // Makes the field more compact
                   ),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ), // Smaller text size
                 ),
               ),
             ),
@@ -398,7 +490,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                         Text(
                           'Loading categories...',
                           style: TextStyle(
-                            color: Colors.deepPurple.shade600,
+                            color: isDarkMode
+                                ? Colors.white
+                                : Colors.deepPurple.shade600,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
@@ -416,13 +510,17 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: Colors.deepPurple.shade100,
+                              color: isDarkMode
+                                  ? Colors.deepPurple.shade800
+                                  : Colors.deepPurple.shade100,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
-                              Icons.category_outlined,
+                              Icons.restaurant_menu,
                               size: 64,
-                              color: Colors.deepPurple.shade400,
+                              color: isDarkMode
+                                  ? Colors.deepPurple.shade300
+                                  : Colors.deepPurple.shade400,
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -433,7 +531,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
-                              color: Colors.deepPurple.shade700,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : Colors.deepPurple.shade700,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -443,7 +543,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                 : 'Try a different search term',
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.grey.shade600,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -469,7 +571,6 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                   final Category item = _filteredCategories
                                       .removeAt(oldIndex);
                                   _filteredCategories.insert(newIndex, item);
-
                                   // Also update the main categories list if no search is active
                                   if (_searchQuery.isEmpty) {
                                     final Category mainItem = _categories
@@ -483,7 +584,6 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                           final isSelected = _selectedCategoryIds.contains(
                             category.id,
                           );
-
                           return AnimatedContainer(
                             key: ValueKey(category.id),
                             duration: Duration(
@@ -505,22 +605,35 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                       )
                                     : BorderSide.none,
                               ),
+                              color: isDarkMode ? Colors.grey[800] : null,
                               child: Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
-                                  gradient: LinearGradient(
-                                    colors: isSelected
-                                        ? [
-                                            Colors.deepPurple.shade100,
-                                            Colors.deepPurple.shade50,
-                                          ]
-                                        : [
+                                  gradient: isSelected
+                                      ? LinearGradient(
+                                          colors: isDarkMode
+                                              ? [
+                                                  Colors.deepPurple.shade800,
+                                                  Colors.deepPurple.shade700,
+                                                ]
+                                              : [
+                                                  Colors.deepPurple.shade100,
+                                                  Colors.deepPurple.shade50,
+                                                ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : isDarkMode
+                                      ? null
+                                      : LinearGradient(
+                                          colors: [
                                             Colors.white,
                                             Colors.deepPurple.shade50,
                                           ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                  color: isDarkMode ? Colors.grey[800] : null,
                                 ),
                                 child: ListTile(
                                   contentPadding: const EdgeInsets.symmetric(
@@ -556,8 +669,8 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                               8,
                                             ),
                                           ),
-                                          child: const Icon(
-                                            Icons.category_rounded,
+                                          child: Icon(
+                                            _getCategoryIcon(category.name),
                                             color: Colors.white,
                                             size: 18,
                                           ),
@@ -567,13 +680,17 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.deepPurple.shade800,
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : Colors.deepPurple.shade800,
                                     ),
                                   ),
                                   subtitle: Text(
                                     '${category.items.length} items',
                                     style: TextStyle(
-                                      color: Colors.deepPurple.shade600,
+                                      color: isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.deepPurple.shade600,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -583,7 +700,9 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                       : PopupMenuButton(
                                           icon: Icon(
                                             Icons.more_vert_rounded,
-                                            color: Colors.deepPurple.shade600,
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.deepPurple.shade600,
                                             size: 20,
                                           ),
                                           shape: RoundedRectangleBorder(
@@ -604,7 +723,14 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                                     size: 18,
                                                   ),
                                                   const SizedBox(width: 8),
-                                                  const Text('Edit'),
+                                                  Text(
+                                                    'Edit',
+                                                    style: TextStyle(
+                                                      color: isDarkMode
+                                                          ? Colors.white
+                                                          : Colors.black87,
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -737,52 +863,32 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       ),
       floatingActionButton: _isSelectionMode
           ? null
-          : Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
-              child: ElevatedButton(
-                onPressed: () async {
-                  final result = await Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          const AddCategoryScreen(),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) {
-                            return SlideTransition(
-                              position: animation.drive(
-                                Tween(
-                                  begin: const Offset(0.0, 1.0),
-                                  end: Offset.zero,
-                                ).chain(CurveTween(curve: Curves.easeInOut)),
-                              ),
-                              child: child,
-                            );
-                          },
-                    ),
-                  );
-                  if (result == true) _fetchCategories();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple.shade600,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
+          : FloatingActionButton(
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        const AddCategoryScreen(),
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                          return SlideTransition(
+                            position: animation.drive(
+                              Tween(
+                                begin: const Offset(0.0, 1.0),
+                                end: Offset.zero,
+                              ).chain(CurveTween(curve: Curves.easeInOut)),
+                            ),
+                            child: child,
+                          );
+                        },
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 6,
-                  shadowColor: Colors.deepPurple.withOpacity(0.4),
-                ),
-                child: const Text(
-                  'Add Category',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+                );
+                if (result == true) _fetchCategories();
+              },
+              backgroundColor: Colors.deepPurple.shade600,
+              elevation: 6,
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
     );
   }
