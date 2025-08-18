@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   String? restaurantName;
   Restaurant? restaurant;
   String? restaurantProfile;
+  String? _error;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -55,11 +56,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
   }
 
   @override
@@ -88,50 +89,73 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _loadData() async {
-    setState(() => isLoading = true);
-    _animationController.reset();
+Future<void> _loadData() async {
+  // First check if widget is still mounted
+  if (!mounted) return;
 
-    try {
-      final results = await Future.wait([
-        ApiService.getItems(),
-        ApiService.getCategories(),
-        ApiService.getOrders(),
-      ]);
-      final items = results[0] as List<item.Item>;
-      final categories = results[1] as List<category.Category>;
-      final orders = results[2] as List<dynamic>;
+  setState(() {
+    isLoading = true;
+    _error = null;
+  });
 
-      final categoryMap = {for (var cat in categories) cat.id: cat};
-      final filteredOrders = _filterOrdersByDate(orders);
+  try {
+    // Load all necessary data in parallel
+    final results = await Future.wait([
+      ApiService.getItems(),
+      ApiService.getCategories(),
+      ApiService.getOrders(),
+      ApiService.getOrderHistory(),
+    ]);
 
-      final itemMap = {
-        for (var item in items)
-          item.id.toString(): item.copyWith(
-            category: categoryMap[item.categoryId],
-          ),
-      };
+    // Parse results
+    final items = results[0] as List<item.Item>;
+    final categories = results[1] as List<category.Category>;
+    final activeOrders = results[2] as List<dynamic>;
+    final historicalOrders = results[3] as List<dynamic>;
 
-      final itemCounts = <String, int>{};
-      final itemData = <String, item.Item>{};
+    // Combine active and historical orders
+    final allOrders = [...activeOrders, ...historicalOrders];
 
-      for (var order in filteredOrders) {
-        if (order['order_items'] != null) {
-          for (var orderItem in order['order_items']) {
-            final itemId = orderItem['item_id'].toString();
-            final item = itemMap[itemId];
-            if (item != null) {
-              final quantity = (orderItem['quantity'] as num).toInt();
-              itemCounts[item.name] = (itemCounts[item.name] ?? 0) + quantity;
-              itemData[item.name] = item;
-            }
+    // Create category map for quick lookup
+    final categoryMap = {
+      for (var cat in categories) cat.id: cat
+    };
+
+    // Filter orders based on selected date range
+    final filteredOrders = _filterOrdersByDate(allOrders);
+
+    // Create item map with category information
+    final itemMap = {
+      for (var item in items)
+        item.id.toString(): item.copyWith(
+          category: categoryMap[item.categoryId],
+        ),
+    };
+
+    // Calculate item counts and data
+    final itemCounts = <String, int>{};
+    final itemData = <String, item.Item>{};
+
+    for (var order in filteredOrders) {
+      if (order['order_items'] != null) {
+        for (var orderItem in order['order_items']) {
+          final itemId = orderItem['item_id'].toString();
+          final item = itemMap[itemId];
+          if (item != null) {
+            final quantity = (orderItem['quantity'] as num).toInt();
+            itemCounts[item.name] = (itemCounts[item.name] ?? 0) + quantity;
+            itemData[item.name] = item;
           }
         }
       }
+    }
 
-      final sortedItems = itemCounts.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
+    // Sort items by order count
+    final sortedItems = itemCounts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
+    // Only update state if widget is still mounted
+    if (mounted) {
       setState(() {
         totalItems = items.length;
         totalCategories = categories.length;
@@ -151,15 +175,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       });
 
       _animationController.forward();
-    } catch (e) {
+    }
+  } catch (e) {
+    // Handle errors only if widget is still mounted
+    if (mounted) {
       setState(() {
+        _error = 'Failed to load data: ${e.toString()}';
         topItem = "Error loading data";
         topItems = [];
         isLoading = false;
       });
-      debugPrint('Error loading home data: $e');
     }
+    debugPrint('Error loading home data: $e');
   }
+}
 
   List<dynamic> _filterOrdersByDate(List<dynamic> orders) {
     final now = DateTime.now();
@@ -209,12 +238,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: Colors.deepPurple.shade700,
-                  onPrimary: Colors.white,
-                  surface: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.white,
-                ),
+              primary: Colors.deepPurple.shade700,
+              onPrimary: Colors.white,
+              surface: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.white,
+            ),
           ),
           child: child!,
         );
@@ -250,7 +279,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+                  colors: [
+                    Colors.deepPurple.shade700,
+                    Colors.deepPurple.shade500,
+                  ],
                 ),
               ),
               child: SafeArea(
@@ -277,8 +309,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                                 child: CircleAvatar(
                                   radius: 28,
-                                  backgroundColor:
-                                      isDarkMode ? const Color.fromARGB(255, 246, 246, 246) : Colors.white,
+                                  backgroundColor: isDarkMode
+                                      ? const Color.fromARGB(255, 246, 246, 246)
+                                      : Colors.white,
                                   backgroundImage: restaurant!.profile != null
                                       ? NetworkImage(
                                           ApiService.getImageUrl(
@@ -571,7 +604,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               },
               decoration: InputDecoration(
                 labelText: 'Filter by',
-                labelStyle: TextStyle(color: const Color.fromARGB(255, 162, 122, 255)),
+                labelStyle: TextStyle(
+                  color: const Color.fromARGB(255, 162, 122, 255),
+                ),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
@@ -580,8 +615,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
-              iconEnabledColor:
-                  isDarkMode ? Colors.white : Colors.deepPurple.shade700,
+              iconEnabledColor: isDarkMode
+                  ? Colors.white
+                  : Colors.deepPurple.shade700,
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.deepPurple.shade700,
                 fontWeight: FontWeight.w500,
@@ -664,7 +700,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   value: card['value'] as String,
                   icon: card['icon'] as IconData,
                   iconColor: card['color'] as Color,
-                  backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                  backgroundColor: isDarkMode ? const Color.fromARGB(255, 57, 57, 57) : Colors.white,
                 ),
               ),
             );
@@ -725,8 +761,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             child: Column(
               children: [
-                Icon(Icons.inbox_outlined,
-                    size: 64, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+                Icon(
+                  Icons.inbox_outlined,
+                  size: 64,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
                 const SizedBox(height: 16),
                 Text(
                   "No orders found for selected period",
@@ -815,7 +854,9 @@ class ModernSummaryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(0.1),
+                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(
+                  0.1,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -888,7 +929,7 @@ class ModernTopItemTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white,
+        color: isDarkMode ? const Color.fromARGB(255, 49, 49, 49) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -933,13 +974,17 @@ class ModernTopItemTile extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Icon(
-                                  Icons.fastfood,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                ),
+                                      Icons.fastfood,
+                                      color: isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
                               )
                             : Icon(
                                 Icons.fastfood,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                       ),
                     ),
@@ -984,7 +1029,9 @@ class ModernTopItemTile extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: isDarkMode ? Colors.white : const Color(0xFF2D2D2D),
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF2D2D2D),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -996,7 +1043,12 @@ class ModernTopItemTile extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 126, 74, 248).withOpacity(0.1),
+                          color: const Color.fromARGB(
+                            255,
+                            126,
+                            74,
+                            248,
+                          ).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
