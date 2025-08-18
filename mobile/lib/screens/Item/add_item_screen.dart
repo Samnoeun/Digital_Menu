@@ -284,7 +284,14 @@ class _AddItemScreenState extends State<AddItemScreen>
           children: [
             const Icon(Icons.check_circle_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                ), // Explicit white text
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.green.shade600,
