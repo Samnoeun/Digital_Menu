@@ -63,7 +63,7 @@ class _AccountScreenState extends State<AccountScreen> {
       _statusMessage = message;
       _showSuccess = message.contains('successfully');
     });
-    
+
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
@@ -112,8 +112,12 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final primaryColor = isDarkMode ? Colors.deepPurple[600] : Colors.deepPurple;
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple[50];
+    final primaryColor = isDarkMode
+        ? Colors.deepPurple[600]
+        : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode
+        ? Colors.grey[900]
+        : Colors.deepPurple[50];
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final iconColor = isDarkMode ? Colors.white : Colors.deepPurple;
@@ -164,22 +168,52 @@ class _AccountScreenState extends State<AccountScreen> {
           : Column(
               children: [
                 if (_showSuccess)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    color: Colors.green,
-                    child: const Text(
-                      'Restaurant updated successfully',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade600,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      textAlign: TextAlign.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Restaurant updated successfully',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 24,
+                    ),
                     child: Form(
                       key: _formKey,
                       child: Column(
@@ -191,7 +225,12 @@ class _AccountScreenState extends State<AccountScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color.fromARGB(255, 80, 55, 127).withOpacity(0.2),
+                                    color: const Color.fromARGB(
+                                      255,
+                                      80,
+                                      55,
+                                      127,
+                                    ).withOpacity(0.2),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
                                   ),
@@ -202,19 +241,22 @@ class _AccountScreenState extends State<AccountScreen> {
                                 children: [
                                   CircleAvatar(
                                     radius: 80,
-                                    backgroundColor: isDarkMode 
-                                        ? Colors.grey[700] 
+                                    backgroundColor: isDarkMode
+                                        ? Colors.grey[700]
                                         : Colors.white,
                                     backgroundImage: _getProfileImage(),
                                     child: _showProfilePlaceholder(isDarkMode),
                                   ),
                                   Container(
                                     decoration: BoxDecoration(
-                                      color: isDarkMode ? Colors.grey[800] : Colors.white,
+                                      color: isDarkMode
+                                          ? Colors.grey[800]
+                                          : Colors.white,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: primaryColor!, 
-                                        width: 2),
+                                        color: primaryColor!,
+                                        width: 2,
+                                      ),
                                     ),
                                     padding: const EdgeInsets.all(6),
                                     child: Icon(
@@ -233,14 +275,19 @@ class _AccountScreenState extends State<AccountScreen> {
                             decoration: InputDecoration(
                               labelText: 'Restaurant Name',
                               hintText: 'Enter restaurant name',
-                              prefixIcon: Icon(Icons.restaurant, color: iconColor),
+                              prefixIcon: Icon(
+                                Icons.restaurant,
+                                color: iconColor,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               filled: true,
                               fillColor: cardColor,
                               labelStyle: TextStyle(color: textColor),
-                              hintStyle: TextStyle(color: textColor.withOpacity(0.7)),
+                              hintStyle: TextStyle(
+                                color: textColor.withOpacity(0.7),
+                              ),
                             ),
                             validator: (val) {
                               if (val == null || val.trim().isEmpty) {
@@ -257,14 +304,19 @@ class _AccountScreenState extends State<AccountScreen> {
                             decoration: InputDecoration(
                               labelText: 'Address',
                               hintText: 'Enter restaurant address',
-                              prefixIcon: Icon(Icons.location_on, color: iconColor),
+                              prefixIcon: Icon(
+                                Icons.location_on,
+                                color: iconColor,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               filled: true,
                               fillColor: cardColor,
                               labelStyle: TextStyle(color: textColor),
-                              hintStyle: TextStyle(color: textColor.withOpacity(0.7)),
+                              hintStyle: TextStyle(
+                                color: textColor.withOpacity(0.7),
+                              ),
                             ),
                             validator: (val) {
                               if (val == null || val.trim().isEmpty) {
@@ -324,8 +376,8 @@ class _AccountScreenState extends State<AccountScreen> {
     if (_profileImage != null) return null;
     if (_restaurant?.profile == null || _restaurant!.profile!.isEmpty) {
       return Icon(
-        Icons.restaurant, 
-        size: 60, 
+        Icons.restaurant,
+        size: 60,
         color: isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple,
       );
     }

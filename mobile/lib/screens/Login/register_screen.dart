@@ -23,6 +23,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? passwordError;
   String? confirmPasswordError;
   String? generalError;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   bool isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
@@ -94,7 +96,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() {
       isLoading = true;
-      generalError = null;
+      emailError = null; // Clear previous errors
     });
 
     try {
@@ -105,9 +107,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         confirmPassword: confirmPasswordController.text.trim(),
       );
 
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registered successfully")),
+          const SnackBar(content: Text("Registration successful!")),
         );
         Navigator.pushReplacement(
           context,
@@ -117,16 +119,225 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } catch (e) {
-      setState(() {
-        generalError = e.toString();
-      });
-    } finally {
-      if (context.mounted) {
+      if (mounted) {
         setState(() {
-          isLoading = false;
+          // Handle specific error cases
+          if (e.toString().contains("email is already taken") || 
+              e.toString().contains("email already exists")) {
+            emailError = "This email is already registered";
+          } else if (!isValidEmail(emailController.text.trim())) {
+            emailError = "Please enter a valid email";
+          } else {
+            // For other errors, still show on email field but generic message
+            emailError = "Registration failed. Please try again";
+          }
         });
       }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
+  }
+
+  Widget _buildEmailField(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 70,
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: emailError != null ? Colors.red : Colors.grey.shade400,
+              width: 2.0,
+            ),
+          ),
+          child: TextField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            onChanged: (value) {
+              if (emailError != null) {
+                setState(() => emailError = null);
+              }
+            },
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
+              prefixIcon: Icon(
+                Icons.email_outlined,
+                color: emailError != null ? Colors.red : Colors.grey.shade600,
+                size: 28,
+              ),
+              border: InputBorder.none,
+              hintText: 'Email',
+              hintStyle: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            style: TextStyle(
+              fontSize: 18,
+            ),
+          ),
+        ),
+        if (emailError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              emailError!,
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStyledTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool isPassword = false,
+    TextInputType? keyboardType,
+    String? errorText,
+    required bool isDark,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 70,
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: errorText != null
+                  ? Colors.red
+                  : isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+              width: 2.0,
+            ),
+          ),
+          child: TextField(
+            controller: controller,
+            obscureText: isPassword 
+                ? (label == 'Password' ? _obscurePassword : _obscureConfirmPassword)
+                : false,
+            keyboardType: keyboardType,
+            onChanged: (value) {
+              if (errorText != null) {
+                setState(() {
+                  if (controller == nameController) nameError = null;
+                  if (controller == passwordController) passwordError = null;
+                  if (controller == confirmPasswordController) confirmPasswordError = null;
+                });
+              }
+            },
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
+              prefixIcon: label.contains('Password') ? null : Icon(
+                icon,
+                color: errorText != null
+                    ? Colors.red
+                    : isDark ? Colors.white70 : Colors.grey.shade600,
+                size: 28,
+              ),
+              suffixIcon: isPassword ? IconButton(
+                icon: Icon(
+                  label == 'Password'
+                    ? _obscurePassword ? Icons.visibility_off : Icons.visibility
+                    : _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                  color: isDark ? Colors.white70 : Colors.grey.shade600,
+                  size: 20, // Smaller size for password visibility icons
+                ),
+                onPressed: () {
+                  setState(() {
+                    if (label == 'Password') {
+                      _obscurePassword = !_obscurePassword;
+                    } else {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    }
+                  });
+                },
+              ) : null,
+              border: InputBorder.none,
+              hintText: label,
+              hintStyle: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            style: TextStyle(
+              fontSize: 18,
+            ),
+          ),
+        ),
+        if (errorText != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Text(
+              errorText,
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 16,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 140,
+        height: 60,
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey.shade800 : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -143,8 +354,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
               height: 300,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
                   colors: [
                     Colors.deepPurple.shade400,
                     Colors.deepPurple.shade600,
@@ -163,8 +372,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: 200,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
                     colors: [
                       Colors.deepPurple.shade200.withOpacity(0.3),
                       Colors.deepPurple.shade300.withOpacity(0.2),
@@ -176,12 +383,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(28.0),
               child: SingleChildScrollView(
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 80),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -206,12 +412,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               color: isDark ? Colors.white : Colors.deepPurple,
                               letterSpacing: 1.2,
                             ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
                     const SizedBox(height: 40),
                     Container(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(30),
                       decoration: BoxDecoration(
                         color: isDark ? Colors.grey.shade800 : Colors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -230,29 +435,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             Text(
                               'Create Account',
                               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                    fontSize: 24,
+                                    fontSize: 30,
                                     fontWeight: FontWeight.bold,
                                     color: isDark ? Colors.white : Colors.deepPurple,
                                   ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 30),
                             if (generalError != null)
                               Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.all(12),
-                                margin: const EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.all(16),
+                                margin: const EdgeInsets.only(bottom: 20),
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.red.shade200),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.red.shade200, width: 2),
                                 ),
                                 child: Text(
                                   generalError!,
                                   style: TextStyle(
                                     color: Colors.red.shade700,
-                                    fontSize: 14,
+                                    fontSize: 16,
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             _buildStyledTextField(
@@ -262,16 +466,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               errorText: nameError,
                               isDark: isDark,
                             ),
-                            const SizedBox(height: 16),
-                            _buildStyledTextField(
-                              controller: emailController,
-                              label: 'Email',
-                              icon: Icons.email_outlined,
-                              keyboardType: TextInputType.emailAddress,
-                              errorText: emailError,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 25),
+                            _buildEmailField(isDark),
+                            const SizedBox(height: 25),
                             _buildStyledTextField(
                               controller: passwordController,
                               label: 'Password',
@@ -280,7 +477,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               errorText: passwordError,
                               isDark: isDark,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 25),
                             _buildStyledTextField(
                               controller: confirmPasswordController,
                               label: 'Confirm Password',
@@ -289,72 +486,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               errorText: confirmPasswordError,
                               isDark: isDark,
                             ),
-                            const SizedBox(height: 24),
-                            Container(
+                            const SizedBox(height: 35),
+                            SizedBox(
                               width: double.infinity,
-                              height: 55,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.deepPurple.shade400,
-                                    Colors.deepPurple.shade600,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(15),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.deepPurple.withOpacity(0.3),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
+                              height: 70,
                               child: ElevatedButton(
                                 onPressed: isLoading ? null : registerUser,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.transparent,
-                                  shadowColor: Colors.transparent,
+                                  backgroundColor: Colors.deepPurple,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
+                                  elevation: 5,
+                                  padding: const EdgeInsets.symmetric(vertical: 20),
                                 ),
                                 child: isLoading
                                     ? const CircularProgressIndicator(
                                         color: Colors.white,
+                                        strokeWidth: 3,
                                       )
                                     : const Text(
                                         'Continue',
                                         style: TextStyle(
-                                          fontSize: 18,
+                                          fontSize: 20,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
                                       ),
                               ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 30),
                             Row(
                               children: [
                                 Expanded(
                                   child: Divider(
                                     color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                                    thickness: 1.5,
                                   ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   child: Text(
                                     'Or continue with',
-                                    style: Theme.of(context).textTheme.bodyMedium,
+                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                      fontSize: 16,
+                                    ),
                                   ),
                                 ),
                                 Expanded(
                                   child: Divider(
                                     color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+                                    thickness: 1.5,
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 30),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
@@ -362,18 +549,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   icon: Icons.g_mobiledata,
                                   label: 'Google',
                                   color: Colors.red,
-                                  onTap: () {
-                                    // Add Google sign-in logic
-                                  },
+                                  onTap: () {},
                                   isDark: isDark,
                                 ),
                                 _buildSocialButton(
                                   icon: Icons.apple,
                                   label: 'Apple',
                                   color: isDark ? Colors.white70 : Colors.black,
-                                  onTap: () {
-                                    // Add Apple sign-in logic
-                                  },
+                                  onTap: () {},
                                   isDark: isDark,
                                 ),
                               ],
@@ -382,13 +565,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 30),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           'Already have an account? ',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                            fontSize: 16,
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
@@ -405,7 +590,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             'Login',
                             style: TextStyle(
                               color: isDark ? Colors.white70 : Colors.deepPurple,
-                              fontSize: 16,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -418,139 +603,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStyledTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool isPassword = false,
-    TextInputType? keyboardType,
-    String? errorText,
-    required bool isDark,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(
-              color: errorText != null
-                  ? Colors.red.shade300
-                  : isDark
-                      ? Colors.grey.shade700
-                      : Colors.grey.shade200,
-              width: errorText != null ? 2 : 1,
-            ),
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: isPassword,
-            keyboardType: keyboardType,
-            onChanged: (value) {
-              if (errorText != null) {
-                setState(() {
-                  if (controller == nameController) {
-                    nameError = null;
-                  } else if (controller == emailController) {
-                    emailError = null;
-                  } else if (controller == passwordController) {
-                    passwordError = null;
-                  } else if (controller == confirmPasswordController) {
-                    confirmPasswordError = null;
-                  }
-                });
-              }
-            },
-            decoration: InputDecoration(
-              labelText: label,
-              prefixIcon: Icon(
-                icon,
-                color: errorText != null
-                    ? Colors.red.shade400
-                    : isDark
-                        ? Colors.white70
-                        : Colors.deepPurple.shade400,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 16,
-              ),
-              labelStyle: TextStyle(
-                color: errorText != null
-                    ? Colors.red.shade600
-                    : isDark
-                        ? Colors.white70
-                        : Colors.grey.shade600,
-              ),
-            ),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-        ),
-        if (errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, left: 16),
-            child: Text(
-              errorText,
-              style: TextStyle(
-                color: Colors.red.shade600,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    required bool isDark,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 120,
-        height: 50,
-        decoration: BoxDecoration(
-          color: isDark ? Colors.grey.shade800 : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: color,
-              size: 28,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -11,7 +11,7 @@ import 'dart:typed_data'; // For Uint8List
 import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.191:8000/api';
+  static const String baseUrl = 'http://192.168.108.128:8000/api';
 
   static String? _token;
 

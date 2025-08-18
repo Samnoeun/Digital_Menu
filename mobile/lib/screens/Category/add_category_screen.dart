@@ -48,39 +48,45 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+ Future<void> _submit() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    try {
-      setState(() {
-        _isLoading = true;
-        _isDuplicateName = false;
-      });
+  try {
+    setState(() {
+      _isLoading = true;
+      _isDuplicateName = false;
+    });
 
-      if (widget.category == null) {
-        await ApiService.createCategory(_nameController.text);
-        _showSuccessSnackbar('Category added successfully');
-      } else {
-        await ApiService.updateCategory(
-          widget.category!.id,
-          _nameController.text,
-        );
-        _showSuccessSnackbar('Category updated successfully');
-      }
-      Navigator.pop(context, true);
-    } catch (e) {
-      if (e.toString().contains('Duplicate entry') ||
-          e.toString().contains('categories_name_unique')) {
-        setState(() {
-          _isDuplicateName = true;
-        });
-        _formKey.currentState!.validate();
-      }
-      _showErrorSnackbar('Category "${_nameController.text}" already exists');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    if (widget.category == null) {
+      // Create category
+      await ApiService.createCategory(_nameController.text);
+      _showSuccessSnackbar('Category added successfully');
+    } else {
+      // Update category
+      await ApiService.updateCategory(
+        widget.category!.id,
+        _nameController.text,
+      );
+      _showSuccessSnackbar('Category updated successfully');
     }
+
+    Navigator.pop(context, true);
+
+  } catch (e) {
+    // Laravel now returns 400 with message if duplicate for the same restaurant
+    if (e.toString().contains('Category name already exists')) {
+      setState(() {
+        _isDuplicateName = true;
+      });
+      _formKey.currentState!.validate();
+      _showErrorSnackbar('Category "${_nameController.text}" already exists for your restaurant');
+    } else {
+      _showErrorSnackbar('Error: ${e.toString()}');
+    }
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
 
   void _showSuccessSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -98,31 +104,22 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
       ),
     );
   }
-
-  void _showErrorSnackbar(String error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(child: Text(error)),
-          ],
-        ),
-        backgroundColor: Colors.red.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        action: error.contains('restaurant')
-            ? SnackBarAction(
-                label: 'Create Restaurant',
-                textColor: Colors.white,
-                onPressed: () =>
-                    Navigator.pushNamed(context, '/create-restaurant'),
-              )
-            : null,
+void _showErrorSnackbar(String error) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.white),
+          const SizedBox(width: 8),
+          Expanded(child: Text(error)),
+        ],
       ),
-    );
-  }
+      backgroundColor: Colors.red.shade600,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {

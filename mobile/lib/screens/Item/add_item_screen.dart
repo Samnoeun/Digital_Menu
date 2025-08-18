@@ -481,7 +481,6 @@ class _AddItemScreenState extends State<AddItemScreen>
                       ),
                       const SizedBox(height: 30),
 
-                      // Modify the Name TextFormField to include the duplicate check:
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 400),
                         child: TextFormField(
@@ -517,6 +516,30 @@ class _AddItemScreenState extends State<AddItemScreen>
                             errorText: _isDuplicateName
                                 ? '"${_nameController.text}" already exists'
                                 : null,
+                            errorStyle: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.red[400]
+                                  : Colors.red, // Red color for errors
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.red[400]!
+                                    : Colors.red, // Red border for errors
+                                width: 1.5,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.red[400]!
+                                    : Colors
+                                          .red, // Red border when focused with error
+                                width: 2,
+                              ),
+                            ),
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
@@ -617,6 +640,27 @@ class _AddItemScreenState extends State<AddItemScreen>
                             prefixIcon: Icon(
                               Icons.attach_money_rounded,
                               color: Colors.deepPurple.shade600,
+                            ),
+                            errorStyle: TextStyle(
+                              color: isDarkMode ? Colors.red[400] : Colors.red,
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.red[400]!
+                                    : Colors.red,
+                                width: 1.5,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.red[400]!
+                                    : Colors.red,
+                                width: 2,
+                              ),
                             ),
                           ),
                           style: TextStyle(

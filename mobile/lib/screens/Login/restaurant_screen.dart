@@ -33,13 +33,13 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         uploadInput.click();
 
         final completer = Completer<void>();
-        
+
         uploadInput.onChange.listen((e) {
           final files = uploadInput.files;
           if (files != null && files.isNotEmpty) {
             final file = files[0];
             final reader = html.FileReader();
-            
+
             reader.onLoadEnd.listen((e) {
               setState(() {
                 _webImageBytes = reader.result as Uint8List?;
@@ -48,7 +48,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               });
               completer.complete();
             });
-            
+
             reader.readAsArrayBuffer(file);
           } else {
             completer.complete();
@@ -69,9 +69,9 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
       }
     }
   }
@@ -115,9 +115,16 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
           'Setup Restaurant',
           style: Theme.of(context).appBarTheme.titleTextStyle,
         ),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+        backgroundColor: Colors.deepPurple.shade700, 
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -130,7 +137,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   child: CircleAvatar(
                     radius: 60,
                     backgroundColor: isDark
-                        ? Colors.deepPurple.shade700
+                        ? Colors.deepPurple.shade800
                         : Colors.deepPurple.shade100,
                     backgroundImage: _getProfileImage(),
                     child: _profileImage == null && _webImageBytes == null
@@ -150,7 +157,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   labelText: 'Restaurant Name',
                   prefixIcon: Icon(
                     Icons.restaurant,
-                    color: isDark ? Colors.black : Colors.deepPurple,
+                    color: isDark ? Colors.white : Colors.deepPurple,
                   ),
                   border: const OutlineInputBorder(),
                   labelStyle: Theme.of(context).textTheme.bodyMedium,
@@ -168,9 +175,10 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                 controller: _addressController,
                 decoration: InputDecoration(
                   labelText: 'Address',
+
                   prefixIcon: Icon(
                     Icons.location_on,
-                    color: isDark ? Colors.black : Colors.deepPurple,
+                    color: isDark ? Colors.white : Colors.deepPurple,
                   ),
                   border: const OutlineInputBorder(),
                   labelStyle: Theme.of(context).textTheme.bodyMedium,
@@ -183,7 +191,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 26),
               ElevatedButton(
                 onPressed: _submit,
                 style: Theme.of(context).elevatedButtonTheme.style,
