@@ -11,7 +11,7 @@ import 'dart:typed_data'; // For Uint8List
 import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class ApiService {
-  static const String baseUrl = 'https://qrmenu.zapto.org/api';
+  static const String baseUrl = 'http://192.168.108.40:8080/api';
 
   static String? _token;
 
@@ -669,4 +669,35 @@ static Future<void> updateRestaurant({
       throw Exception(data['message'] ?? 'Failed to send reset password email');
     }
   }
+  // Add this to your ApiService class
+static Future<List<dynamic>> getOrderHistory() async {
+  try {
+    final token = await getAuthToken();
+    if (token == null) throw Exception('Please login first');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/order-history'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      if (jsonResponse is! Map<String, dynamic> || !jsonResponse.containsKey('data')) {
+        throw Exception('Invalid API response format');
+      }
+      return jsonResponse['data'] as List<dynamic>;
+    } else if (response.statusCode == 401) {
+      await clearAuthToken();
+      throw Exception('Session expired. Please login again');
+    } else {
+      throw Exception('Failed to load order history: ${response.body}');
+    }
+  } catch (e) {
+    debugPrint('Error in getOrderHistory: $e');
+    rethrow;
+  }
+}
 }
