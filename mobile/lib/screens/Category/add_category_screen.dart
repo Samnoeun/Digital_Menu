@@ -15,6 +15,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   bool _isLoading = false;
+  bool _isDuplicateName = false;
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
@@ -47,85 +48,104 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     super.dispose();
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+ Future<void> _submit() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    try {
-      setState(() => _isLoading = true);
-      if (widget.category == null) {
-        await ApiService.createCategory(_nameController.text);
-        _showSuccessSnackbar('Category added successfully');
-      } else {
-        await ApiService.updateCategory(
-          widget.category!.id,
-          _nameController.text,
-        );
-        _showSuccessSnackbar('Category updated successfully');
-      }
-      Navigator.pop(context, true);
-    } catch (e) {
-      _showErrorSnackbar(e.toString());
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+  try {
+    setState(() {
+      _isLoading = true;
+      _isDuplicateName = false;
+    });
+
+    if (widget.category == null) {
+      // Create category
+      await ApiService.createCategory(_nameController.text);
+      _showSuccessSnackbar('Category added successfully');
+    } else {
+      // Update category
+      await ApiService.updateCategory(
+        widget.category!.id,
+        _nameController.text,
+      );
+      _showSuccessSnackbar('Category updated successfully');
     }
-  }
 
-  void _showSuccessSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: Colors.green.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
-  }
+    Navigator.pop(context, true);
 
-  void _showErrorSnackbar(String error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(child: Text(error)),
-          ],
-        ),
-        backgroundColor: Colors.red.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        action: error.contains('restaurant')
-            ? SnackBarAction(
-                label: 'Create Restaurant',
-                textColor: Colors.white,
-                onPressed: () =>
-                    Navigator.pushNamed(context, '/create-restaurant'),
-              )
-            : null,
-      ),
-    );
+  } catch (e) {
+    // Laravel now returns 400 with message if duplicate for the same restaurant
+    if (e.toString().contains('Category name already exists')) {
+      setState(() {
+        _isDuplicateName = true;
+      });
+      _formKey.currentState!.validate();
+      // _c('Category "${_nameController.text}" already exists for your restaurant');
+    } else {
+      // _showErrorSnackbar('Error: ${e.toString()}');
+    }
+  } finally {
+    if (mounted) setState(() => _isLoading = false);
   }
+}
+
+void _showSuccessSnackbar(String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.check_circle_outline, color: Colors.white),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.green.shade600,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      duration: const Duration(seconds: 2), // Optional: Add duration
+    ),
+  );
+}
+// void _showErrorSnackbar(String error) {
+//   ScaffoldMessenger.of(context).showSnackBar(
+//     SnackBar(
+//       content: Row(
+//         children: [
+//           const Icon(Icons.error_outline, color: Colors.white),
+//           const SizedBox(width: 8),
+//           Expanded(child: Text(error)),
+//         ],
+//       ),
+//       backgroundColor: Colors.red.shade600,
+//       behavior: SnackBarBehavior.floating,
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//     ),
+//   );
+// }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final primaryColor = isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple;
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50;
+    final primaryColor = isDarkMode
+        ? Colors.deepPurple[600]
+        : Colors.deepPurple;
+    final scaffoldBgColor = isDarkMode
+        ? Colors.grey[900]
+        : Colors.deepPurple.shade50;
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.white;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
-    final inputFillColor = isDarkMode ? Colors.grey[700] : Colors.deepPurple.shade50;
+    final inputFillColor = isDarkMode
+        ? Colors.grey[700]
+        : Colors.deepPurple.shade50;
+    final errorColor = Colors.red.shade400;
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
@@ -136,7 +156,11 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_ios, size: 18, color: Colors.white),
+                icon: const Icon(
+                  Icons.arrow_back_ios,
+                  size: 18,
+                  color: Colors.white,
+                ),
                 onPressed: () => Navigator.pop(context),
                 constraints: const BoxConstraints(),
                 padding: EdgeInsets.zero,
@@ -160,7 +184,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
             gradient: LinearGradient(
               colors: [
                 primaryColor!,
-                isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
+                isDarkMode
+                    ? Colors.deepPurple.shade600
+                    : Colors.deepPurple.shade600,
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -179,7 +205,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                 padding: const EdgeInsets.all(20.0),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height -
+                    minHeight:
+                        MediaQuery.of(context).size.height -
                         MediaQuery.of(context).padding.top -
                         kToolbarHeight -
                         40,
@@ -195,9 +222,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.1),
+                                color: const Color.fromARGB(
+                                  255,
+                                  71,
+                                  70,
+                                  70,
+                                ).withOpacity(isDarkMode ? 0.2 : 0.1),
                                 blurRadius: 20,
-                                offset: const Offset(0, 10),
+                                offset: const Offset(0, 5),
                               ),
                             ],
                           ),
@@ -213,7 +245,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                     gradient: LinearGradient(
                                       colors: [
                                         primaryColor,
-                                        isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
+                                        isDarkMode
+                                            ? Colors.deepPurple.shade500
+                                            : Colors.deepPurple.shade400,
                                       ],
                                     ),
                                     shape: BoxShape.circle,
@@ -253,50 +287,109 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   decoration: InputDecoration(
                                     labelText: 'Category Name',
                                     labelStyle: TextStyle(
-                                      color: primaryColor,
-                                     fontWeight: FontWeight.w600
+                                      color: _isDuplicateName
+                                          ? errorColor
+                                          : (isDarkMode
+                                                ? Colors.white
+                                                : primaryColor),
+                                      fontWeight: FontWeight.w600,
                                     ),
                                     hintText: 'Enter category name',
+                                    hintStyle: TextStyle(
+                                      color: isDarkMode
+                                          ? Colors.white70
+                                          : Colors.grey[600],
+                                    ),
                                     prefixIcon: Icon(
                                       Icons.label_outline,
-                                      color: primaryColor,
+                                      color: _isDuplicateName
+                                          ? errorColor
+                                          : (isDarkMode
+                                                ? Colors.white
+                                                : primaryColor),
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: isDarkMode ? Colors.grey[600]! : Colors.deepPurple.shade300,
+                                        color: _isDuplicateName
+                                            ? errorColor
+                                            : (isDarkMode
+                                                  ? Colors.grey[600]!
+                                                  : Colors.deepPurple.shade300),
                                       ),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: primaryColor,
+                                        color: _isDuplicateName
+                                            ? errorColor
+                                            : (isDarkMode
+                                                  ? Colors.white
+                                                  : primaryColor),
                                         width: 2,
                                       ),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       borderSide: BorderSide(
-                                        color: isDarkMode ? Colors.grey[600]! : Colors.deepPurple.shade300,
+                                        color: _isDuplicateName
+                                            ? errorColor
+                                            : (isDarkMode
+                                                  ? Colors.grey[600]!
+                                                  : Colors.deepPurple.shade300),
                                       ),
                                     ),
                                     filled: true,
-                                    fillColor: inputFillColor,
+                                    fillColor: isDarkMode
+                                        ? Colors.grey[800]
+                                        : inputFillColor,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 14,
+                                    ),
+                                    errorText: _isDuplicateName
+                                        ? 'Category name already exists'
+                                        : null,
+                                    errorStyle: TextStyle(
+                                      color: errorColor,
+                                      fontSize: 14,
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: errorColor,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: errorColor,
+                                        width: 2,
+                                      ),
                                     ),
                                   ),
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: textColor,
-                                    fontWeight: FontWeight.w600
+                                    fontWeight: FontWeight.w600,
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
                                       return 'Please enter a category name';
                                     }
+                                    if (_isDuplicateName) {
+                                      return '"$value" already exists. Please use a different name.';
+                                    }
                                     return null;
+                                  },
+                                  onChanged: (value) {
+                                    if (_isDuplicateName) {
+                                      setState(() {
+                                        _isDuplicateName = false;
+                                      });
+                                      _formKey.currentState?.validate();
+                                    }
                                   },
                                 ),
                                 const SizedBox(height: 24),
@@ -306,7 +399,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                     gradient: LinearGradient(
                                       colors: [
                                         primaryColor,
-                                        isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
+                                        isDarkMode
+                                            ? Colors.deepPurple.shade500
+                                            : Colors.deepPurple.shade400,
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(12),
@@ -326,6 +421,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
+                                      padding: const EdgeInsets.all(0),
                                     ),
                                     child: _isLoading
                                         ? const SizedBox(
@@ -337,7 +433,8 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                             ),
                                           )
                                         : Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Icon(
                                                 widget.category == null
