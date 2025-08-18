@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'qr_scanner_screen.dart';
 
 class QrScreen extends StatefulWidget {
@@ -13,7 +14,7 @@ class _QrScreenState extends State<QrScreen> {
   final TextEditingController _textController = TextEditingController();
   String qrText = '';
   bool showQR = false;
-  String _language = 'Khmer'; // Default language
+  String _language = 'English'; // Default language, will be overridden by SharedPreferences
 
   // Localization map for English and Khmer
   final Map<String, Map<String, String>> localization = {
@@ -42,6 +43,21 @@ class _QrScreenState extends State<QrScreen> {
       'qr_info': 'ព័ត៌មានបន្ថែម៖ អ្នកអាចស្កេន QR Code នេះ ដោយប្រើកម្មវិធីស្កេន QR ឬកាមេរ៉ារបស់អ្នក។',
     },
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage(); // Load saved language on initialization
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      _language = savedLanguage;
+    });
+  }
 
   @override
   void dispose() {
@@ -108,9 +124,10 @@ class _QrScreenState extends State<QrScreen> {
               ),
               Text(
                 localization[_language]!['app_bar_title']!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ],
@@ -157,12 +174,21 @@ class _QrScreenState extends State<QrScreen> {
                 ),
                 filled: true,
                 fillColor: cardBackgroundColor,
-                labelStyle: TextStyle(color: primaryColor),
-                hintStyle: TextStyle(color: secondaryTextColor),
+                labelStyle: TextStyle(
+                  color: primaryColor,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+                hintStyle: TextStyle(
+                  color: secondaryTextColor,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
                 contentPadding: const EdgeInsets.symmetric(
                     vertical: 16.0, horizontal: 16.0),
               ),
-              style: TextStyle(color: textColor),
+              style: TextStyle(
+                color: textColor,
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
               maxLines: 3,
               onChanged: (val) {
                 if (showQR && val.trim() != qrText) {
@@ -175,7 +201,12 @@ class _QrScreenState extends State<QrScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.qr_code),
-                label: Text(localization[_language]!['generate_button']!),
+                label: Text(
+                  localization[_language]!['generate_button']!,
+                  style: TextStyle(
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
+                ),
                 onPressed: _generateQR,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
@@ -195,6 +226,7 @@ class _QrScreenState extends State<QrScreen> {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: primaryColor,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
               const SizedBox(height: 16),
@@ -238,6 +270,7 @@ class _QrScreenState extends State<QrScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: primaryColor,
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -246,6 +279,7 @@ class _QrScreenState extends State<QrScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         color: textColor,
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -258,6 +292,7 @@ class _QrScreenState extends State<QrScreen> {
                 style: TextStyle(
                   color: secondaryTextColor,
                   fontSize: 13,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
                 textAlign: TextAlign.center,
               ),
