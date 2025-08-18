@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'account_screen.dart';
 import '../Login/login_screen.dart';
 
@@ -12,7 +13,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool isDarkMode = false;
-  String selectedLanguage = 'English';
+  String selectedLanguage = 'English'; // Default value
 
   final Map<String, Map<String, String>> localization = {
     'English': {
@@ -38,11 +39,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadSavedLanguage(); // Load saved language on initialization
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         isDarkMode = Theme.of(context).brightness == Brightness.dark;
       });
     });
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
+  }
+
+  // Save the selected language to SharedPreferences
+  Future<void> _saveLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedLanguage', language);
   }
 
   void _toggleDarkMode(bool value) {
@@ -109,6 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () {
                       setState(() {
                         selectedLanguage = tempSelected;
+                        _saveLanguage(tempSelected); // Save the selected language
                       });
                       Navigator.pop(context);
                     },
