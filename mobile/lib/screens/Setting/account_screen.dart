@@ -9,7 +9,9 @@ import '../../services/api_services.dart';
 import '../../models/restaurant_model.dart';
 
 class AccountScreen extends StatefulWidget {
-  const AccountScreen({super.key});
+  final String selectedLanguage;
+  final Function(bool) onThemeToggle;
+  const AccountScreen({super.key, required this.selectedLanguage, required this.onThemeToggle});
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -26,6 +28,33 @@ class _AccountScreenState extends State<AccountScreen> {
   Restaurant? _restaurant;
   bool _isLoading = true;
   bool _isSaving = false;
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'edit_restaurant': 'Edit Restaurant',
+      'restaurant_name': 'Restaurant Name',
+      'enter_restaurant_name': 'Enter restaurant name',
+      'address': 'Address',
+      'enter_address': 'Enter restaurant address',
+      'save_changes': 'SAVE CHANGES',
+      'failed_to_load': 'Failed to load restaurant data',
+      'update_success': '✅ Restaurant updated successfully',
+      'update_error': '❌ Error',
+      'failed_to_pick_image': 'Failed to pick image',
+    },
+    'Khmer': {
+      'edit_restaurant': 'កែសម្រួលភោជនីយដ្ឋាន',
+      'restaurant_name': 'ឈ្មោះភោជនីយដ្ឋាន',
+      'enter_restaurant_name': 'បញ្ចូលឈ្មោះភោជនីយដ្ឋាន',
+      'address': 'អាសយដ្ឋាន',
+      'enter_address': 'បញ្ចូលអាសយដ្ឋានភោជនីយដ្ឋាន',
+      'save_changes': 'រក្សាទុកការផ្លាស់ប្តូរ',
+      'failed_to_load': 'បរាជ័យក្នុងការផ្ទុកទិន្នន័យភោជនីយដ្ឋាន',
+      'update_success': '✅ ភោជនីយដ្ឋានបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ',
+      'update_error': '❌ កំហុស',
+      'failed_to_pick_image': 'បរាជ័យក្នុងការជ្រើសរើសរូបភាព',
+    },
+  };
 
   @override
   void initState() {
@@ -48,7 +77,7 @@ class _AccountScreenState extends State<AccountScreen> {
       debugPrint('Error loading restaurant data: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load restaurant data: $e')),
+          SnackBar(content: Text(localization[widget.selectedLanguage]!['failed_to_load']!)),
         );
       }
     } finally {
@@ -101,7 +130,7 @@ class _AccountScreenState extends State<AccountScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to pick image: $e')),
+          SnackBar(content: Text(localization[widget.selectedLanguage]!['failed_to_pick_image']!)),
         );
       }
     }
@@ -126,8 +155,8 @@ class _AccountScreenState extends State<AccountScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Restaurant updated successfully'),
+          SnackBar(
+            content: Text(localization[widget.selectedLanguage]!['update_success']!),
             backgroundColor: Colors.green,
           ),
         );
@@ -137,7 +166,7 @@ class _AccountScreenState extends State<AccountScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ Error: ${e.toString()}'),
+            content: Text('${localization[widget.selectedLanguage]!['update_error']!}: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -146,6 +175,19 @@ class _AccountScreenState extends State<AccountScreen> {
       if (mounted) setState(() => _isSaving = false);
     }
   }
+
+  TextStyle getTextStyle({bool isLabel = false, bool isHint = false}) {
+    final theme = Theme.of(context);
+    return TextStyle(
+      fontFamily: widget.selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: isLabel ? 16 : 14,
+      color: isHint
+          ? theme.textTheme.bodyMedium!.color!.withOpacity(0.7)
+          : theme.textTheme.bodyLarge!.color,
+      fontWeight: isLabel ? FontWeight.w600 : FontWeight.w400,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -155,6 +197,7 @@ class _AccountScreenState extends State<AccountScreen> {
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final iconColor = isDarkMode ? Colors.white : Colors.deepPurple;
+    final lang = localization[widget.selectedLanguage]!;
 
     return Scaffold(
       appBar: AppBar(
@@ -173,11 +216,12 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Edit Restaurant',
+                lang['edit_restaurant']!,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 20,
                   color: Colors.white,
+                  fontFamily: widget.selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ],
@@ -243,24 +287,24 @@ class _AccountScreenState extends State<AccountScreen> {
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
-                        labelText: 'Restaurant Name',
-                        hintText: 'Enter restaurant name',
+                        labelText: lang['restaurant_name'],
+                        hintText: lang['enter_restaurant_name'],
                         prefixIcon: Icon(Icons.restaurant, color: iconColor),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                         filled: true,
                         fillColor: cardColor,
-                        labelStyle: TextStyle(color: textColor),
-                        hintStyle: TextStyle(color: textColor.withOpacity(0.7)),
+                        labelStyle: getTextStyle(isLabel: true),
+                        hintStyle: getTextStyle(isHint: true),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
-                          return 'Please enter restaurant name';
+                          return lang['enter_restaurant_name'];
                         }
                         return null;
                       },
-                      style: TextStyle(color: textColor),
+                      style: getTextStyle(),
                     ),
                     const SizedBox(height: 28),
 
@@ -269,24 +313,24 @@ class _AccountScreenState extends State<AccountScreen> {
                       controller: _addressController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        labelText: 'Address',
-                        hintText: 'Enter restaurant address',
+                        labelText: lang['address'],
+                        hintText: lang['enter_address'],
                         prefixIcon: Icon(Icons.location_on, color: iconColor),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                         filled: true,
                         fillColor: cardColor,
-                        labelStyle: TextStyle(color: textColor),
-                        hintStyle: TextStyle(color: textColor.withOpacity(0.7)),
+                        labelStyle: getTextStyle(isLabel: true),
+                        hintStyle: getTextStyle(isHint: true),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
-                          return 'Please enter address';
+                          return lang['enter_address'];
                         }
                         return null;
                       },
-                      style: TextStyle(color: textColor),
+                      style: getTextStyle(),
                     ),
                     const SizedBox(height: 36),
 
@@ -307,13 +351,14 @@ class _AccountScreenState extends State<AccountScreen> {
                             ? const CircularProgressIndicator(
                                 color: Colors.white,
                               )
-                            : const Text(
-                                'SAVE CHANGES',
+                            : Text(
+                                lang['save_changes']!,
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
                                   letterSpacing: 1.2,
                                   color: Colors.white,
+                                  fontFamily: widget.selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                       ),

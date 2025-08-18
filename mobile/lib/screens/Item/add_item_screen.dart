@@ -474,7 +474,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                             prefixIcon: Icon(
                               Icons.restaurant_menu,
-                              color: Colors.deepPurple.shade600,
+                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                           ),
                           style: TextStyle(
@@ -515,7 +515,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                             prefixIcon: Icon(
                               Icons.description_rounded,
-                              color: Colors.deepPurple.shade600,
+                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                           ),
                           style: TextStyle(
@@ -551,7 +551,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                             prefixIcon: Icon(
                               Icons.attach_money_rounded,
-                              color: Colors.deepPurple.shade600,
+                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                           ),
                           style: TextStyle(
@@ -612,7 +612,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                             prefixIcon: Icon(
                               Icons.category_rounded,
-                              color: Colors.deepPurple.shade600,
+                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                           ),
                           dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
