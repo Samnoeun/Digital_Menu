@@ -33,10 +33,10 @@ migrate_working_dir/
 .pub/
 
 # Ignore all build folders
-/build/
-
+/build/*
 # But allow build/web to be committed
 !/build/web
+!/build/web/**
 
 # Symbolication related
 app.*.symbols

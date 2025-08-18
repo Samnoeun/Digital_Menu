@@ -15,9 +15,11 @@ dependencies:
   permission_handler: ^11.3.1
   qr_flutter: ^4.1.0
   http: ^1.4.0
-  intl: ^0.18.1
+  # intl: ^0.18.1
   # shared_preferences: ^2.1.0
   shared_preferences: ^2.2.3
+  intl: ^0.20.2
+  # shared_preferences: ^2.1.0
   image_picker_web: ^3.0.0
   universal_html: ^2.2.1
   mobile_scanner: ^3.5.5
@@ -30,6 +32,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
   assets:
     - assets/logo/app_logo.png
     - assets/home/banner.png

@@ -518,7 +518,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 : Colors.white,
                             prefixIcon: Icon(
                               Icons.restaurant_menu,
-                              color: Colors.deepPurple.shade600,
+                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                             errorText: _isDuplicateName
                                 ? '"${_nameController.text}" already exists'
@@ -604,7 +604,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 : Colors.white,
                             prefixIcon: Icon(
                               Icons.description_rounded,
-                              color: Colors.deepPurple.shade600,
+                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                           ),
                           style: TextStyle(
@@ -646,7 +646,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 : Colors.white,
                             prefixIcon: Icon(
                               Icons.attach_money_rounded,
-                              color: Colors.deepPurple.shade600,
+                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                             errorStyle: TextStyle(
                               color: isDarkMode ? Colors.red[400] : Colors.red,
@@ -738,7 +738,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 : Colors.white,
                             prefixIcon: Icon(
                               Icons.category_rounded,
-                              color: Colors.deepPurple.shade600,
+                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                           ),
                           dropdownColor: isDarkMode

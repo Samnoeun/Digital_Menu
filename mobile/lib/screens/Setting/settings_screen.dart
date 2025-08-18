@@ -149,8 +149,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       color: isGray
           ? Theme.of(context).textTheme.bodyMedium!.color
           : isSubtitle
-          ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
-          : Theme.of(context).textTheme.bodyLarge!.color,
+              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+              : Theme.of(context).textTheme.bodyLarge!.color,
       fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
     );
   }
@@ -172,7 +172,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         elevation: 0,
         automaticallyImplyLeading: false,
-
         title: Padding(
           padding: const EdgeInsets.only(left: 0, right: 0),
           child: Row(
@@ -183,24 +182,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Icons.arrow_back_ios,
                   size: 18,
                   color: Colors.white,
-                ), // Added color here
+                ),
                 onPressed: () => Navigator.pop(context),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(
-                width: 0,
-              ), 
+              const SizedBox(width: 0),
               Text(
                 lang['settings']!,
                 style: const TextStyle(
                   color: Colors.white,
-                ), 
+                ),
               ),
             ],
           ),
         ),
-
         backgroundColor: Colors.deepPurple.shade700,
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -261,7 +257,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.arrow_forward_ios, size: 18),
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const AccountScreen()),
+              MaterialPageRoute(
+                builder: (_) => AccountScreen(
+                  selectedLanguage: selectedLanguage,
+                  onThemeToggle: widget.onThemeToggle,
+                ),
+              ),
             ),
           ),
           const Divider(indent: 24, endIndent: 24, thickness: 1, height: 32),
