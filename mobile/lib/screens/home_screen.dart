@@ -700,7 +700,7 @@ Future<void> _loadData() async {
                   value: card['value'] as String,
                   icon: card['icon'] as IconData,
                   iconColor: card['color'] as Color,
-                  backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                  backgroundColor: isDarkMode ? const Color.fromARGB(255, 57, 57, 57) : Colors.white,
                 ),
               ),
             );
@@ -929,7 +929,7 @@ class ModernTopItemTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white,
+        color: isDarkMode ? const Color.fromARGB(255, 49, 49, 49) : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(

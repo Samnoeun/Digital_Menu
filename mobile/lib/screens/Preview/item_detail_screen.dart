@@ -18,7 +18,7 @@ class ItemDetailBottomSheet extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.6,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white,
+        color: isDarkMode ? const Color.fromARGB(255, 42, 42, 42) : Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
