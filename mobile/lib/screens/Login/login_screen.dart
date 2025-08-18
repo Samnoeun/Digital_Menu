@@ -390,83 +390,90 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildPasswordField(bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(
+ Widget _buildPasswordField(bool isDark) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: passwordError != null
+                ? Colors.red.shade400
+                : isDark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade200,
+            width: passwordError != null ? 1.5 : 1,
+          ),
+        ),
+        child: TextField(
+          controller: passwordController,
+          obscureText: _obscurePassword,
+          onChanged: (value) {
+            if (passwordError != null) {
+              setState(() {
+                passwordError = null;
+              });
+            }
+          },
+          decoration: InputDecoration(
+            labelText: 'Password',
+            labelStyle: TextStyle(
               color: passwordError != null
                   ? Colors.red.shade400
                   : isDark
-                      ? Colors.grey.shade700
-                      : Colors.grey.shade200,
-              width: passwordError != null ? 1.5 : 1,
+                      ? Colors.white70
+                      : Colors.deepPurple.shade400,
+            ),
+            prefixIcon: Icon(
+              Icons.lock_outline,
+              color: passwordError != null
+                  ? Colors.red.shade400
+                  : isDark
+                      ? Colors.white70
+                      : Colors.deepPurple.shade400,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: isDark ? Colors.white70 : Colors.grey.shade600,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            errorStyle: TextStyle(
+              color: Colors.red.shade400,
+              fontSize: 12,
             ),
           ),
-          child: TextField(
-            controller: passwordController,
-            obscureText: _obscurePassword,
-            onChanged: (value) {
-              if (passwordError != null) {
-                setState(() {
-                  passwordError = null;
-                });
-              }
-            },
-            decoration: InputDecoration(
-              labelText: 'Password',
-              labelStyle: TextStyle(
-                color: passwordError != null
-                    ? Colors.red.shade400
-                    : isDark
-                        ? Colors.white70
-                        : Colors.deepPurple.shade400,
-              ),
-              // Removed the lock icon prefix
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: isDark ? Colors.white70 : Colors.grey.shade600,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 16,
-              ),
-              errorStyle: TextStyle(
-                color: Colors.red.shade400,
-                fontSize: 12,
-              ),
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      ),
+      if (passwordError != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8, left: 16),
+          child: Text(
+            passwordError!,
+            style: TextStyle(
+              color: Colors.red.shade400,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-            style: Theme.of(context).textTheme.bodyLarge,
           ),
         ),
-        if (passwordError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, left: 16),
-            child: Text(
-              passwordError!,
-              style: TextStyle(
-                color: Colors.red.shade400,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+    ],
+  );
+}
 
   Widget _buildEmailField(bool isDark) {
     return Column(

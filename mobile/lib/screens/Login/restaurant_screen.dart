@@ -110,6 +110,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(
           'Setup Restaurant',

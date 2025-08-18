@@ -79,9 +79,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
         _isDuplicateName = true;
       });
       _formKey.currentState!.validate();
-      _showErrorSnackbar('Category "${_nameController.text}" already exists for your restaurant');
+      // _c('Category "${_nameController.text}" already exists for your restaurant');
     } else {
-      _showErrorSnackbar('Error: ${e.toString()}');
+      // _showErrorSnackbar('Error: ${e.toString()}');
     }
   } finally {
     if (mounted) setState(() => _isLoading = false);
@@ -112,22 +112,22 @@ void _showSuccessSnackbar(String message) {
     ),
   );
 }
-void _showErrorSnackbar(String error) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          const Icon(Icons.error_outline, color: Colors.white),
-          const SizedBox(width: 8),
-          Expanded(child: Text(error)),
-        ],
-      ),
-      backgroundColor: Colors.red.shade600,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    ),
-  );
-}
+// void _showErrorSnackbar(String error) {
+//   ScaffoldMessenger.of(context).showSnackBar(
+//     SnackBar(
+//       content: Row(
+//         children: [
+//           const Icon(Icons.error_outline, color: Colors.white),
+//           const SizedBox(width: 8),
+//           Expanded(child: Text(error)),
+//         ],
+//       ),
+//       backgroundColor: Colors.red.shade600,
+//       behavior: SnackBarBehavior.floating,
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//     ),
+//   );
+// }
 
   @override
   Widget build(BuildContext context) {
