@@ -2,19 +2,70 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/menu_item.dart';
 
-class QRMenuViewScreen extends StatelessWidget {
+class QRMenuViewScreen extends StatefulWidget {
   final List<MenuItem> menuItems;
 
   const QRMenuViewScreen({super.key, required this.menuItems});
 
+  @override
+  State<QRMenuViewScreen> createState() => _QRMenuViewScreenState();
+}
+
+class _QRMenuViewScreenState extends State<QRMenuViewScreen> {
+  String _language = 'English'; // Default language, will be overridden by SharedPreferences
+
+  // Localization map for English and Khmer
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'app_bar_title': 'Generate QR Code',
+      'info_text': 'Selected {count} item(s) for QR code generation',
+      'generate_button': 'Generate QR Code',
+      'refresh_tooltip': 'Refresh QR Code',
+      'dialog_title': 'Scan QR Code to View Menu',
+      'dialog_subtitle': 'Menu contains {count} item(s)',
+      'close_button': 'Close',
+      'copy_button': 'Copy Data',
+      'preview_button': 'Preview',
+      'copy_snackbar': 'Menu data copied to clipboard!',
+    },
+    'Khmer': {
+      'app_bar_title': 'បង្កើត QR Code',
+      'info_text': 'បានជ្រើសរើស {count} មុខទំនិញសម្រាប់បង្កើត QR Code',
+      'generate_button': 'បង្កើត QR Code',
+      'refresh_tooltip': 'ធ្វើឱ្យ QR Code ស្រស់',
+      'dialog_title': 'ស្កេន QR Code ដើម្បីមើលម៉ឺនុយ',
+      'dialog_subtitle': 'ម៉ឺនុយមាន {count} មុខទំនិញ',
+      'close_button': 'បិទ',
+      'copy_button': 'ចម្លងទិន្នន័យ',
+      'preview_button': 'មើលជាមុន',
+      'copy_snackbar': 'ទិន្នន័យម៉ឺនុយត្រូវបានចម្លងទៅក្តារតម្បៀតខ្ទប់!',
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage(); // Load saved language on initialization
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      _language = savedLanguage;
+    });
+  }
+
   String _generateMenuJson() {
     // Create a JSON structure for the menu
     final menuData = {
-      'restaurant': 'Digital Menu Restaurant',
+      'restaurant': localization[_language]!['app_bar_title']!.replaceAll(' QR Code', ''),
       'timestamp': DateTime.now().toIso8601String(),
-      'menu_items': menuItems
+      'menu_items': widget.menuItems
           .map(
             (item) => {
               'id': item.id,
@@ -43,9 +94,13 @@ class QRMenuViewScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Scan QR Code to View Menu',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  localization[_language]!['dialog_title']!,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
@@ -68,8 +123,11 @@ class QRMenuViewScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Menu contains ${menuItems.length} item(s)',
-                  style: const TextStyle(color: Colors.grey),
+                  localization[_language]!['dialog_subtitle']!.replaceAll('{count}', widget.menuItems.length.toString()),
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -77,18 +135,28 @@ class QRMenuViewScreen extends StatelessWidget {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Close'),
+                      child: Text(
+                        localization[_language]!['close_button']!,
+                        style: TextStyle(
+                          fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                        ),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: menuJson));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Menu data copied to clipboard!'),
+                          SnackBar(
+                            content: Text(localization[_language]!['copy_snackbar']!),
                           ),
                         );
                       },
-                      child: const Text('Copy Data'),
+                      child: Text(
+                        localization[_language]!['copy_button']!,
+                        style: TextStyle(
+                          fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                        ),
+                      ),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -97,11 +165,16 @@ class QRMenuViewScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) =>
-                                PublicMenuViewScreen(menuItems: menuItems),
+                                PublicMenuViewScreen(menuItems: widget.menuItems),
                           ),
                         );
                       },
-                      child: const Text('Preview'),
+                      child: Text(
+                        localization[_language]!['preview_button']!,
+                        style: TextStyle(
+                          fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -115,9 +188,13 @@ class QRMenuViewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.deepPurple.shade700;
+    final cardColor = isDarkMode ? Colors.grey[800] : Colors.deepPurple.shade50;
+
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Disable default back button
+        automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFFF3E5F5),
         elevation: 0,
         titleSpacing: 0,
@@ -137,11 +214,12 @@ class QRMenuViewScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Text(
-              'Generate QR Code',
+            Text(
+              localization[_language]!['app_bar_title']!,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF6A1B9A),
+                color: const Color(0xFF6A1B9A),
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
@@ -150,28 +228,30 @@ class QRMenuViewScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.refresh, color: Color(0xFF6A1B9A)),
             onPressed: () => _generateQRCode(context),
-            tooltip: 'Refresh QR Code',
+            tooltip: localization[_language]!['refresh_tooltip']!,
           ),
         ],
       ),
-
       body: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
             margin: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.deepPurple.shade50,
+              color: cardColor,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info, color: Colors.deepPurple),
+                Icon(Icons.info, color: textColor),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Selected ${menuItems.length} item(s) for QR code generation',
-                    style: TextStyle(color: Colors.deepPurple.shade700),
+                    localization[_language]!['info_text']!.replaceAll('{count}', widget.menuItems.length.toString()),
+                    style: TextStyle(
+                      color: textColor,
+                      fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                    ),
                   ),
                 ),
               ],
@@ -179,9 +259,9 @@ class QRMenuViewScreen extends StatelessWidget {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: menuItems.length,
+              itemCount: widget.menuItems.length,
               itemBuilder: (context, index) {
-                final item = menuItems[index];
+                final item = widget.menuItems[index];
                 return Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -205,13 +285,24 @@ class QRMenuViewScreen extends StatelessWidget {
                         },
                       ),
                     ),
-                    title: Text(item.name),
-                    subtitle: Text(item.category),
+                    title: Text(
+                      item.name,
+                      style: TextStyle(
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      item.category,
+                      style: TextStyle(
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
+                    ),
                     trailing: Text(
                       '\$${item.price.toStringAsFixed(2)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.green,
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ),
@@ -225,7 +316,12 @@ class QRMenuViewScreen extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.qr_code),
-                label: const Text('Generate QR Code'),
+                label: Text(
+                  localization[_language]!['generate_button']!,
+                  style: TextStyle(
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
+                ),
                 onPressed: () => _generateQRCode(context),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -239,17 +335,57 @@ class QRMenuViewScreen extends StatelessWidget {
   }
 }
 
-// This is what customers see when they scan the QR code
-class PublicMenuViewScreen extends StatelessWidget {
+class PublicMenuViewScreen extends StatefulWidget {
   final List<MenuItem> menuItems;
 
   const PublicMenuViewScreen({super.key, required this.menuItems});
 
   @override
+  State<PublicMenuViewScreen> createState() => _PublicMenuViewScreenState();
+}
+
+class _PublicMenuViewScreenState extends State<PublicMenuViewScreen> {
+  String _language = 'English'; // Default language, will be overridden by SharedPreferences
+
+  // Localization map for English and Khmer
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'app_bar_title': 'Digital Menu',
+      'welcome_text': 'Welcome to Our Restaurant',
+      'subtitle': 'Scan & Order Menu',
+    },
+    'Khmer': {
+      'app_bar_title': 'ម៉ឺនុយឌីជីថល',
+      'welcome_text': 'សូមស្វាគមន៍មកកាន់ភោជនីយដ្ឋានរបស់យើង',
+      'subtitle': 'ស្កេន និងកម្ម៉ង់ម៉ឺនុយ',
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage(); // Load saved language on initialization
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      _language = savedLanguage;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Digital Menu'),
+        title: Text(
+          localization[_language]!['app_bar_title']!,
+          style: TextStyle(
+            fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+          ),
+        ),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
       ),
@@ -265,21 +401,26 @@ class PublicMenuViewScreen extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
             ),
-            child: const Column(
+            child: Column(
               children: [
-                Icon(Icons.restaurant_menu, size: 50, color: Colors.white),
-                SizedBox(height: 8),
+                const Icon(Icons.restaurant_menu, size: 50, color: Colors.white),
+                const SizedBox(height: 8),
                 Text(
-                  'Welcome to Our Restaurant',
+                  localization[_language]!['welcome_text']!,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                   ),
                 ),
                 Text(
-                  'Scan & Order Menu',
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                  localization[_language]!['subtitle']!,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white70,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                 ),
               ],
             ),
@@ -287,9 +428,9 @@ class PublicMenuViewScreen extends StatelessWidget {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: menuItems.length,
+              itemCount: widget.menuItems.length,
               itemBuilder: (context, index) {
-                final item = menuItems[index];
+                final item = widget.menuItems[index];
                 return Card(
                   elevation: 4,
                   margin: const EdgeInsets.only(bottom: 16),
@@ -321,9 +462,10 @@ class PublicMenuViewScreen extends StatelessWidget {
                             children: [
                               Text(
                                 item.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
+                                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -332,22 +474,27 @@ class PublicMenuViewScreen extends StatelessWidget {
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 14,
+                                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 item.description,
-                                style: const TextStyle(fontSize: 14),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 '\$${item.price.toStringAsFixed(2)}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green,
+                                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                             ],
