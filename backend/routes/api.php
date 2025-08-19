@@ -17,6 +17,11 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgot']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
 
+// Public routes for menu preview and order items
+Route::get('/restaurants/{restaurant}/preview', [RestaurantController::class, 'preview']); // Public menu preview
+Route::get('/order-items', [OrderItemController::class, 'index']); // View all order items
+Route::post('/order-items', [OrderItemController::class, 'store']); // Create order item
+
 // 🔐 Protected Routes (Require authentication via Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
@@ -26,7 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Restaurant routes
-    Route::apiResource('restaurants', RestaurantController::class);
+    Route::apiResource('restaurants', RestaurantController::class)->except(['show']);
     Route::get('/restaurants/user/{id}', [RestaurantController::class, 'getByUserId']);
 
     // Category routes
@@ -42,8 +47,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('orders', OrderController::class);
     Route::put('/orders/{order}/status', [OrderController::class, 'updateStatus']);
     
-    // Order item routes
-    Route::apiResource('order-items', OrderItemController::class);
+    // Order item routes (remaining methods still protected)
+    Route::apiResource('order-items', OrderItemController::class)->except(['index', 'store']);
     
     // User routes
     Route::apiResource('users', UserController::class);
