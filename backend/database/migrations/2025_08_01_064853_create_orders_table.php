@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['restaurant_id', 'table_number']);
+            $table->softDeletes();
         });
     }
 

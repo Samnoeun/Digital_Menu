@@ -296,10 +296,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           Stack(
             alignment: Alignment.topRight,
             children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                onPressed: _goToCartPage,
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.shopping_cart, color: Colors.white),
+              //   onPressed: _goToCartPage,
+              // ),
               if (_cart.isNotEmpty)
                 Positioned(
                   right: 8,
@@ -501,57 +501,60 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                 ),
                                 trailing: quantity > 0
                                     ? Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.deepPurple.shade700
-                                              .withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.remove,
-                                                size: 18,
-                                                color:
-                                                    Colors.deepPurple.shade700,
-                                              ),
-                                              onPressed: () =>
-                                                  _decrementQuantity(item),
-                                              padding: EdgeInsets.zero,
-                                              constraints:
-                                                  const BoxConstraints(),
-                                            ),
-                                            Text(
-                                              '$quantity',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: isDarkMode
-                                                    ? Colors.white
-                                                    : Colors.black87,
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.add,
-                                                size: 18,
-                                                color:
-                                                    Colors.deepPurple.shade700,
-                                              ),
-                                              onPressed: () =>
-                                                  _incrementQuantity(item),
-                                              padding: EdgeInsets.zero,
-                                              constraints:
-                                                  const BoxConstraints(),
-                                            ),
-                                          ],
-                                        ),
-                                      )
+  padding: const EdgeInsets.symmetric(horizontal: 3),
+  decoration: BoxDecoration(
+    color: isDarkMode 
+      ? Colors.grey.shade600.withOpacity(0.3)
+      : const Color.fromARGB(255, 56, 50, 81).withOpacity(0.1),
+    borderRadius: BorderRadius.circular(24),
+    border: Border.all(
+      color: isDarkMode 
+        ? Colors.grey.shade600 
+        : Colors.grey.shade300,
+      width: 0.3,
+    ),
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      IconButton(
+        icon: Icon(
+          Icons.remove,
+          size: 18,
+          color: isDarkMode 
+            ? Colors.white 
+            : Colors.deepPurple.shade700,
+        ),
+        onPressed: () => _decrementQuantity(item),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(
+          '$quantity',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+        ),
+      ),
+      IconButton(
+        icon: Icon(
+          Icons.add,
+          size: 18,
+          color: isDarkMode 
+            ? Colors.white 
+            : Colors.deepPurple.shade700,
+        ),
+        onPressed: () => _incrementQuantity(item),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+      ),
+    ],
+  ),
+)
                                     : IconButton(
                                         icon: const Icon(
                                           Icons.add,
