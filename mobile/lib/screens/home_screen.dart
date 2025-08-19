@@ -132,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       final sortedItems = itemCounts.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
 
+
       setState(() {
         totalItems = items.length;
         totalCategories = categories.length;
@@ -234,6 +235,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
+
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
       body: CustomScrollView(
@@ -317,6 +319,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.white70,
+
                                     ),
                                   ),
                                 ],
@@ -441,6 +444,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+
   Widget _buildWelcomeBanner(ThemeData theme) {
     final isDarkMode = theme.brightness == Brightness.dark;
     return Container(
@@ -531,6 +535,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       ),
     );
   }
+
 
   Widget _buildDateFilter(ThemeData theme) {
     final isDarkMode = theme.brightness == Brightness.dark;
@@ -651,6 +656,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         final index = entry.key;
         final card = entry.value;
 
+
         return TweenAnimationBuilder(
           duration: Duration(milliseconds: 600 + (index * 100)),
           tween: Tween<double>(begin: 0, end: 1),
@@ -744,6 +750,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: topItems.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
+
 
               return TweenAnimationBuilder(
                 duration: Duration(milliseconds: 800 + (index * 100)),
@@ -885,6 +892,7 @@ class ModernTopItemTile extends StatelessWidget {
       Colors.deepPurple.shade700, // Default
     ];
 
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -988,6 +996,7 @@ class ModernTopItemTile extends StatelessWidget {
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+
                       ),
                       const SizedBox(height: 6),
                       Container(
