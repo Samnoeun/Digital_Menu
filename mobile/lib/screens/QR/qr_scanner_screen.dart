@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'qr_menu_view_screen.dart';
 import '../../models/menu_item.dart';
 
@@ -12,6 +13,68 @@ class QRScannerScreen extends StatefulWidget {
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
   final TextEditingController _qrDataController = TextEditingController();
+  String _language = 'English'; // Default language, will be overridden by SharedPreferences
+
+  // Localization map for English and Khmer
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'app_bar_title': 'QR Scanner Demo',
+      'info_text': 'In a real app, this would use the camera to scan QR codes. For demo purposes, paste the QR data below.',
+      'paste_label': 'Paste QR Code Data:',
+      'hint_text': 'Paste QR code data here...',
+      'process_button': 'Process QR Data',
+      'how_to_test': 'How to test:',
+      'test_instructions': '1. Go to Menu page\n'
+          '2. Select some menu items\n'
+          '3. Generate QR code\n'
+          '4. Copy the data\n'
+          '5. Come back here and paste it\n'
+          '6. Click "Process QR Data"',
+      'empty_input_error': 'Please paste QR code data',
+      'dialog_title': 'QR Code Content',
+      'scanned_data_label': 'Scanned Data:',
+      'url_message': 'This appears to be a URL. You can open it in a browser.',
+      'close_button': 'Close',
+      'open_url_button': 'Open URL',
+      'url_snackbar': 'Would open URL in browser',
+    },
+    'Khmer': {
+      'app_bar_title': 'ស្កេន QR Code',
+      'info_text': 'នៅក្នុងកម្មវិធីពិតប្រាកដ វានឹងប្រើកាមេរ៉ាដើម្បីស្កេន QR Code។ សម្រាប់គោលបំណងសាកល្បង សូមបិទភ្ជាប់ទិន្នន័យ QR ខាងក្រោម។',
+      'paste_label': 'បិទភ្ជាប់ទិន្នន័យ QR Code:',
+      'hint_text': 'បិទភ្ជាប់ទិន្នន័យ QR Code នៅទីនេះ...',
+      'process_button': 'ដំណើរការទិន្នន័យ QR',
+      'how_to_test': 'វិធីសាកល្បង:',
+      'test_instructions': '1. ចូលទៅកាន់ទំព័រម៉ឺនុយ\n'
+          '2. ជ្រើសរើសមុខម្ហូបមួយចំនួន\n'
+          '3. បង្កើត QR Code\n'
+          '4. ចម្លងទិន្នន័យ\n'
+          '5. ត្រលប់មកទីនេះ ហើយបិទភ្ជាប់វា\n'
+          '6. ចុច "ដំណើរការទិន្នន័យ QR"',
+      'empty_input_error': 'សូមបិទភ្ជាប់ទិន្នន័យ QR Code',
+      'dialog_title': 'ខ្លឹមសារនៃ QR Code',
+      'scanned_data_label': 'ទិន្នន័យស្កេន:',
+      'url_message': 'នេះហាក់ដូចជា URL។ អ្នកអាចបើកវានៅក្នុងកម្មវិធីរុករក។',
+      'close_button': 'បិទ',
+      'open_url_button': 'បើក URL',
+      'url_snackbar': 'នឹងបើក URL នៅក្នុងកម្មវិធីរុករក',
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage(); // Load saved language on initialization
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      _language = savedLanguage;
+    });
+  }
 
   @override
   void dispose() {
@@ -25,7 +88,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     if (qrData.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please paste QR code data'),
+          content: Text(localization[_language]!['empty_input_error']!),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
         ),
@@ -77,18 +140,23 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         return AlertDialog(
           backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
           title: Text(
-            'QR Code Content',
-            style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+            localization[_language]!['dialog_title']!,
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Scanned Data:',
+                localization[_language]!['scanned_data_label']!,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black),
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
               ),
               const SizedBox(height: 8),
               Container(
@@ -100,15 +168,20 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 ),
                 child: Text(
                   data,
-                  style: TextStyle(color: textColor),
+                  style: TextStyle(
+                    color: textColor,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               if (data.startsWith('http'))
                 Text(
-                  'This appears to be a URL. You can open it in a browser.',
+                  localization[_language]!['url_message']!,
                   style: TextStyle(
-                    color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600),
+                    color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                 ),
             ],
           ),
@@ -116,9 +189,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                'Close',
+                localization[_language]!['close_button']!,
                 style: TextStyle(
-                  color: isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple.shade600),
+                  color: isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple.shade600,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
               ),
             ),
             if (data.startsWith('http'))
@@ -126,7 +201,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Would open URL in browser'),
+                      content: Text(localization[_language]!['url_snackbar']!),
                       backgroundColor: isDarkMode ? Colors.grey[800] : null,
                     ),
                   );
@@ -136,9 +211,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   backgroundColor: isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple.shade600,
                 ),
                 child: Text(
-                  'Open URL',
+                  localization[_language]!['open_url_button']!,
                   style: TextStyle(
-                    color: isDarkMode ? Colors.black : Colors.white),
+                    color: isDarkMode ? Colors.black : Colors.white,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                 ),
               ),
           ],
@@ -155,7 +232,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.deepPurple.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.deepPurple.shade800;
     final borderColor = isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade200;
-    final primaryColor = isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple.shade600;
+    final primaryColor = isDarkMode ? Colors.deepPurple[600] : Colors.deepPurple.shade600;
     final hintColor = isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade400;
     final inputFillColor = isDarkMode ? Colors.grey[800] : Colors.white;
 
@@ -180,11 +257,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const Text(
-                'QR Scanner Demo',
+              Text(
+                localization[_language]!['app_bar_title']!,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ],
@@ -211,8 +289,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'In a real app, this would use the camera to scan QR codes. For demo purposes, paste the QR data below.',
-                      style: TextStyle(color: textColor),
+                      localization[_language]!['info_text']!,
+                      style: TextStyle(
+                        color: textColor,
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
                     ),
                   ),
                 ],
@@ -220,11 +301,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Paste QR Code Data:',
+              localization[_language]!['paste_label']!,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: textColor,
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
             const SizedBox(height: 8),
@@ -239,15 +321,21 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: borderColor),
                 ),
-                hintText: 'Paste QR code data here...',
+                hintText: localization[_language]!['hint_text']!,
                 prefixIcon: Icon(Icons.qr_code_scanner, color: primaryColor),
                 filled: true,
                 fillColor: inputFillColor,
-                hintStyle: TextStyle(color: hintColor),
+                hintStyle: TextStyle(
+                  color: hintColor,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 16.0, horizontal: 16.0),
               ),
-              style: TextStyle(color: textColor),
+              style: TextStyle(
+                color: textColor,
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
               maxLines: 5,
             ),
             const SizedBox(height: 16),
@@ -255,7 +343,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.search),
-                label: const Text('Process QR Data'),
+                label: Text(
+                  localization[_language]!['process_button']!,
+                  style: TextStyle(
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
+                ),
                 onPressed: _processQRData,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
@@ -269,23 +362,21 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'How to test:',
+              localization[_language]!['how_to_test']!,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: textColor,
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              '1. Go to Menu page\n'
-              '2. Select some menu items\n'
-              '3. Generate QR code\n'
-              '4. Copy the data\n'
-              '5. Come back here and paste it\n'
-              '6. Click "Process QR Data"',
+              localization[_language]!['test_instructions']!,
               style: TextStyle(
-                color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600),
+                color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
             ),
           ],
         ),

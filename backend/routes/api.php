@@ -10,12 +10,16 @@ use App\Http\Controllers\Api\OrderItemController;
 use App\Http\Controllers\Api\TableController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RestaurantController;
+use App\Http\Controllers\Api\OrderHistoryController;
+use App\Models\OrderHistory;
 
 // 🔓 Public Routes (No authentication needed)
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgot']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
+// New public route for menu preview
+Route::get('/restaurants/{id}/menu-preview', [RestaurantController::class, 'menuPreview']);
 
 // Public routes for menu preview and order items
 Route::get('/restaurants/{restaurant}/preview', [RestaurantController::class, 'preview']); // Public menu preview
@@ -52,4 +56,9 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // User routes
     Route::apiResource('users', UserController::class);
+    // Order history routes
+    // routes/api.php
+Route::get('/order-history', [OrderHistoryController::class, 'index']);
+
+    
 });

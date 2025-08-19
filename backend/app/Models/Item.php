@@ -29,4 +29,8 @@ class Item extends Model
     {
         return $this->belongsTo(Restaurant::class, 'restaurant_id', 'id', 'category');
     }
+    public function orderItemHistory()
+    {
+        return $this->hasMany(OrderItemHistory::class);
+    }
 }

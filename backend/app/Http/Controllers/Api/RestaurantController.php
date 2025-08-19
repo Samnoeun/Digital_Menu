@@ -40,7 +40,6 @@ class RestaurantController extends Controller
         return response()->json(['message' => 'Restaurant created', 'data' => $restaurant], 201);
     }
 
-
     public function getByUser($userId)
     {
         $restaurant = Restaurant::where('user_id', $userId)->first();
@@ -65,6 +64,7 @@ class RestaurantController extends Controller
             ]
         ]);
     }
+
     public function getByUserId($id)
     {
         $restaurant = Restaurant::where('user_id', $id)->first();
@@ -76,12 +76,6 @@ class RestaurantController extends Controller
         return response()->json(['restaurant' => $restaurant]);
     }
 
-
-
-
-
-
-
     public function show($id)
     {
         $restaurant = Restaurant::findOrFail($id);
@@ -89,38 +83,74 @@ class RestaurantController extends Controller
     }
 
     public function update(Request $request, Restaurant $restaurant)
-{
-    $validated = $request->validate([
-        'restaurant_name' => 'required|string|max:255',
-        'address' => 'required|string',
-    ]);
+    {
+        $validated = $request->validate([
+            'restaurant_name' => 'required|string|max:255',
+            'address' => 'required|string',
+        ]);
 
-    // Handle image upload
-    if ($request->hasFile('profile')) {
-        // Delete old image if exists
-        if ($restaurant->profile) {
-            Storage::delete('public/profiles/'.$restaurant->profile);
+        // Handle image upload
+        if ($request->hasFile('profile')) {
+            // Delete old image if exists
+            if ($restaurant->profile) {
+                Storage::delete('public/profiles/'.$restaurant->profile);
+            }
+            
+            // Store new image (consistent with store() method)
+            $file = $request->file('profile');
+            $filename = time().'.'.$file->getClientOriginalExtension();
+            $file->storeAs('public/profiles', $filename);
+            $validated['profile'] = $filename;
         }
-        
-        // Store new image (consistent with store() method)
-        $file = $request->file('profile');
-        $filename = time().'.'.$file->getClientOriginalExtension();
-        $file->storeAs('public/profiles', $filename);
-        $validated['profile'] = $filename;
+
+        $restaurant->update($validated);
+
+        return response()->json([
+            'message' => 'Restaurant updated successfully',
+            'data' => $restaurant
+        ]);
     }
 
-    $restaurant->update($validated);
-
-    return response()->json([
-        'message' => 'Restaurant updated successfully',
-        'data' => $restaurant
-    ]);
-}
     public function destroy($id)
     {
         $restaurant = Restaurant::findOrFail($id);
         $restaurant->delete();
 
         return response()->json(['message' => 'Deleted successfully']);
+    }
+
+    public function menuPreview($id)
+    {
+        $restaurant = Restaurant::with(['categories.items'])
+            ->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'restaurant' => [
+                    'id' => $restaurant->id,
+                    'restaurant_name' => $restaurant->restaurant_name,
+                    'profile' => $restaurant->profile
+                        ? url('storage/profiles/' . $restaurant->profile)
+                        : null,
+                    'address' => $restaurant->address,
+                    'categories' => $restaurant->categories->map(function ($category) {
+                        return [
+                            'id' => $category->id,
+                            'name' => $category->name,
+                            'items' => $category->items->map(function ($item) {
+                                return [
+                                    'id' => $item->id,
+                                    'name' => $item->name,
+                                    'description' => $item->description,
+                                    'price' => $item->price,
+                                    'image' => $item->image ? url($item->image) : null,
+                                ];
+                            })
+                        ];
+                    })
+                ]
+            ]
+        ], 200);
     }
 }

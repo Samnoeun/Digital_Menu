@@ -11,10 +11,10 @@ use App\Http\Resources\ItemResource;
 use App\Models\Category;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\QueryException;
 
 class ItemController extends Controller
 {
-
     public function index()
     {
         $user = auth()->user();
@@ -27,12 +27,11 @@ class ItemController extends Controller
             Item::whereHas('category', function ($query) use ($user) {
                 $query->where('restaurant_id', $user->restaurant->id);
             })
-                ->with('category')
-                ->orderBy('created_at', 'desc') // <<< add this line to show latest first
-                ->get()
+            ->with('category')
+            ->orderBy('created_at', 'desc')
+            ->get()
         );
     }
-
 
     public function store(StoreItemRequest $request)
     {
@@ -44,7 +43,7 @@ class ItemController extends Controller
             ], 422);
         }
 
-        // Verify the category belongs to the user's restaurant
+        // Verify category belongs to this restaurant
         $category = Category::where('id', $request->category_id)
             ->where('restaurant_id', $user->restaurant->id)
             ->firstOrFail();
@@ -57,14 +56,20 @@ class ItemController extends Controller
                 $validated['image_path'] = $imagePath;
             }
 
+            // Create item safely
             $item = Item::create($validated);
 
             return response()->json([
                 'message' => 'Item created successfully',
                 'data' => new ItemResource($item)
             ], 201);
-        } catch (\Exception $e) {
-            // Delete the uploaded image if item creation fails
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') { // Duplicate entry
+                return response()->json([
+                    'message' => 'Item name already exists in this category'
+                ], 422);
+            }
+
             if (isset($imagePath)) {
                 Storage::disk('public')->delete($imagePath);
             }
@@ -91,15 +96,9 @@ class ItemController extends Controller
 
         try {
             if ($request->hasFile('image')) {
-                Log::info('Image uploaded:', [
-                    'original_name' => $request->file('image')->getClientOriginalName(),
-                    'size' => $request->file('image')->getSize(),
-                ]);
-
                 $path = $request->file('image')->store('items', 'public');
                 $validated['image_path'] = $path;
 
-                // Delete old image after successful upload
                 if ($oldImagePath) {
                     Storage::disk('public')->delete($oldImagePath);
                 }
@@ -111,8 +110,13 @@ class ItemController extends Controller
                 'message' => 'Item updated successfully',
                 'data' => new ItemResource($item)
             ]);
-        } catch (\Exception $e) {
-            // Delete the new uploaded image if update fails
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'Item name already exists in this category'
+                ], 422);
+            }
+
             if (isset($path)) {
                 Storage::disk('public')->delete($path);
             }
@@ -132,7 +136,6 @@ class ItemController extends Controller
             $imagePath = $item->image_path;
             $item->delete();
 
-            // Delete associated image
             if ($imagePath) {
                 Storage::disk('public')->delete($imagePath);
             }
@@ -146,9 +149,6 @@ class ItemController extends Controller
         }
     }
 
-    /**
-     * Authorize that the item belongs to the user's restaurant
-     */
     protected function authorizeItemAccess(Item $item)
     {
         $user = auth()->user();

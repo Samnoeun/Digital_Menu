@@ -11,7 +11,7 @@ import 'dart:typed_data'; // For Uint8List
 import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.155:8000/api';
+  static const String baseUrl = 'https://qrmenu.zapto.org/api';
 
   static String? _token;
 
@@ -628,6 +628,25 @@ static Future<void> updateRestaurant({
 
     // Case 2: Return with direct path concatenation
     return baseUrl.replaceFirst('/api', '') + path;
+  }
+
+  // New method for menu preview
+  static Future<Map<String, dynamic>> getMenuPreview(int restaurantId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/restaurants/$restaurantId/menu-preview'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return jsonData['data'];
+      } else {
+        throw Exception('Failed to load menu preview: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching menu preview: ${e.toString()}');
+    }
   }
 
   static Future<void> saveLoginData(String token, String email) async {

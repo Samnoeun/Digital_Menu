@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('order_histories', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
             $table->foreignId('restaurant_id')->constrained()->onDelete('cascade');
-             $table->unique(['restaurant_id', 'name']);
+            $table->integer('table_number');
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists('order_histories');
     }
 };

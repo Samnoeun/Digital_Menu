@@ -18,4 +18,8 @@ class OrderItem extends Model
         return $this->belongsTo(Item::class);
     }
     protected $fillable = ['order_id', 'item_id', 'quantity', 'special_note'];
+    public function orderHistory()
+    {
+        return $this->belongsTo(OrderHistory::class, 'order_history_id');
+    }
 }
