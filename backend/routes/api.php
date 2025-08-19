@@ -17,6 +17,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgot']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
 
+
 // 🔐 Protected Routes (Require authentication via Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
@@ -47,4 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // User routes
     Route::apiResource('users', UserController::class);
+    Route::get('/reports/sales-summary', [ReportController::class, 'salesSummary']);
+
+    
 });
+

@@ -8,6 +8,7 @@ import 'Setting/settings_screen.dart';
 import 'Preview/menu_preview_screen.dart';
 import 'more_screen.dart';
 import 'Preview/item_detail_screen.dart';
+import '../screens/report_order_screen.dart';
 // Option 1: With alias
 import 'category/category_list_screen.dart' as category_screen;
 
@@ -73,6 +74,17 @@ void initState() {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const QrScreen()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.description),
+                title: const Text('ReportOrder'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ReportOrderScreen()),
                   );
                 },
               ),
