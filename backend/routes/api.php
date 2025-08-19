@@ -16,6 +16,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgot']);
 Route::post('/reset-password', [AuthController::class, 'reset']);
+// New public route for menu preview
+Route::get('/restaurants/{id}/menu-preview', [RestaurantController::class, 'menuPreview']);
 
 // 🔐 Protected Routes (Require authentication via Sanctum)
 Route::middleware('auth:sanctum')->group(function () {

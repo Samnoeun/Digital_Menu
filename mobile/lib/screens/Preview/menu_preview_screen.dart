@@ -6,8 +6,9 @@ import '../../screens/cart_screen.dart';
 import './item_detail_screen.dart';
 
 class MenuPreviewScreen extends StatefulWidget {
+  final int restaurantId;
   final Function(bool)? onThemeToggle;
-  const MenuPreviewScreen({Key? key, this.onThemeToggle}) : super(key: key);
+  const MenuPreviewScreen({Key? key, required this.restaurantId, this.onThemeToggle}) : super(key: key);
 
   @override
   State<MenuPreviewScreen> createState() => _MenuPreviewScreenState();
@@ -43,12 +44,23 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final categories = await ApiService.getCategories();
-      final items = await ApiService.getItems();
+      final data = await ApiService.getMenuPreview(widget.restaurantId);
+      final restaurantData = data['restaurant'];
+      final categoriesData = restaurantData['categories'] as List<dynamic>;
+
       setState(() {
-        _categories = categories;
-        _allItems = items;
-        _filteredItems = items;
+        // Initialize categories with their items
+        _categories = categoriesData.map((json) => category.Category.fromJson({
+          'id': json['id'],
+          'name': json['name'],
+          'restaurant_id': widget.restaurantId,
+          'items': json['items'] ?? [],
+        })).toList();
+
+        // Flatten all items and use existing Item objects
+        _allItems = _categories.expand((cat) => cat.items).cast<item.Item>().toList();
+
+        _filteredItems = _allItems;
         _isLoading = false;
       });
     } catch (e) {
@@ -157,8 +169,11 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
 
   double get _totalSelectedPrice {
     return _selectedItems.entries.fold(
-      0,
-      (sum, entry) => sum + (entry.key.price * entry.value),
+      0.0,
+      (sum, entry) {
+        final price = double.tryParse(entry.key.price as String) ?? 0.0;
+        return sum + (price * entry.value);
+      },
     );
   }
 
@@ -248,385 +263,389 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    return Scaffold(
-      backgroundColor: isDarkMode
-          ? Colors.grey[900]
-          : Colors.deepPurple.shade50,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.deepPurple.shade700,
-        iconTheme: const IconThemeData(color: Color(0xFF6A1B9A)),
-        title: Padding(
-          padding: const EdgeInsets.only(left: 0, right: 20),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  size: 18,
-                  color: Color.fromARGB(255, 255, 255, 255),
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-              ),
-              const SizedBox(width: 0),
-              const Text(
-                'Preview',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          if (widget.onThemeToggle != null)
-            IconButton(
-              icon: Icon(
-                isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                widget.onThemeToggle!(isDarkMode);
-              },
-            ),
-          Stack(
-            alignment: Alignment.topRight,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                onPressed: _goToCartPage,
-              ),
-              if (_cart.isNotEmpty)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      _cart.length.toString(),
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-      ),
-      body: Column(
-        children: [
-          _buildSearchBar(),
-          SizedBox(
-            width: double.infinity,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Scaffold(
+          backgroundColor: isDarkMode
+              ? Colors.grey[900]
+              : Colors.deepPurple.shade50,
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            backgroundColor: Colors.deepPurple.shade700,
+            iconTheme: const IconThemeData(color: Color(0xFF6A1B9A)),
+            title: Padding(
+              padding: const EdgeInsets.only(left: 0, right: 20),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  ChoiceChip(
-                    label: const Text(
-                      'All',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back_ios,
+                      size: 18,
+                      color: Color.fromARGB(255, 255, 255, 255),
                     ),
-                    selected: _selectedCategoryId == null,
-                    selectedColor: Colors.deepPurple.shade600,
-                    backgroundColor: isDarkMode
-                        ? Colors.grey[700]
-                        : Colors.deepPurple.shade100,
-                    labelStyle: TextStyle(
-                      color: _selectedCategoryId == null
-                          ? Colors.white
-                          : isDarkMode
-                          ? Colors.grey[400]
-                          : Colors.deepPurple.shade700,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                    onSelected: (_) => _onCategorySelected(null),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 8,
-                    ),
+                    onPressed: () => Navigator.of(context).pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
-                  const SizedBox(width: 12),
-                  ..._categories.map(
-                    (category.Category cat) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: ChoiceChip(
-                        label: Text(
-                          cat.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        selected: _selectedCategoryId == cat.id,
-                        selectedColor: Colors.deepPurple.shade600,
-                        backgroundColor: isDarkMode
-                            ? Colors.grey[700]
-                            : Colors.deepPurple.shade100,
-                        labelStyle: TextStyle(
-                          color: _selectedCategoryId == cat.id
-                              ? Colors.white
-                              : isDarkMode
-                              ? Colors.grey[400]
-                              : Colors.deepPurple.shade700,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                        onSelected: (_) => _onCategorySelected(cat.id),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 8,
-                        ),
-                      ),
+                  const SizedBox(width: 0),
+                  const Text(
+                    'Preview',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.deepPurple.shade700,
-                    ),
-                  )
-                : _error != null
-                ? Center(
-                    child: Text(
-                      'Error: $_error',
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.grey[400] : Colors.black87,
-                      ),
-                    ),
-                  )
-                : ListView(
-                    padding: const EdgeInsets.all(12),
-                    children: _categories.map((category.Category cat) {
-                      final itemsInCategory = _filteredItems
-                          .where((item) => item.categoryId == cat.id)
-                          .toList();
-
-                      if (itemsInCategory.isEmpty) return const SizedBox();
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cat.name,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors
-                                        .white // White text in dark mode
-                                  : Colors
-                                        .deepPurple
-                                        .shade700, // Deep purple in light mode
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ...itemsInCategory.map((item.Item item) {
-                            final quantity = _selectedItems[item] ?? 0;
-                            return Card(
-                              color: isDarkMode
-                                  ? Colors.grey[800]
-                                  : Colors.white,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ListTile(
-                                onTap: () => _showItemDetail(item),
-                                leading: item.imagePath != null
-                                    ? Image.network(
-                                        ApiService.getImageUrl(item.imagePath),
-                                        width: 50,
-                                        height: 50,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                Icon(
-                                                  Icons.broken_image,
-                                                  color: isDarkMode
-                                                      ? Colors.grey[400]
-                                                      : Colors.grey[600],
-                                                ),
-                                      )
-                                    : Icon(
-                                        Icons.image_not_supported,
-                                        color: isDarkMode
-                                            ? Colors.grey[400]
-                                            : Colors.grey[600],
-                                      ),
-                                title: Text(
-                                  item.name,
-                                  style: TextStyle(
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  '\$${item.price.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                    color: isDarkMode
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                                  ),
-                                ),
-                                trailing: quantity > 0
-                                    ? Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.deepPurple.shade700
-                                              .withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.remove,
-                                                size: 18,
-                                                color:
-                                                    Colors.deepPurple.shade700,
-                                              ),
-                                              onPressed: () =>
-                                                  _decrementQuantity(item),
-                                              padding: EdgeInsets.zero,
-                                              constraints:
-                                                  const BoxConstraints(),
-                                            ),
-                                            Text(
-                                              '$quantity',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: isDarkMode
-                                                    ? Colors.white
-                                                    : Colors.black87,
-                                              ),
-                                            ),
-                                            IconButton(
-                                              icon: Icon(
-                                                Icons.add,
-                                                size: 18,
-                                                color:
-                                                    Colors.deepPurple.shade700,
-                                              ),
-                                              onPressed: () =>
-                                                  _incrementQuantity(item),
-                                              padding: EdgeInsets.zero,
-                                              constraints:
-                                                  const BoxConstraints(),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    : IconButton(
-                                        icon: const Icon(
-                                          Icons.add,
-                                          color: Colors.white,
-                                        ),
-                                        onPressed: () =>
-                                            _incrementQuantity(item),
-                                        style: IconButton.styleFrom(
-                                          backgroundColor:
-                                              Colors.deepPurple.shade700,
-                                          foregroundColor: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            );
-                          }),
-                          const SizedBox(height: 20),
-                        ],
-                      );
-                    }).toList(),
+            actions: [
+              if (widget.onThemeToggle != null)
+                IconButton(
+                  icon: Icon(
+                    isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                    color: Colors.white,
                   ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: _selectedItems.isNotEmpty
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: 60),
-              child: Container(
-                height: 55,
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.deepPurple.shade700,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  onPressed: () {
+                    widget.onThemeToggle!(isDarkMode);
+                  },
                 ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: _addToCart,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Basket • ${_totalSelectedItems} Item${_totalSelectedItems > 1 ? 's' : ''}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            '\$${_totalSelectedPrice.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart, color: Colors.white),
+                    onPressed: _goToCartPage,
+                  ),
+                  if (_cart.isNotEmpty)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          _cart.length.toString(),
+                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
                       ),
                     ),
+                ],
+              ),
+            ],
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+            ),
+          ),
+          body: Column(
+            children: [
+              _buildSearchBar(),
+              SizedBox(
+                width: constraints.maxWidth,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      ChoiceChip(
+                        label: const Text(
+                          'All',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        selected: _selectedCategoryId == null,
+                        selectedColor: Colors.deepPurple.shade600,
+                        backgroundColor: isDarkMode
+                            ? Colors.grey[700]
+                            : Colors.deepPurple.shade100,
+                        labelStyle: TextStyle(
+                          color: _selectedCategoryId == null
+                              ? Colors.white
+                              : isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade700,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                        onSelected: (_) => _onCategorySelected(null),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 8,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ..._categories.map(
+                        (category.Category cat) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: ChoiceChip(
+                            label: Text(
+                              cat.name,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            selected: _selectedCategoryId == cat.id,
+                            selectedColor: Colors.deepPurple.shade600,
+                            backgroundColor: isDarkMode
+                                ? Colors.grey[700]
+                                : Colors.deepPurple.shade100,
+                            labelStyle: TextStyle(
+                              color: _selectedCategoryId == cat.id
+                                  ? Colors.white
+                                  : isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.deepPurple.shade700,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                            onSelected: (_) => _onCategorySelected(cat.id),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 8,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            )
-          : null,
+              const SizedBox(height: 10),
+              Expanded(
+                child: _isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.deepPurple.shade700,
+                        ),
+                      )
+                    : _error != null
+                        ? Center(
+                            child: Text(
+                              'Error: $_error',
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.grey[400] : Colors.black87,
+                              ),
+                            ),
+                          )
+                        : ListView(
+                            padding: const EdgeInsets.all(12),
+                            children: _categories.map((category.Category cat) {
+                              final itemsInCategory = _filteredItems
+                                  .where((item) => item.categoryId == cat.id)
+                                  .toList();
+
+                              if (itemsInCategory.isEmpty) return const SizedBox();
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    cat.name,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors
+                                                    .white // White text in dark mode
+                                              : Colors
+                                                    .deepPurple
+                                                    .shade700, // Deep purple in light mode
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  ...itemsInCategory.map((item.Item item) {
+                                    final quantity = _selectedItems[item] ?? 0;
+                                    return Card(
+                                      color: isDarkMode
+                                          ? Colors.grey[800]
+                                          : Colors.white,
+                                      elevation: 2,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: ListTile(
+                                        onTap: () => _showItemDetail(item),
+                                        leading: item.imagePath != null
+                                            ? Image.network(
+                                                ApiService.getImageUrl(item.imagePath),
+                                                width: 50,
+                                                height: 50,
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (context, error, stackTrace) =>
+                                                        Icon(
+                                                          Icons.broken_image,
+                                                          color: isDarkMode
+                                                              ? Colors.grey[400]
+                                                              : Colors.grey[600],
+                                                        ),
+                                              )
+                                            : Icon(
+                                                Icons.image_not_supported,
+                                                color: isDarkMode
+                                                    ? Colors.grey[400]
+                                                    : Colors.grey[600],
+                                              ),
+                                        title: Text(
+                                          item.name,
+                                          style: TextStyle(
+                                            color: isDarkMode
+                                                ? Colors.white
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          '\$${double.tryParse(item.price as String)?.toStringAsFixed(2) ?? '0.00'}',
+                                          style: TextStyle(
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
+                                          ),
+                                        ),
+                                        trailing: quantity > 0
+                                            ? Container(
+                                                padding: const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.deepPurple.shade700
+                                                      .withOpacity(0.1),
+                                                  borderRadius: BorderRadius.circular(
+                                                    20,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    IconButton(
+                                                      icon: Icon(
+                                                        Icons.remove,
+                                                        size: 18,
+                                                        color:
+                                                            Colors.deepPurple.shade700,
+                                                      ),
+                                                      onPressed: () =>
+                                                          _decrementQuantity(item),
+                                                      padding: EdgeInsets.zero,
+                                                      constraints:
+                                                          const BoxConstraints(),
+                                                    ),
+                                                    Text(
+                                                      '$quantity',
+                                                      style: TextStyle(
+                                                        fontSize: 14,
+                                                        color: isDarkMode
+                                                            ? Colors.white
+                                                            : Colors.black87,
+                                                      ),
+                                                    ),
+                                                    IconButton(
+                                                      icon: Icon(
+                                                        Icons.add,
+                                                        size: 18,
+                                                        color:
+                                                            Colors.deepPurple.shade700,
+                                                      ),
+                                                      onPressed: () =>
+                                                          _incrementQuantity(item),
+                                                      padding: EdgeInsets.zero,
+                                                      constraints:
+                                                          const BoxConstraints(),
+                                                    ),
+                                                  ],
+                                                ),
+                                              )
+                                            : IconButton(
+                                                icon: const Icon(
+                                                  Icons.add,
+                                                  color: Colors.white,
+                                                ),
+                                                onPressed: () =>
+                                                    _incrementQuantity(item),
+                                                style: IconButton.styleFrom(
+                                                  backgroundColor:
+                                                      Colors.deepPurple.shade700,
+                                                  foregroundColor: Colors.white,
+                                                ),
+                                              ),
+                                      ),
+                                    );
+                                  }),
+                                  const SizedBox(height: 20),
+                                ],
+                              );
+                            }).toList(),
+                          ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: _selectedItems.isNotEmpty
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 60),
+                  child: Container(
+                    height: 55,
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.deepPurple.shade700,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: _addToCart,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Basket • ${_totalSelectedItems} Item${_totalSelectedItems > 1 ? 's' : ''}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '\$${_totalSelectedPrice.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : null,
+        );
+      },
     );
   }
 }

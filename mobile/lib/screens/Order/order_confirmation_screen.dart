@@ -6,12 +6,14 @@ class OrderConfirmationScreen extends StatelessWidget {
   final int tableNumber;
   final List<Map<String, dynamic>> orderItems;
   final VoidCallback onClearCart;
+  final int restaurantId; // Added to pass to MenuPreviewScreen
 
   const OrderConfirmationScreen({
     super.key,
     required this.tableNumber,
     required this.orderItems,
     required this.onClearCart,
+    required this.restaurantId, // Required parameter
   });
 
   @override
@@ -21,18 +23,17 @@ class OrderConfirmationScreen extends StatelessWidget {
     final currencyFormat = NumberFormat.currency(symbol: '\$');
 
     final total = orderItems.fold(0.0, (sum, item) {
-      return sum + ((item['price'] ?? 0.0) * (item['quantity'] ?? 1));
+      return sum + ((double.tryParse(item['price']?.toString() ?? '0.0') ?? 0.0) * (item['quantity'] ?? 1));
     });
 
     // Color definitions
-    
     final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
     final successColor = isDarkMode ? Colors.green[300] : Colors.green;
     final infoCardColor = isDarkMode ? Colors.blue[900] : Colors.blue.shade50;
-   final Color infoBorderColor = isDarkMode ? Colors.blue[800]! : Colors.blue.shade100;
+    final Color infoBorderColor = isDarkMode ? Colors.blue[800]! : Colors.blue.shade100;
     final infoTextColor = isDarkMode ? Colors.blue[100] : Colors.blue.shade800;
     final Color primaryColor = isDarkMode ? Colors.deepPurple[300]! : Colors.deepPurple;
 
@@ -191,7 +192,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                                       ),
                                     ),
                                     Text(
-                                      currencyFormat.format((item['price'] ?? 0.0) * (item['quantity'] ?? 1)),
+                                      currencyFormat.format((double.tryParse(item['price']?.toString() ?? '0.0') ?? 0.0) * (item['quantity'] ?? 1)),
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: textColor,
@@ -250,7 +251,9 @@ class OrderConfirmationScreen extends StatelessWidget {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MenuPreviewScreen(),
+                          builder: (context) => MenuPreviewScreen(
+                            restaurantId: restaurantId, // Pass the restaurantId
+                          ),
                         ),
                       );
                     },

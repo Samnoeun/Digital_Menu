@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/preview/:restaurantId",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}

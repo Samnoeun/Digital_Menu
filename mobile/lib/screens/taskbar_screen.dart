@@ -2,40 +2,37 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'Order/order_screen.dart';
 import 'item/item_list_screen.dart' as item_screen;
-// import 'category/category_list_screen.dart' as category_screen;
+import 'category/category_list_screen.dart' as category_screen;
 import 'QR/qr_screen.dart';
 import 'Setting/settings_screen.dart';
 import 'Preview/menu_preview_screen.dart';
 import 'more_screen.dart';
 import 'Preview/item_detail_screen.dart';
-// Option 1: With alias
-import 'category/category_list_screen.dart' as category_screen;
 
-
-class MenuScreen extends StatefulWidget {
+class TaskbarScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
-  const MenuScreen({super.key, required this.onThemeToggle});
+  final int? restaurantId; // Optional parameter for restaurantId
+  const TaskbarScreen({super.key, required this.onThemeToggle, this.restaurantId});
 
   @override
-  State<MenuScreen> createState() => _MenuScreenState();
+  State<TaskbarScreen> createState() => _TaskbarScreenState();
 }
 
-class _MenuScreenState extends State<MenuScreen> {
+class _TaskbarScreenState extends State<TaskbarScreen> {
   int _selectedIndex = 0;
 
   late final List<Widget> _pages;
 
   @override
-  @override
-void initState() {
-  super.initState();
-  _pages = [
-    const HomeScreen(),
-    const OrderScreen(),
-    const item_screen.ItemListScreen(),
-    const category_screen.CategoryListScreen(),
-  ];
-}
+  void initState() {
+    super.initState();
+    _pages = [
+      const HomeScreen(),
+      const OrderScreen(),
+      const item_screen.ItemListScreen(),
+      const category_screen.CategoryListScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -59,10 +56,25 @@ void initState() {
                 title: const Text('Menu Preview'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MenuPreviewScreen()),
-                  );
+                  if (widget.restaurantId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MenuPreviewScreen(
+                          restaurantId: widget.restaurantId!,
+                        ),
+                      ),
+                    );
+                  } else {
+                    // Prompt user to scan QR code if restaurantId is not set
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please scan a QR code first to select a restaurant.')),
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const QrScreen()),
+                    );
+                  }
                 },
               ),
               ListTile(

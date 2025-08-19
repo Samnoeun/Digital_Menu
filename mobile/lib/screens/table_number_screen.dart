@@ -5,11 +5,13 @@ import 'Order/order_confirmation_screen.dart';
 class TableNumberScreen extends StatefulWidget {
   final List<Map<String, dynamic>> orderItems;
   final Function() onClearCart;
+  final int restaurantId; // Added to receive restaurantId
 
   const TableNumberScreen({
     Key? key,
     required this.orderItems,
     required this.onClearCart,
+    required this.restaurantId, // Required parameter
   }) : super(key: key);
 
   @override
@@ -48,6 +50,7 @@ class _TableNumberScreenState extends State<TableNumberScreen> {
               tableNumber: tableNumber,
               orderItems: widget.orderItems,
               onClearCart: widget.onClearCart,
+              restaurantId: widget.restaurantId, // Pass the restaurantId
             ),
           ),
         );
