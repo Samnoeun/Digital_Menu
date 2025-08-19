@@ -124,19 +124,20 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   }
 
   void _goToCartPage() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CartScreen(
-          cart: _cart,
-          onDelete: _removeFromCart,
-          onClearCart: () {
-            setState(() => _cart.clear());
-          },
-        ),
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CartScreen(
+        cart: _cart,
+        onDelete: _removeFromCart,
+        onClearCart: () {
+          setState(() => _cart.clear());
+        },
+        restaurantId: widget.restaurantId, // Pass restaurantId
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _removeFromCart(item.Item itemToRemove) {
     setState(() {

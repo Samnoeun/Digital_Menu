@@ -1,9 +1,6 @@
-
 import 'package:flutter/material.dart';
 import '../services/api_services.dart';
-import 'Login/login_screen.dart';
-import 'taskbar_screen.dart';
-import 'Login/restaurant_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -32,21 +29,11 @@ class _SplashScreenState extends State<SplashScreen> {
             try {
               await ApiService.getRestaurant();
               if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => MenuScreen(onThemeToggle: widget.onThemeToggle),
-                  ),
-                );
+                context.go('/taskbar');
               }
             } catch (e) {
               if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RestaurantScreen(onThemeToggle: widget.onThemeToggle),
-                  ),
-                );
+                context.go('/restaurant'); // Assuming a route for restaurant setup
               }
             }
           } else {
@@ -55,32 +42,17 @@ class _SplashScreenState extends State<SplashScreen> {
         } catch (e) {
           await ApiService.clearLoginData();
           if (mounted) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LoginScreen(onThemeToggle: widget.onThemeToggle),
-              ),
-            );
+            context.go('/login');
           }
         }
       } else {
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => LoginScreen(onThemeToggle: widget.onThemeToggle),
-            ),
-          );
+          context.go('/login');
         }
       }
     } catch (e) {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => LoginScreen(onThemeToggle: widget.onThemeToggle),
-          ),
-        );
+        context.go('/login');
       }
     }
   }
@@ -88,7 +60,6 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       body: Center(
         child: Column(

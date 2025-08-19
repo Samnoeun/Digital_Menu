@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:universal_html/html.dart' as html;
 import '../../../services/api_services.dart';
-import '../taskbar_screen.dart';
+import '../taskbar_screen.dart'; // Updated to navigate to TaskbarScreen
 
 class RestaurantScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -91,7 +91,7 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => MenuScreen(onThemeToggle: widget.onThemeToggle),
+              builder: (_) => TaskbarScreen(onThemeToggle: widget.onThemeToggle), // Navigate to TaskbarScreen
             ),
           );
         }

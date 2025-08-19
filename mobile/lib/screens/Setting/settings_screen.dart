@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'account_screen.dart';
+import 'package:go_router/go_router.dart';
+import '../../services/api_services.dart';
 import '../Login/login_screen.dart';
+import 'account_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
-  const SettingsScreen({super.key, required this.onThemeToggle});
+  final String selectedLanguage;
+  const SettingsScreen({super.key, required this.onThemeToggle, this.selectedLanguage = 'English'});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -12,7 +15,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool isDarkMode = false;
-  String selectedLanguage = 'English';
+  late String selectedLanguage;
 
   final Map<String, Map<String, String>> localization = {
     'English': {
@@ -38,6 +41,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    selectedLanguage = widget.selectedLanguage;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -132,14 +136,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _logout(BuildContext context) {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (_) => LoginScreen(onThemeToggle: widget.onThemeToggle),
-      ),
-      (route) => false,
-    );
+  void _logout(BuildContext context) async {
+    try {
+      await ApiService.clearAuthToken();
+      context.go('/login');
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout failed: $e')),
+        );
+      }
+    }
   }
 
   TextStyle getTextStyle({bool isSubtitle = false, bool isGray = false}) {
@@ -181,7 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   size: 18,
                   color: Colors.white,
                 ),
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => context.pop(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
@@ -253,14 +260,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             title: Text(lang['account']!, style: getTextStyle(isGray: true)),
             trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => AccountScreen(
-                  selectedLanguage: selectedLanguage,
-                  onThemeToggle: widget.onThemeToggle,
-                ),
-              ),
+            onTap: () => context.push(
+              '/account',
+              extra: {
+                'selectedLanguage': selectedLanguage,
+                'onThemeToggle': widget.onThemeToggle,
+              },
             ),
           ),
           const Divider(indent: 24, endIndent: 24, thickness: 1, height: 32),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'QR/qr_screen.dart';
 import 'Setting/settings_screen.dart';
 
@@ -16,22 +17,19 @@ class MoreScreen extends StatelessWidget {
             leading: const Icon(Icons.qr_code),
             title: const Text('QR Preview'),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const QrScreen()),
-              );
+              // Navigate to /qr with a restaurantId (hardcoded for now, replace with dynamic value if available)
+              context.push('/qr', extra: {'restaurantId': 1}); // Replace 1 with dynamic ID
             },
           ),
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => SettingsScreen(onThemeToggle: onThemeToggle),
-                ),
-              );
+              // Navigate to /account with theme toggle and selectedLanguage
+              context.push('/account', extra: {
+                'onThemeToggle': onThemeToggle,
+                'selectedLanguage': 'English', // Adjust dynamically if needed
+              });
             },
           ),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'home_screen.dart';
 import 'Order/order_screen.dart';
 import 'item/item_list_screen.dart' as item_screen;
@@ -11,8 +12,7 @@ import 'Preview/item_detail_screen.dart';
 
 class TaskbarScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
-  final int? restaurantId; // Optional parameter for restaurantId
-  const TaskbarScreen({super.key, required this.onThemeToggle, this.restaurantId});
+  const TaskbarScreen({super.key, required this.onThemeToggle, int? restaurantId});
 
   @override
   State<TaskbarScreen> createState() => _TaskbarScreenState();
@@ -56,25 +56,7 @@ class _TaskbarScreenState extends State<TaskbarScreen> {
                 title: const Text('Menu Preview'),
                 onTap: () {
                   Navigator.pop(context);
-                  if (widget.restaurantId != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MenuPreviewScreen(
-                          restaurantId: widget.restaurantId!,
-                        ),
-                      ),
-                    );
-                  } else {
-                    // Prompt user to scan QR code if restaurantId is not set
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please scan a QR code first to select a restaurant.')),
-                    );
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const QrScreen()),
-                    );
-                  }
+                  context.go('/menu?restaurantId=1'); // Hardcoded restaurantId for now
                 },
               ),
               ListTile(
@@ -82,10 +64,7 @@ class _TaskbarScreenState extends State<TaskbarScreen> {
                 title: const Text('QR Code'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const QrScreen()),
-                  );
+                  context.push('/qr');
                 },
               ),
               ListTile(
@@ -93,12 +72,7 @@ class _TaskbarScreenState extends State<TaskbarScreen> {
                 title: const Text('Settings'),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SettingsScreen(onThemeToggle: widget.onThemeToggle),
-                    ),
-                  );
+                  context.push('/account', extra: {'onThemeToggle': widget.onThemeToggle, 'selectedLanguage': 'English'});
                 },
               ),
             ],

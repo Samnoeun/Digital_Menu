@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../services/api_services.dart';
 import 'register_screen.dart';
-import '../taskbar_screen.dart';
+import '../taskbar_screen.dart'; // Updated to navigate to TaskbarScreen
 
 class LoginScreen extends StatefulWidget {
   final Function(bool) onThemeToggle;
@@ -63,41 +64,73 @@ class _LoginScreenState extends State<LoginScreen> {
     return isValid;
   }
 
+  // void loginUser() async {
+  //   if (!validateForm()) return;
+
+  //   setState(() {
+  //     isLoading = true;
+  //     generalError = null;
+  //   });
+
+  //   try {
+  //     final response = await ApiService.login(
+  //       emailController.text.trim(),
+  //       passwordController.text.trim(),
+  //     );
+
+  //     final user = response['user'];
+  //     final token = response['token'] as String;
+
+  //     if (context.mounted) {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(
+  //           builder: (_) => TaskbarScreen(onThemeToggle: widget.onThemeToggle), // Navigate to TaskbarScreen
+  //         ),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     setState(() {
+  //       generalError = e.toString();
+  //     });
+  //   } finally {
+  //     if (context.mounted) {
+  //       setState(() => isLoading = false);
+  //     }
+  //   }
+  // }
+
   void loginUser() async {
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
+  setState(() {
+    isLoading = true;
+    generalError = null;
+  });
+
+  try {
+    final response = await ApiService.login(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
+
+    final user = response['user'];
+    final token = response['token'] as String;
+
+    if (context.mounted) {
+      // Use GoRouter to navigate to /taskbar
+      context.go('/taskbar');
+    }
+  } catch (e) {
     setState(() {
-      isLoading = true;
-      generalError = null;
+      generalError = e.toString();
     });
-
-    try {
-      final response = await ApiService.login(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-
-      final user = response['user'];
-      final token = response['token'] as String;
-
-      if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MenuScreen(onThemeToggle: widget.onThemeToggle),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        generalError = e.toString();
-      });
-    } finally {
-      if (context.mounted) {
-        setState(() => isLoading = false);
-      }
+  } finally {
+    if (context.mounted) {
+      setState(() => isLoading = false);
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {

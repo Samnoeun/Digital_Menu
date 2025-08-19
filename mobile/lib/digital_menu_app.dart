@@ -42,8 +42,14 @@ class _DigitalMenuAppState extends State<DigitalMenuApp> {
         ),
         GoRoute(
           path: '/taskbar',
-          builder: (context, state) =>
-              TaskbarScreen(onThemeToggle: toggleTheme),
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>? ?? {};
+            final restaurantId = extra['restaurantId'] as int?;
+            return TaskbarScreen(
+              onThemeToggle: toggleTheme,
+              restaurantId: restaurantId,
+            );
+          },
         ),
         GoRoute(
           path: '/menu',
