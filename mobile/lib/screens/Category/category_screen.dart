@@ -1,8 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'category_list_screen.dart';
 
-class CategoryScreen extends StatelessWidget {
+// Centralized Language Service
+class LanguageService {
+  static final Map<String, Map<String, String>> _localization = {
+    'English': {
+      'loading_categories': 'Loading Categories...',
+    },
+    'Khmer': {
+      'loading_categories': 'កំពុងដំណើរការប្រភេទ...',
+    },
+  };
+
+  static Future<String> getCurrentLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('selectedLanguage') ?? 'English';
+  }
+
+  static String getText(String key, String language) {
+    return _localization[language]?[key] ?? key;
+  }
+}
+
+// Updated CategoryScreen with translation support
+class CategoryScreen extends StatefulWidget {
   const CategoryScreen({Key? key}) : super(key: key);
+
+  @override
+  State<CategoryScreen> createState() => _CategoryScreenState();
+}
+
+class _CategoryScreenState extends State<CategoryScreen> {
+  String selectedLanguage = 'English';
+  String loadingText = 'Loading Categories...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguage();
+  }
+
+  Future<void> _loadLanguage() async {
+    final language = await LanguageService.getCurrentLanguage();
+    setState(() {
+      selectedLanguage = language;
+      loadingText = LanguageService.getText('loading_categories', language);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +89,12 @@ class CategoryScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Loading Categories...',
+              loadingText,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.deepPurple.shade700,
                 fontWeight: FontWeight.w500,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
