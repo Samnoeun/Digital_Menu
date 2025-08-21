@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'add_category_screen.dart';
 import 'category_detail_screen.dart';
 import '../../models/category_model.dart';
@@ -22,6 +23,52 @@ class _CategoryListScreenState extends State<CategoryListScreen>
   String _searchQuery = '';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'categories': 'Categories',
+      'selected': '{count} Selected',
+      'search_categories': 'Search categories...',
+      'loading_categories': 'Loading categories...',
+      'no_categories_found': 'No categories found',
+      'no_matching_categories': 'No matching categories',
+      'add_category_prompt': 'Tap the + button to add a new category',
+      'try_different_search': 'Try a different search term',
+      'select': 'Select',
+      'confirm_delete': 'Confirm Delete',
+      'delete_single': 'Delete category "{name}"? This will also delete all items in it.',
+      'delete_multiple': 'Delete {count} selected {count, plural, one{category} other{categories}}? This will also delete all items in them.',
+      'cancel': 'Cancel',
+      'delete': 'Delete',
+      'edit': 'Edit',
+      'category_deleted': 'Category deleted successfully',
+      'categories_deleted': 'Selected categories deleted successfully',
+      'failed_delete_category': 'Failed to delete category: {error}',
+      'failed_delete_categories': 'Failed to delete categories: {error}',
+    },
+    'Khmer': {
+      'categories': 'ប្រភេទ',
+      'selected': 'បានជ្រើសរើស {count}',
+      'search_categories': 'ស្វែងរកប្រភេទ...',
+      'loading_categories': 'កំពុងផ្ទុកប្រភេទ...',
+      'no_categories_found': 'រកមិនឃើញប្រភេទទេ',
+      'no_matching_categories': 'គ្មានប្រភេទដែលត្រូវនឹងការស្វែងរក',
+      'add_category_prompt': 'ចុចប៊ូតុង + ដើម្បីបន្ថែមប្រភេទថ្មី',
+      'try_different_search': 'សាកល្បងប្រើពាក្យស្វែងរកផ្សេង',
+      'select': 'ជ្រើសរើស',
+      'confirm_delete': 'បញ្ជាក់ការលុប',
+      'delete_single': 'លុបប្រភេទ "{name}"? វានឹងលុបធាតុទាំងអស់នៅក្នុងនោះផងដែរ។',
+      'delete_multiple': 'លុប {count} ប្រភេទដែលបានជ្រើសរើស? វានឹងលុបធាតុទាំងអស់នៅក្នុងនោះផងដែរ។',
+      'cancel': 'បោះបង់',
+      'delete': 'លុប',
+      'edit': 'កែសម្រួល',
+      'category_deleted': 'បានលុបប្រភេទដោយជោគជ័យ',
+      'categories_deleted': 'បានលុបប្រភេទដែលបានជ្រើសរើសដោយជោគជ័យ',
+      'failed_delete_category': 'បរាជ័យក្នុងការលុបប្រភេទ: {error}',
+      'failed_delete_categories': 'បរាជ័យក្នុងការលុបប្រភេទ: {error}',
+    },
+  };
 
   @override
   void initState() {
@@ -34,6 +81,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _searchController.addListener(_onSearchChanged);
+    _loadSavedLanguage();
     _fetchCategories();
   }
 
@@ -42,6 +90,15 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     _searchController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
   }
 
   // Helper function to get restaurant/food related icons
@@ -129,6 +186,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
 
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -139,17 +197,19 @@ class _CategoryListScreenState extends State<CategoryListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              'Confirm Delete',
+              lang['confirm_delete']!,
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.black87,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
         ),
         content: Text(
-          'Delete ${_selectedCategoryIds.length} selected ${_selectedCategoryIds.length == 1 ? 'category' : 'categories'}? This will also delete all items in them.',
+          lang['delete_multiple']!.replaceFirst('{count}', '${_selectedCategoryIds.length}'),
           style: TextStyle(
             color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
         backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
@@ -157,9 +217,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              lang['cancel']!,
               style: TextStyle(
                 color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -171,7 +232,13 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              lang['delete']!,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
           ),
         ],
       ),
@@ -180,17 +247,16 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     if (confirmed == true) {
       try {
         setState(() => _isLoading = true);
-        // Delete all selected categories
         for (int categoryId in _selectedCategoryIds) {
           await ApiService.deleteCategory(categoryId);
         }
         _selectedCategoryIds.clear();
         _isSelectionMode = false;
         _fetchCategories();
-        _showSuccessSnackbar('Selected categories deleted successfully');
+        _showSuccessSnackbar(lang['categories_deleted']!);
       } catch (e) {
         setState(() => _isLoading = false);
-        _showErrorSnackbar('Failed to delete categories: ${e.toString()}');
+        _showErrorSnackbar(lang['failed_delete_categories']!.replaceFirst('{error}', e.toString()));
       }
     }
   }
@@ -212,7 +278,12 @@ class _CategoryListScreenState extends State<CategoryListScreen>
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(
+              localization[selectedLanguage]!['failed_delete_categories']!.replaceFirst('{error}', e.toString()),
+              style: TextStyle(
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
             backgroundColor: Colors.red.shade600,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -229,6 +300,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
   Future<void> _deleteCategory(int id, String name) async {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -239,17 +311,19 @@ class _CategoryListScreenState extends State<CategoryListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              'Confirm Delete',
+              lang['confirm_delete']!,
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.black87,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
         ),
         content: Text(
-          'Delete category "$name"? This will also delete all items in it.',
+          lang['delete_single']!.replaceFirst('{name}', name),
           style: TextStyle(
             color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
         backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
@@ -257,9 +331,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              lang['cancel']!,
               style: TextStyle(
                 color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -271,7 +346,13 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              lang['delete']!,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
           ),
         ],
       ),
@@ -282,10 +363,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
         setState(() => _isLoading = true);
         await ApiService.deleteCategory(id);
         _fetchCategories();
-        _showSuccessSnackbar('Category deleted successfully');
+        _showSuccessSnackbar(lang['category_deleted']!);
       } catch (e) {
         setState(() => _isLoading = false);
-        _showErrorSnackbar('Failed to delete category: ${e.toString()}');
+        _showErrorSnackbar(lang['failed_delete_category']!.replaceFirst('{error}', e.toString()));
       }
     }
   }
@@ -297,7 +378,14 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.red.shade600,
@@ -315,7 +403,14 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           children: [
             const Icon(Icons.check_circle_outline),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.green.shade600,
@@ -330,6 +425,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
 
     return Scaffold(
       backgroundColor: isDarkMode
@@ -352,12 +448,13 @@ class _CategoryListScreenState extends State<CategoryListScreen>
               padding: const EdgeInsets.only(left: 10),
               child: Text(
                 _isSelectionMode
-                    ? '${_selectedCategoryIds.length} Selected'
-                    : 'Categories',
-                style: const TextStyle(
+                    ? lang['selected']!.replaceFirst('{count}', '${_selectedCategoryIds.length}')
+                    : lang['categories']!,
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 24,
                   color: Colors.white,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ),
@@ -380,17 +477,18 @@ class _CategoryListScreenState extends State<CategoryListScreen>
               IconButton(
                 icon: const Icon(Icons.delete, color: Colors.white),
                 onPressed: _deleteSelectedCategories,
-                tooltip: 'Delete Selected',
+                tooltip: lang['delete']!,
               ),
           ] else ...[
             TextButton(
               onPressed: _toggleSelectionMode,
-              child: const Text(
-                'Select',
+              child: Text(
+                lang['select']!,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ),
@@ -430,27 +528,24 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search categories...',
+                    hintText: lang['search_categories']!,
                     hintStyle: TextStyle(
                       color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
                       fontSize: 14,
+                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors
-                                .white // White in dark mode
-                          : Colors.deepPurple.shade600, // Purple in light mode
+                          ? Colors.white
+                          : Colors.deepPurple.shade600,
                       size: 20,
                     ),
-
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(
                               Icons.clear_rounded,
-                              color: isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                               size: 18,
                             ),
                             onPressed: () => _searchController.clear(),
@@ -464,14 +559,15 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                     fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 8, // Reduced vertical padding
+                      vertical: 8,
                     ),
-                    isDense: true, // Makes the field more compact
+                    isDense: true,
                   ),
                   style: TextStyle(
                     fontSize: 14,
                     color: isDarkMode ? Colors.white : Colors.black87,
-                  ), // Smaller text size
+                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                 ),
               ),
             ),
@@ -488,376 +584,300 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Loading categories...',
+                          lang['loading_categories']!,
                           style: TextStyle(
-                            color: isDarkMode
-                                ? Colors.white
-                                : Colors.deepPurple.shade600,
+                            color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                         ),
                       ],
                     ),
                   )
                 : _filteredCategories.isEmpty
-                ? Center(
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: isDarkMode
-                                  ? Colors.deepPurple.shade800
-                                  : Colors.deepPurple.shade100,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.restaurant_menu,
-                              size: 64,
-                              color: isDarkMode
-                                  ? Colors.deepPurple.shade300
-                                  : Colors.deepPurple.shade400,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            _searchQuery.isEmpty
-                                ? 'No categories found'
-                                : 'No matching categories',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : Colors.deepPurple.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _searchQuery.isEmpty
-                                ? 'Tap the + button to add a new category'
-                                : 'Try a different search term',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _fetchCategories,
-                    color: Colors.deepPurple.shade600,
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: ReorderableListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _filteredCategories.length,
-                        onReorder: _isSelectionMode
-                            ? (int oldIndex, int newIndex) {}
-                            : (int oldIndex, int newIndex) {
-                                setState(() {
-                                  if (oldIndex < newIndex) {
-                                    newIndex -= 1;
-                                  }
-                                  final Category item = _filteredCategories
-                                      .removeAt(oldIndex);
-                                  _filteredCategories.insert(newIndex, item);
-                                  // Also update the main categories list if no search is active
-                                  if (_searchQuery.isEmpty) {
-                                    final Category mainItem = _categories
-                                        .removeAt(oldIndex);
-                                    _categories.insert(newIndex, mainItem);
-                                  }
-                                });
-                              },
-                        itemBuilder: (context, index) {
-                          final category = _filteredCategories[index];
-                          final isSelected = _selectedCategoryIds.contains(
-                            category.id,
-                          );
-                          return AnimatedContainer(
-                            key: ValueKey(category.id),
-                            duration: Duration(
-                              milliseconds: 300 + (index * 50),
-                            ),
-                            curve: Curves.easeOutBack,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: Card(
-                              elevation: isSelected ? 6 : 3,
-                              shadowColor: isSelected
-                                  ? Colors.deepPurple.withOpacity(0.3)
-                                  : Colors.deepPurple.withOpacity(0.15),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: isSelected
-                                    ? BorderSide(
-                                        color: Colors.deepPurple.shade600,
-                                        width: 2,
-                                      )
-                                    : BorderSide.none,
-                              ),
-                              color: isDarkMode ? Colors.grey[800] : null,
-                              child: Container(
+                    ? Center(
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(24),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  gradient: isSelected
-                                      ? LinearGradient(
-                                          colors: isDarkMode
-                                              ? [
-                                                  Colors.deepPurple.shade800,
-                                                  Colors.deepPurple.shade700,
-                                                ]
-                                              : [
-                                                  Colors.deepPurple.shade100,
-                                                  Colors.deepPurple.shade50,
-                                                ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        )
-                                      : isDarkMode
-                                      ? null
-                                      : LinearGradient(
-                                          colors: [
-                                            Colors.white,
-                                            Colors.deepPurple.shade50,
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                  color: isDarkMode ? Colors.grey[800] : null,
+                                  color: isDarkMode
+                                      ? Colors.deepPurple.shade800
+                                      : Colors.deepPurple.shade100,
+                                  shape: BoxShape.circle,
                                 ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
+                                child: Icon(
+                                  Icons.restaurant_menu,
+                                  size: 64,
+                                  color: isDarkMode
+                                      ? Colors.deepPurple.shade300
+                                      : Colors.deepPurple.shade400,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                _searchQuery.isEmpty
+                                    ? lang['no_categories_found']!
+                                    : lang['no_matching_categories']!,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDarkMode ? Colors.white : Colors.deepPurple.shade700,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _searchQuery.isEmpty
+                                    ? lang['add_category_prompt']!
+                                    : lang['try_different_search']!,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _fetchCategories,
+                        color: Colors.deepPurple.shade600,
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: ReorderableListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _filteredCategories.length,
+                            onReorder: _isSelectionMode
+                                ? (int oldIndex, int newIndex) {}
+                                : (int oldIndex, int newIndex) {
+                                    setState(() {
+                                      if (oldIndex < newIndex) {
+                                        newIndex -= 1;
+                                      }
+                                      final Category item = _filteredCategories.removeAt(oldIndex);
+                                      _filteredCategories.insert(newIndex, item);
+                                      if (_searchQuery.isEmpty) {
+                                        final Category mainItem = _categories.removeAt(oldIndex);
+                                        _categories.insert(newIndex, mainItem);
+                                      }
+                                    });
+                                  },
+                            itemBuilder: (context, index) {
+                              final category = _filteredCategories[index];
+                              final isSelected = _selectedCategoryIds.contains(category.id);
+                              return AnimatedContainer(
+                                key: ValueKey(category.id),
+                                duration: Duration(milliseconds: 300 + (index * 50)),
+                                curve: Curves.easeOutBack,
+                                margin: const EdgeInsets.only(bottom: 12),
+                                child: Card(
+                                  elevation: isSelected ? 6 : 3,
+                                  shadowColor: isSelected
+                                      ? Colors.deepPurple.withOpacity(0.3)
+                                      : Colors.deepPurple.withOpacity(0.15),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: isSelected
+                                        ? BorderSide(color: Colors.deepPurple.shade600, width: 2)
+                                        : BorderSide.none,
                                   ),
-                                  leading: _isSelectionMode
-                                      ? Checkbox(
-                                          value: isSelected,
-                                          onChanged: (bool? value) {
-                                            _toggleCategorySelection(
-                                              category.id,
-                                            );
-                                          },
-                                          activeColor:
-                                              Colors.deepPurple.shade600,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              4,
+                                  color: isDarkMode ? Colors.grey[800] : null,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      gradient: isSelected
+                                          ? LinearGradient(
+                                              colors: isDarkMode
+                                                  ? [
+                                                      Colors.deepPurple.shade800,
+                                                      Colors.deepPurple.shade700,
+                                                    ]
+                                                  : [
+                                                      Colors.deepPurple.shade100,
+                                                      Colors.deepPurple.shade50,
+                                                    ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            )
+                                          : isDarkMode
+                                              ? null
+                                              : LinearGradient(
+                                                  colors: [
+                                                    Colors.white,
+                                                    Colors.deepPurple.shade50,
+                                                  ],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                      color: isDarkMode ? Colors.grey[800] : null,
+                                    ),
+                                    child: ListTile(
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      leading: _isSelectionMode
+                                          ? Checkbox(
+                                              value: isSelected,
+                                              onChanged: (bool? value) {
+                                                _toggleCategorySelection(category.id);
+                                              },
+                                              activeColor: Colors.deepPurple.shade600,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                            )
+                                          : Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  colors: [
+                                                    Colors.deepPurple.shade600,
+                                                    Colors.deepPurple.shade400,
+                                                  ],
+                                                ),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Icon(
+                                                _getCategoryIcon(category.name),
+                                                color: Colors.white,
+                                                size: 18,
+                                              ),
                                             ),
-                                          ),
-                                        )
-                                      : Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.deepPurple.shade600,
-                                                Colors.deepPurple.shade400,
-                                              ],
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            _getCategoryIcon(category.name),
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
+                                      title: Text(
+                                        category.name,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDarkMode ? Colors.white : Colors.deepPurple.shade800,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                         ),
-                                  title: Text(
-                                    category.name,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDarkMode
-                                          ? Colors.white
-                                          : Colors.deepPurple.shade800,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    '${category.items.length} items',
-                                    style: TextStyle(
-                                      color: isDarkMode
-                                          ? Colors.grey[400]
-                                          : Colors.deepPurple.shade600,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  trailing: _isSelectionMode
-                                      ? null
-                                      : PopupMenuButton(
-                                          icon: Icon(
-                                            Icons.more_vert_rounded,
-                                            color: isDarkMode
-                                                ? Colors.grey[400]
-                                                : Colors.deepPurple.shade600,
-                                            size: 20,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          itemBuilder: (context) => [
-                                            PopupMenuItem(
-                                              value: 'edit',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.edit_rounded,
-                                                    color: Colors
-                                                        .deepPurple
-                                                        .shade600,
-                                                    size: 18,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    'Edit',
-                                                    style: TextStyle(
-                                                      color: isDarkMode
-                                                          ? Colors.white
-                                                          : Colors.black87,
-                                                    ),
-                                                  ),
-                                                ],
+                                      ),
+                                      subtitle: Text(
+                                        '${category.items.length} items',
+                                        style: TextStyle(
+                                          color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                        ),
+                                      ),
+                                      trailing: _isSelectionMode
+                                          ? null
+                                          : PopupMenuButton(
+                                              icon: Icon(
+                                                Icons.more_vert_rounded,
+                                                color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                                                size: 20,
                                               ),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'delete',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.delete_rounded,
-                                                    color: Colors.red.shade600,
-                                                    size: 18,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    'Delete',
-                                                    style: TextStyle(
-                                                      color:
-                                                          Colors.red.shade600,
-                                                    ),
-                                                  ),
-                                                ],
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
                                               ),
-                                            ),
-                                          ],
-                                          onSelected: (value) async {
-                                            if (value == 'edit') {
-                                              final result = await Navigator.push(
-                                                context,
-                                                PageRouteBuilder(
-                                                  pageBuilder:
-                                                      (
-                                                        context,
-                                                        animation,
-                                                        secondaryAnimation,
-                                                      ) => AddCategoryScreen(
-                                                        category: category,
+                                              itemBuilder: (context) => [
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.edit_rounded,
+                                                        color: Colors.deepPurple.shade600,
+                                                        size: 18,
                                                       ),
-                                                  transitionsBuilder:
-                                                      (
-                                                        context,
-                                                        animation,
-                                                        secondaryAnimation,
-                                                        child,
-                                                      ) {
+                                                      const SizedBox(width: 8),
+                                                      Text(
+                                                        lang['edit']!,
+                                                        style: TextStyle(
+                                                          color: isDarkMode ? Colors.white : Colors.black87,
+                                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.delete_rounded,
+                                                        color: Colors.red.shade600,
+                                                        size: 18,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Text(
+                                                        lang['delete']!,
+                                                        style: TextStyle(
+                                                          color: Colors.red.shade600,
+                                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  final result = await Navigator.push(
+                                                    context,
+                                                    PageRouteBuilder(
+                                                      pageBuilder: (context, animation, secondaryAnimation) =>
+                                                          AddCategoryScreen(category: category),
+                                                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                                         return SlideTransition(
                                                           position: animation.drive(
                                                             Tween(
-                                                              begin:
-                                                                  const Offset(
-                                                                    1.0,
-                                                                    0.0,
-                                                                  ),
+                                                              begin: const Offset(1.0, 0.0),
                                                               end: Offset.zero,
-                                                            ).chain(
-                                                              CurveTween(
-                                                                curve: Curves
-                                                                    .easeInOut,
-                                                              ),
-                                                            ),
+                                                            ).chain(CurveTween(curve: Curves.easeInOut)),
                                                           ),
                                                           child: child,
                                                         );
                                                       },
-                                                ),
-                                              );
-                                              if (result == true)
-                                                _fetchCategories();
-                                            } else if (value == 'delete') {
-                                              _deleteCategory(
-                                                category.id,
-                                                category.name,
-                                              );
-                                            }
-                                          },
-                                        ),
-                                  onTap: _isSelectionMode
-                                      ? () => _toggleCategorySelection(
-                                          category.id,
-                                        )
-                                      : () {
-                                          Navigator.push(
-                                            context,
-                                            PageRouteBuilder(
-                                              pageBuilder:
-                                                  (
-                                                    context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                  ) => CategoryDetailScreen(
-                                                    category: category,
-                                                  ),
-                                              transitionsBuilder:
-                                                  (
-                                                    context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                    child,
-                                                  ) {
+                                                    ),
+                                                  );
+                                                  if (result == true) _fetchCategories();
+                                                } else if (value == 'delete') {
+                                                  _deleteCategory(category.id, category.name);
+                                                }
+                                              },
+                                            ),
+                                      onTap: _isSelectionMode
+                                          ? () => _toggleCategorySelection(category.id)
+                                          : () {
+                                              Navigator.push(
+                                                context,
+                                                PageRouteBuilder(
+                                                  pageBuilder: (context, animation, secondaryAnimation) =>
+                                                      CategoryDetailScreen(category: category),
+                                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
                                                     return SlideTransition(
                                                       position: animation.drive(
                                                         Tween(
-                                                          begin: const Offset(
-                                                            1.0,
-                                                            0.0,
-                                                          ),
+                                                          begin: const Offset(1.0, 0.0),
                                                           end: Offset.zero,
-                                                        ).chain(
-                                                          CurveTween(
-                                                            curve: Curves
-                                                                .easeInOut,
-                                                          ),
-                                                        ),
+                                                        ).chain(CurveTween(curve: Curves.easeInOut)),
                                                       ),
                                                       child: child,
                                                     );
                                                   },
-                                            ),
-                                          );
-                                        },
+                                                ),
+                                              );
+                                            },
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
+                              );
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
           ),
         ],
       ),
@@ -870,18 +890,17 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                   PageRouteBuilder(
                     pageBuilder: (context, animation, secondaryAnimation) =>
                         const AddCategoryScreen(),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                          return SlideTransition(
-                            position: animation.drive(
-                              Tween(
-                                begin: const Offset(0.0, 1.0),
-                                end: Offset.zero,
-                              ).chain(CurveTween(curve: Curves.easeInOut)),
-                            ),
-                            child: child,
-                          );
-                        },
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      return SlideTransition(
+                        position: animation.drive(
+                          Tween(
+                            begin: const Offset(0.0, 1.0),
+                            end: Offset.zero,
+                          ).chain(CurveTween(curve: Curves.easeInOut)),
+                        ),
+                        child: child,
+                      );
+                    },
                   ),
                 );
                 if (result == true) _fetchCategories();
