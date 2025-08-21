@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../Preview/menu_preview_screen.dart';
 
-class OrderConfirmationScreen extends StatelessWidget {
+class OrderConfirmationScreen extends StatefulWidget {
   final int tableNumber;
   final List<Map<String, dynamic>> orderItems;
   final VoidCallback onClearCart;
@@ -15,24 +16,80 @@ class OrderConfirmationScreen extends StatelessWidget {
   });
 
   @override
+  State<OrderConfirmationScreen> createState() => _OrderConfirmationScreenState();
+}
+
+class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
+  String selectedLanguage = 'English';
+  
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'order_confirmation': 'Order Confirmation',
+      'order_submitted': 'Order Submitted Successfully!',
+      'table_number': 'Your Table Number is',
+      'remember_number': 'Please remember this number',
+      'order_summary': 'Order Summary',
+      'total': 'Total:',
+      'back_to_menu': 'Back to Menu',
+      'unknown_item': 'Unknown Item',
+    },
+    'Khmer': {
+      'order_confirmation': 'ការបញ្ជាក់ការកម្មង',
+      'order_submitted': 'ការកម្មងត្រូវបានដាក់ស្នើដោយជោគជ័យ!',
+      'table_number': 'លេខតុរបស់អ្នកគឺ',
+      'remember_number': 'សូមចងចាំលេខនេះ',
+      'order_summary': 'សេចក្តីសង្ខេបការកម្មង',
+      'total': 'សរុប៖',
+      'back_to_menu': 'ត្រឡប់ទៅម៉ឺនុយ',
+      'unknown_item': 'ធាតុមិនស្គាល់',
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage();
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
+  }
+
+  TextStyle getTextStyle({bool isBold = false, bool isSecondary = false, double? fontSize}) {
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: fontSize ?? (isSecondary ? 16 : 18),
+      color: isSecondary 
+          ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+          : Theme.of(context).textTheme.bodyLarge!.color,
+      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final currencyFormat = NumberFormat.currency(symbol: '\$');
+    final lang = localization[selectedLanguage]!;
 
-    final total = orderItems.fold(0.0, (sum, item) {
+    final total = widget.orderItems.fold(0.0, (sum, item) {
       return sum + ((item['price'] ?? 0.0) * (item['quantity'] ?? 1));
     });
 
     // Color definitions
-    
     final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
     final successColor = isDarkMode ? Colors.green[300] : Colors.green;
     final infoCardColor = isDarkMode ? Colors.blue[900] : Colors.blue.shade50;
-   final Color infoBorderColor = isDarkMode ? Colors.blue[800]! : Colors.blue.shade100;
+    final Color infoBorderColor = isDarkMode ? Colors.blue[800]! : Colors.blue.shade100;
     final infoTextColor = isDarkMode ? Colors.blue[100] : Colors.blue.shade800;
     final Color primaryColor = isDarkMode ? Colors.deepPurple[300]! : Colors.deepPurple;
 
@@ -50,15 +107,16 @@ class OrderConfirmationScreen extends StatelessWidget {
           ),
         ),
         titleSpacing: 0,
-        title: const Row(
+        title: Row(
           children: [
-            SizedBox(width: 30),
+            const SizedBox(width: 30),
             Text(
-              'Order Confirmation',
+              lang['order_confirmation']!,
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
@@ -85,11 +143,12 @@ class OrderConfirmationScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'Order Submitted Successfully!',
+                              lang['order_submitted']!,
                               style: TextStyle(
                                 fontSize: 22,
                                 color: successColor,
                                 fontWeight: FontWeight.bold,
+                                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                               ),
                             ),
                           ],
@@ -109,27 +168,30 @@ class OrderConfirmationScreen extends StatelessWidget {
                           child: Column(
                             children: [
                               Text(
-                                'Your Table Number is',
+                                lang['table_number']!,
                                 style: TextStyle(
                                   fontSize: 18,
                                   color: infoTextColor,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '$tableNumber',
+                                '${widget.tableNumber}',
                                 style: TextStyle(
                                   fontSize: 48,
                                   fontWeight: FontWeight.bold,
                                   color: isDarkMode ? Colors.blue[100] : Colors.blue.shade900,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Please remember this number',
+                                lang['remember_number']!,
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: infoTextColor,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                             ],
@@ -151,51 +213,35 @@ class OrderConfirmationScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Order Summary',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: textColor,
-                                  ),
+                                  lang['order_summary']!,
+                                  style: getTextStyle(isBold: true),
                                 ),
                                 Text(
                                   DateFormat('hh:mm a').format(DateTime.now()),
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: secondaryTextColor,
-                                  ),
+                                  style: getTextStyle(isSecondary: true),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            ...orderItems.map(
+                            ...widget.orderItems.map(
                               (item) => Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 4),
                                 child: Row(
                                   children: [
                                     Text(
                                       '${item['quantity']}x',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: textColor,
-                                      ),
+                                      style: getTextStyle(),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
-                                        item['name'] ?? 'Unknown Item',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: textColor,
-                                        ),
+                                        item['name'] ?? lang['unknown_item']!,
+                                        style: getTextStyle(),
                                       ),
                                     ),
                                     Text(
                                       currencyFormat.format((item['price'] ?? 0.0) * (item['quantity'] ?? 1)),
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: textColor,
-                                      ),
+                                      style: getTextStyle(),
                                     ),
                                   ],
                                 ),
@@ -206,12 +252,8 @@ class OrderConfirmationScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Total:',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: textColor,
-                                  ),
+                                  lang['total']!,
+                                  style: getTextStyle(isBold: true, fontSize: 18),
                                 ),
                                 Text(
                                   currencyFormat.format(total),
@@ -219,6 +261,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: successColor,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                 ),
                               ],
@@ -246,7 +289,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      onClearCart();
+                      widget.onClearCart();
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -254,9 +297,13 @@ class OrderConfirmationScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    child: const Text(
-                      'Back to Menu',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
+                    child: Text(
+                      lang['back_to_menu']!,
+                      style: TextStyle(
+                        fontSize: 18, 
+                        color: Colors.white,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
                     ),
                   ),
                 ),
