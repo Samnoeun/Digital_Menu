@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/category_model.dart' as my_models;
 import '../../models/item_model.dart' as item_model;
 import '../../services/api_services.dart';
@@ -34,6 +35,84 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
   String? _webImageName;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  String selectedLanguage = 'English';
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'edit_item': 'Edit Item',
+      'add_item': 'Add Item',
+      'add_image': 'Add Image',
+      'change_image': 'Change Image',
+      'item_name': 'Item Name',
+      'description_optional': 'Description (Optional)',
+      'price': 'Price',
+      'category': 'Category',
+      'update_item': 'Update Item',
+      'create_item': 'Create Item',
+      'select_category': 'Select Category',
+      'name_required': 'Please enter item name',
+      'price_required': 'Please enter price',
+      'price_valid': 'Please enter valid price',
+      'category_required': 'Please select category',
+      'image_required': 'Image is required',
+      'loading': 'Loading...',
+      'success': 'Success',
+      'error': 'Error',
+      'item_created': 'Item created successfully',
+      'item_updated': 'Item updated successfully',
+      'item_deleted': 'Item deleted successfully',
+      'create_failed': 'Failed to create item',
+      'update_failed': 'Failed to update item',
+      'delete_failed': 'Failed to delete item',
+      'categories_failed': 'Failed to load categories',
+      'image_failed': 'Failed to pick image',
+      'fill_required': 'Please fill all required fields',
+      'confirm_delete': 'Confirm Delete',
+      'delete_confirm': 'Delete this item?',
+      'cancel': 'Cancel',
+      'delete': 'Delete',
+      'camera': 'Camera',
+      'gallery': 'Gallery',
+      'choose_image': 'Choose Image',
+    },
+    'Khmer': {
+      'edit_item': 'កែសម្រួលធាតុ',
+      'add_item': 'បន្ថែមធាតុ',
+      'add_image': 'បន្ថែមរូបភាព',
+      'change_image': 'ផ្លាស់ប្តូររូបភាព',
+      'item_name': 'ឈ្មោះធាតុ',
+      'description_optional': 'ការពិពណ៌នា (ជាជម្រើស)',
+      'price': 'តម្លៃ',
+      'category': 'ប្រភេទ',
+      'update_item': 'ធ្វើបច្ចុប្បន្នភាពធាតុ',
+      'create_item': 'បង្កើតធាតុ',
+      'select_category': 'ជ្រើសរើសប្រភេទ',
+      'name_required': 'សូមបញ្ចូលឈ្មោះធាតុ',
+      'price_required': 'សូមបញ្ចូលតម្លៃ',
+      'price_valid': 'សូមបញ្ចូលតម្លៃដែលត្រឹមត្រូវ',
+      'category_required': 'សូមជ្រើសរើសប្រភេទ',
+      'image_required': 'រូបភាពត្រូវបានទាមទារ',
+      'loading': 'កំពុងផ្ទុក...',
+      'success': 'ជោគជ័យ',
+      'error': 'កំហុស',
+      'item_created': 'ធាតុត្រូវបានបង្កើតដោយជោគជ័យ',
+      'item_updated': 'ធាតុត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ',
+      'item_deleted': 'ធាតុត្រូវបានលុបដោយជោគជ័យ',
+      'create_failed': 'បរាជ័យក្នុងការបង្កើតធាតុ',
+      'update_failed': 'បរាជ័យក្នុងការធ្វើបច្ចុប្បន្នភាពធាតុ',
+      'delete_failed': 'បរាជ័យក្នុងការលុបធាតុ',
+      'categories_failed': 'បរាជ័យក្នុងការផ្ទុកប្រភេទ',
+      'image_failed': 'បរាជ័យក្នុងការជ្រើសរើសរូបភាព',
+      'fill_required': 'សូមបំពេញគ្រប់ផ្នែកដែលត្រូវការ',
+      'confirm_delete': 'បញ្ជាក់ការលុប',
+      'delete_confirm': 'លុបធាតុនេះ?',
+      'cancel': 'បោះបង់',
+      'delete': 'លុប',
+      'camera': 'កាមេរ៉ា',
+      'gallery': 'វិចិត្រសាល',
+      'choose_image': 'ជ្រើសរើសរូបភាព',
+    },
+  };
 
   @override
   void initState() {
@@ -45,6 +124,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    _loadSavedLanguage();
     _initializeForm();
   }
 
@@ -55,6 +135,24 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     _priceController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
+  }
+
+  TextStyle getTextStyle({bool isBold = false, double? fontSize, Color? color}) {
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: fontSize ?? 16,
+      color: color ?? Theme.of(context).textTheme.bodyLarge!.color,
+      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+    );
   }
 
   Future<void> _initializeForm() async {
@@ -84,13 +182,15 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
         }
       });
     } catch (e) {
-      _showErrorSnackbar('Failed to load categories: $e');
+      final lang = localization[selectedLanguage]!;
+      _showErrorSnackbar('${lang['categories_failed']!}: $e');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   Future<void> _pickImage() async {
+    final lang = localization[selectedLanguage]!;
     try {
       if (kIsWeb) {
         final result = await ImagePickerService.pickImage();
@@ -103,24 +203,47 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           });
         }
       } else {
-        final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-        if (picked != null) {
-          setState(() {
-            _imageFile = File(picked.path);
-            _webImageBytes = null;
-            _webImageName = null;
-            _imagePath = null;
-          });
+        final source = await showModalBottomSheet<ImageSource>(
+          context: context,
+          builder: (context) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: Text(lang['camera']!),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: Text(lang['gallery']!),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        );
+
+        if (source != null) {
+          final picked = await ImagePicker().pickImage(source: source);
+          if (picked != null) {
+            setState(() {
+              _imageFile = File(picked.path);
+              _webImageBytes = null;
+              _webImageName = null;
+              _imagePath = null;
+            });
+          }
         }
       }
     } catch (e) {
-      _showErrorSnackbar('Failed to pick image: $e');
+      _showErrorSnackbar('${lang['image_failed']!}: $e');
     }
   }
 
   Future<void> _saveItem() async {
+    final lang = localization[selectedLanguage]!;
+    
     if (!_formKey.currentState!.validate() || _selectedCategory == null) {
-      _showErrorSnackbar('Please fill all required fields');
+      _showErrorSnackbar(lang['fill_required']!);
       return;
     }
 
@@ -141,7 +264,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           webImageBytes: _webImageBytes,
           webImageName: _webImageName,
         );
-        _showSuccessSnackbar('Item created successfully');
+        _showSuccessSnackbar(lang['item_created']!);
       } else {
         await ApiService.updateItem(
           widget.item!.id,
@@ -153,17 +276,20 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           webImageBytes: _webImageBytes,
           webImageName: _webImageName,
         );
-        _showSuccessSnackbar('Item updated successfully');
+        _showSuccessSnackbar(lang['item_updated']!);
       }
       Navigator.pop(context, true);
     } catch (e) {
-      _showErrorSnackbar('Error: ${e.toString()}');
+      final errorMsg = widget.item != null ? lang['update_failed']! : lang['create_failed']!;
+      _showErrorSnackbar('$errorMsg: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   Future<void> _deleteItem() async {
+    final lang = localization[selectedLanguage]!;
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -176,32 +302,35 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              'Confirm Delete',
+              lang['confirm_delete']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white
                     : Colors.black87,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
         ),
         content: Text(
-          'Delete ${widget.item!.name}?',
+          '${lang['delete_confirm']!} "${widget.item!.name}"?',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
                 : Colors.grey[600],
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              lang['cancel']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
                     : Colors.grey[600],
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -213,7 +342,13 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              lang['delete']!,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
           ),
         ],
       ),
@@ -224,10 +359,10 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     setState(() => _isLoading = true);
     try {
       await ApiService.deleteItem(widget.item!.id);
-      _showSuccessSnackbar('Item deleted successfully');
+      _showSuccessSnackbar(lang['item_deleted']!);
       Navigator.pop(context, true);
     } catch (e) {
-      _showErrorSnackbar('Failed to delete item: $e');
+      _showErrorSnackbar('${lang['delete_failed']!}: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -240,7 +375,14 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.deepPurple.shade700,
@@ -258,7 +400,14 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           children: [
             const Icon(Icons.check_circle_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.green.shade600,
@@ -274,6 +423,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     final isEdit = widget.item != null;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50,
@@ -293,11 +443,12 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
             ),
             const SizedBox(width: 8),
             Text(
-              isEdit ? 'Edit Item' : 'Add Item',
-              style: const TextStyle(
+              isEdit ? lang['edit_item']! : lang['add_item']!,
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 22,
                 color: Colors.white,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
@@ -318,7 +469,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.white),
               onPressed: _deleteItem,
-              tooltip: 'Delete Item',
+              tooltip: lang['delete']!,
             ),
           if (widget.onThemeToggle != null)
             IconButton(
@@ -344,11 +495,12 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Loading...',
+                    lang['loading']!,
                     style: TextStyle(
                       color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
+                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                     ),
                   ),
                 ],
@@ -433,13 +585,14 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                                               ),
                                               const SizedBox(height: 8),
                                               Text(
-                                                'Add Image',
+                                                lang['add_image']!,
                                                 style: TextStyle(
                                                   color: isDarkMode
                                                       ? Colors.grey[400]
                                                       : Colors.deepPurple.shade600,
                                                   fontWeight: FontWeight.w600,
                                                   fontSize: 16,
+                                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                                 ),
                                               ),
                                             ],
@@ -455,9 +608,10 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                         child: TextFormField(
                           controller: _nameController,
                           decoration: InputDecoration(
-                            labelText: 'Item Name',
+                            labelText: lang['item_name']!,
                             labelStyle: TextStyle(
                               color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -479,10 +633,11 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter item name';
+                              return lang['name_required']!;
                             }
                             return null;
                           },
@@ -496,9 +651,10 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                         child: TextFormField(
                           controller: _descController,
                           decoration: InputDecoration(
-                            labelText: 'Description (Optional)',
+                            labelText: lang['description_optional']!,
                             labelStyle: TextStyle(
                               color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -520,6 +676,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                           maxLines: 3,
                         ),
@@ -532,9 +689,10 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                         child: TextFormField(
                           controller: _priceController,
                           decoration: InputDecoration(
-                            labelText: 'Price',
+                            labelText: lang['price']!,
                             labelStyle: TextStyle(
                               color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -556,14 +714,15 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                           keyboardType: const TextInputType.numberWithOptions(decimal: true),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter price';
+                              return lang['price_required']!;
                             }
                             if (double.tryParse(value) == null) {
-                              return 'Please enter valid price';
+                              return lang['price_valid']!;
                             }
                             return null;
                           },
@@ -583,6 +742,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                                 category.name,
                                 style: TextStyle(
                                   color: isDarkMode ? Colors.white : Colors.black87,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                             );
@@ -593,9 +753,10 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             });
                           },
                           decoration: InputDecoration(
-                            labelText: 'Category',
+                            labelText: lang['category']!,
                             labelStyle: TextStyle(
                               color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -618,7 +779,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
                           validator: (value) {
                             if (value == null) {
-                              return 'Please select category';
+                              return lang['category_required']!;
                             }
                             return null;
                           },
@@ -644,11 +805,12 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           child: _isLoading
                               ? const CircularProgressIndicator(color: Colors.white)
                               : Text(
-                                  isEdit ? 'Update Item' : 'Create Item',
-                                  style: const TextStyle(
+                                  isEdit ? lang['update_item']! : lang['create_item']!,
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                 ),
                         ),
