@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/category_model.dart' as category;
 import '../../models/item_model.dart' as item;
 import '../../services/api_services.dart';
@@ -26,6 +27,28 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   String? _error;
 
   final TextEditingController _searchController = TextEditingController();
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'preview': 'Preview',
+      'search_items': 'Search items...',
+      'all': 'All',
+      'error': 'Error: {error}',
+      'basket': 'Basket',
+      'item': 'Item',
+      'items': 'Items',
+    },
+    'Khmer': {
+      'preview': 'មើលជាមុន',
+      'search_items': 'ស្វែងរកធាតុ...',
+      'all': 'ទាំងអស់',
+      'error': 'កំហុស៖ {error}',
+      'basket': 'កន្ត្រក',
+      'item': 'ធាតុ',
+      'items': 'ធាតុ',
+    },
+  };
 
   @override
   void initState() {
@@ -37,6 +60,15 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
         _searchText = _searchController.text;
         _filterItems();
       });
+    });
+    _loadSavedLanguage();
+  }
+
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
     });
   }
 
@@ -58,7 +90,12 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString()}'),
+          content: Text(
+            localization[selectedLanguage]!['error']!.replaceFirst('{error}', _error!),
+            style: TextStyle(
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
+          ),
           backgroundColor: Colors.deepPurple.shade700,
         ),
       );
@@ -171,6 +208,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   Widget _buildSearchBar() {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -197,17 +235,17 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search items...',
+              hintText: lang['search_items']!,
               hintStyle: TextStyle(
                 color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
                 fontSize: 14,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
               prefixIcon: Icon(
                 Icons.search_rounded,
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors
-                          .white // White in dark mode
-                    : Colors.deepPurple.shade600, // Purple in light mode
+                    ? Colors.white
+                    : Colors.deepPurple.shade600,
                 size: 20,
               ),
               suffixIcon: _searchController.text.isNotEmpty
@@ -237,6 +275,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             style: TextStyle(
               fontSize: 14,
               color: isDarkMode ? Colors.white : Colors.black87,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
             ),
           ),
         ),
@@ -248,6 +287,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
     return Scaffold(
       backgroundColor: isDarkMode
           ? Colors.grey[900]
@@ -272,11 +312,12 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 0),
-              const Text(
-                'Preview',
+              Text(
+                lang['preview']!,
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ],
@@ -296,10 +337,6 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           Stack(
             alignment: Alignment.topRight,
             children: [
-              // IconButton(
-              //   icon: const Icon(Icons.shopping_cart, color: Colors.white),
-              //   onPressed: _goToCartPage,
-              // ),
               if (_cart.isNotEmpty)
                 Positioned(
                   right: 8,
@@ -340,11 +377,12 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
               child: Row(
                 children: [
                   ChoiceChip(
-                    label: const Text(
-                      'All',
+                    label: Text(
+                      lang['all']!,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                     selected: _selectedCategoryId == null,
@@ -360,6 +398,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                           : Colors.deepPurple.shade700,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
+                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                     ),
                     onSelected: (_) => _onCategorySelected(null),
                     padding: const EdgeInsets.symmetric(
@@ -374,9 +413,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                       child: ChoiceChip(
                         label: Text(
                           cat.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                         ),
                         selected: _selectedCategoryId == cat.id,
@@ -392,6 +432,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                               : Colors.deepPurple.shade700,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
+                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                         ),
                         onSelected: (_) => _onCategorySelected(cat.id),
                         padding: const EdgeInsets.symmetric(
@@ -416,9 +457,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                 : _error != null
                 ? Center(
                     child: Text(
-                      'Error: $_error',
+                      localization[selectedLanguage]!['error']!.replaceFirst('{error}', _error!),
                       style: TextStyle(
                         color: isDarkMode ? Colors.grey[400] : Colors.black87,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   )
@@ -443,10 +485,11 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                   Theme.of(context).brightness ==
                                       Brightness.dark
                                   ? Colors
-                                        .white // White text in dark mode
+                                        .white
                                   : Colors
                                         .deepPurple
-                                        .shade700, // Deep purple in light mode
+                                        .shade700,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                           const SizedBox(height: 10),
@@ -489,6 +532,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                     color: isDarkMode
                                         ? Colors.white
                                         : Colors.black87,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                 ),
                                 subtitle: Text(
@@ -497,6 +541,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                                     color: isDarkMode
                                         ? Colors.grey[400]
                                         : Colors.grey[600],
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                 ),
                                 trailing: quantity > 0
@@ -537,6 +582,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: isDarkMode ? Colors.white : Colors.black87,
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
       ),
@@ -607,19 +653,21 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Basket • ${_totalSelectedItems} Item${_totalSelectedItems > 1 ? 's' : ''}',
-                            style: const TextStyle(
+                            '${lang['basket']} • ${_totalSelectedItems} ${(_totalSelectedItems > 1 ? lang['items'] : lang['item'])!}',
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                           Text(
                             '\$${_totalSelectedPrice.toStringAsFixed(2)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                         ],
