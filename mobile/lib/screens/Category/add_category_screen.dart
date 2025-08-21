@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/category_model.dart';
 import '../../services/api_services.dart';
 
@@ -18,6 +19,38 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
   late AnimationController _animationController;
   late Animation<double> _slideAnimation;
   late Animation<double> _fadeAnimation;
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'add_category': 'Add Category',
+      'edit_category': 'Edit Category',
+      'create_category': 'Create Category',
+      'update_category': 'Update Category',
+      'category_name': 'Category Name',
+      'enter_category_name': 'Enter category name',
+      'please_enter_name': 'Please enter a category name',
+      'add_new_category': 'Add a new category to organize your items',
+      'update_category_info': 'Update the category information',
+      'category_added': 'Category added successfully',
+      'category_updated': 'Category updated successfully',
+      'error': '{error}',
+    },
+    'Khmer': {
+      'add_category': 'បន្ថែមប្រភេទ',
+      'edit_category': 'កែប្រែប្រភេទ',
+      'create_category': 'បង្កើតប្រភេទ',
+      'update_category': 'ធ្វើបច្ចុប្បន្នភាពប្រភេទ',
+      'category_name': 'ឈ្មោះប្រភេទ',
+      'enter_category_name': 'បញ្ចូលឈ្មោះប្រភេទ',
+      'please_enter_name': 'សូមបញ្ចូលឈ្មោះប្រភេទ',
+      'add_new_category': 'បន្ថែមប្រភេទថ្មីដើម្បីរៀបចំធាតុរបស់អ្នក',
+      'update_category_info': 'ធ្វើបច្ចុប្បន្នភាពព័ត៌មានប្រភេទ',
+      'category_added': 'បានបន្ថែមប្រភេទដោយជោគជ័យ',
+      'category_updated': 'បានធ្វើបច្ចុប្បន្នភាពប្រភេទដោយជោគជ័យ',
+      'error': '{error}',
+    },
+  };
 
   @override
   void initState() {
@@ -38,6 +71,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     }
 
     _animationController.forward();
+    _loadSavedLanguage();
   }
 
   @override
@@ -47,6 +81,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     super.dispose();
   }
 
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -54,17 +96,17 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
       setState(() => _isLoading = true);
       if (widget.category == null) {
         await ApiService.createCategory(_nameController.text);
-        _showSuccessSnackbar('Category added successfully');
+        _showSuccessSnackbar(localization[selectedLanguage]!['category_added']!);
       } else {
         await ApiService.updateCategory(
           widget.category!.id,
           _nameController.text,
         );
-        _showSuccessSnackbar('Category updated successfully');
+        _showSuccessSnackbar(localization[selectedLanguage]!['category_updated']!);
       }
       Navigator.pop(context, true);
     } catch (e) {
-      _showErrorSnackbar(e.toString());
+      _showErrorSnackbar(localization[selectedLanguage]!['error']!.replaceFirst('{error}', e.toString()));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -126,6 +168,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
     final inputFillColor = isDarkMode ? Colors.grey[700] : Colors.deepPurple.shade50;
+    final lang = localization[selectedLanguage]!;
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
@@ -143,11 +186,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
               ),
               const SizedBox(width: 0),
               Text(
-                widget.category == null ? 'Add Category' : 'Edit Category',
-                style: const TextStyle(
+                widget.category == null
+                    ? lang['add_category']!
+                    : lang['edit_category']!,
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 22,
                   color: Colors.white,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ],
@@ -227,23 +273,25 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                 const SizedBox(height: 20),
                                 Text(
                                   widget.category == null
-                                      ? 'Create Category'
-                                      : 'Edit Category',
+                                      ? lang['create_category']!
+                                      : lang['update_category']!,
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w700,
                                     color: textColor,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
                                   widget.category == null
-                                      ? 'Add a new category to organize your items'
-                                      : 'Update the category information',
+                                      ? lang['add_new_category']!
+                                      : lang['update_category_info']!,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: secondaryTextColor,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -251,12 +299,13 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                 TextFormField(
                                   controller: _nameController,
                                   decoration: InputDecoration(
-                                    labelText: 'Category Name',
+                                    labelText: lang['category_name']!,
                                     labelStyle: TextStyle(
                                       color: primaryColor,
-                                     fontWeight: FontWeight.w600
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                     ),
-                                    hintText: 'Enter category name',
+                                    hintText: lang['enter_category_name']!,
                                     prefixIcon: Icon(
                                       Icons.label_outline,
                                       color: primaryColor,
@@ -290,11 +339,12 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                   style: TextStyle(
                                     fontSize: 16,
                                     color: textColor,
-                                    fontWeight: FontWeight.w600
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
-                                      return 'Please enter a category name';
+                                      return lang['please_enter_name']!;
                                     }
                                     return null;
                                   },
@@ -349,12 +399,13 @@ class _AddCategoryScreenState extends State<AddCategoryScreen>
                                               const SizedBox(width: 8),
                                               Text(
                                                 widget.category == null
-                                                    ? 'Add Category'
-                                                    : 'Update Category',
-                                                style: const TextStyle(
+                                                    ? lang['add_category']!
+                                                    : lang['update_category']!,
+                                                style: TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w600,
                                                   color: Colors.white,
+                                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                                 ),
                                               ),
                                             ],
