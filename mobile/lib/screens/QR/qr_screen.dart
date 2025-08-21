@@ -95,12 +95,23 @@ class _QrScreenState extends State<QrScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final scaffoldBackgroundColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50;
+    final scaffoldBackgroundColor = isDarkMode
+        ? Colors.grey[900]
+        : Colors.deepPurple.shade50;
+    // final cardBackgroundColor = isDarkMode ? Colors.grey[800] : Colors.white;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
-    final primaryColor = isDarkMode ? Colors.deepPurple.shade300 : Colors.deepPurple.shade600;
-    final Color inputBorderColor = isDarkMode ? Colors.grey[600]! : Colors.deepPurple.shade200;
-    final Color cardBackgroundColor = isDarkMode ? Colors.grey[800]! : Colors.white;
+    final primaryColor = isDarkMode
+        ? Colors.deepPurple.shade600
+        : Colors.deepPurple.shade600;
+    // final inputBorderColor = isDarkMode ? Colors.grey[600] : Colors.deepPurple.shade200;
+    final Color inputBorderColor = isDarkMode
+        ? Colors.grey[600]!
+        : Colors.deepPurple.shade200;
+    // Change from Color? to Color by providing a default value
+    final Color cardBackgroundColor = isDarkMode
+        ? Colors.grey[800]!
+        : Colors.white;
 
     return Scaffold(
       backgroundColor: scaffoldBackgroundColor,
@@ -161,8 +172,15 @@ class _QrScreenState extends State<QrScreen> {
             TextField(
               controller: _textController,
               decoration: InputDecoration(
-                labelText: localization[_language]!['input_label'],
-                hintText: localization[_language]!['input_hint'],
+                labelText: 'Enter link or data',
+                hintText: 'https://example.com',
+                labelStyle: TextStyle(
+                  color: isDarkMode
+                      ? Colors.white
+                      : Color(
+                          0xFF8249ED,
+                        ), 
+                ),
                 prefixIcon: Icon(Icons.link, color: primaryColor),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -172,22 +190,15 @@ class _QrScreenState extends State<QrScreen> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: inputBorderColor),
                 ),
+
                 filled: true,
                 fillColor: cardBackgroundColor,
-                labelStyle: TextStyle(
-                  color: primaryColor,
-                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
-                hintStyle: TextStyle(
-                  color: secondaryTextColor,
-                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
+                // labelStyle: TextStyle(color: primaryColor),
+                hintStyle: TextStyle(color: secondaryTextColor),
                 contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16.0, horizontal: 16.0),
-              ),
-              style: TextStyle(
-                color: textColor,
-                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  vertical: 16.0,
+                  horizontal: 16.0,
+                ),
               ),
               maxLines: 3,
               onChanged: (val) {
@@ -242,15 +253,21 @@ class _QrScreenState extends State<QrScreen> {
                       offset: const Offset(0, 3),
                     ),
                   ],
+                  // border: Border.all(...)
                   border: Border.all(
-                      color: isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade100),
+                    color: isDarkMode
+                        ? Colors.grey[700]!
+                        : Colors.deepPurple.shade100,
+                  ),
                 ),
                 child: QrImageView(
                   data: qrText,
                   version: QrVersions.auto,
                   size: 250.0,
                   backgroundColor: cardBackgroundColor,
-                  foregroundColor: isDarkMode ? Colors.white : Colors.deepPurple.shade800,
+                  foregroundColor: isDarkMode
+                      ? Colors.white
+                      : Colors.deepPurple.shade800,
                   errorCorrectionLevel: QrErrorCorrectLevel.M,
                 ),
               ),
@@ -261,7 +278,10 @@ class _QrScreenState extends State<QrScreen> {
                   color: cardBackgroundColor,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                      color: isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade100),
+                    color: isDarkMode
+                        ? Colors.grey[700]!
+                        : Colors.deepPurple.shade100,
+                  ),
                 ),
                 child: Column(
                   children: [
@@ -276,11 +296,7 @@ class _QrScreenState extends State<QrScreen> {
                     const SizedBox(height: 8),
                     Text(
                       qrText,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: textColor,
-                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                      ),
+                      style: TextStyle(fontSize: 13, color: textColor),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -288,12 +304,8 @@ class _QrScreenState extends State<QrScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                localization[_language]!['qr_info']!,
-                style: TextStyle(
-                  color: secondaryTextColor,
-                  fontSize: 13,
-                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
+                'Tip: You can scan this QR code with any QR scanner app or your camera.',
+                style: TextStyle(color: secondaryTextColor, fontSize: 13),
                 textAlign: TextAlign.center,
               ),
             ],

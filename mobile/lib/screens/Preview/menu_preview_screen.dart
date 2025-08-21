@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/category_model.dart' as category;
 import '../../models/item_model.dart' as item;
 import '../../services/api_services.dart';
@@ -25,50 +24,19 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
   String _searchText = '';
   bool _isLoading = true;
   String? _error;
-  String _language = 'English'; // Default language, will be overridden by SharedPreferences
 
   final TextEditingController _searchController = TextEditingController();
-
-  // Localization map for English and Khmer
-  final Map<String, Map<String, String>> localization = {
-    'English': {
-      'app_bar_title': 'Preview',
-      'search_hint': 'Search items...',
-      'all_category': 'All',
-      'error_prefix': 'Error:',
-      'basket_text': 'Basket • {count} Item{plural}',
-      'snackbar_error': 'Error: {error}',
-    },
-    'Khmer': {
-      'app_bar_title': 'មើលជាមុន',
-      'search_hint': 'ស្វែងរកមុខទំនិញ...',
-      'all_category': 'ទាំងអស់',
-      'error_prefix': 'កំហុស:',
-      'basket_text': 'កន្ត្រក • {count} មុខទំនិញ{plural}',
-      'snackbar_error': 'កំហុស: {error}',
-    },
-  };
 
   @override
   void initState() {
     super.initState();
     _loadData();
-    _loadSavedLanguage(); // Load saved language
 
     _searchController.addListener(() {
       setState(() {
         _searchText = _searchController.text;
         _filterItems();
       });
-    });
-  }
-
-  // Load the saved language from SharedPreferences
-  Future<void> _loadSavedLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
-    setState(() {
-      _language = savedLanguage;
     });
   }
 
@@ -90,10 +58,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            localization[_language]!['snackbar_error']!.replaceAll('{error}', e.toString()),
-            style: TextStyle(fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null),
-          ),
+          content: Text('Error: ${e.toString()}'),
           backgroundColor: Colors.deepPurple.shade700,
         ),
       );
@@ -232,17 +197,17 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: localization[_language]!['search_hint'],
+              hintText: 'Search items...',
               hintStyle: TextStyle(
                 color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
                 fontSize: 14,
-                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
               prefixIcon: Icon(
                 Icons.search_rounded,
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.deepPurple.shade600,
+                    ? Colors
+                          .white // White in dark mode
+                    : Colors.deepPurple.shade600, // Purple in light mode
                 size: 20,
               ),
               suffixIcon: _searchController.text.isNotEmpty
@@ -272,7 +237,6 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
             style: TextStyle(
               fontSize: 14,
               color: isDarkMode ? Colors.white : Colors.black87,
-              fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
             ),
           ),
         ),
@@ -301,19 +265,18 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                 icon: const Icon(
                   Icons.arrow_back_ios,
                   size: 18,
-                  color: Colors.white,
+                  color: Color.fromARGB(255, 255, 255, 255),
                 ),
                 onPressed: () => Navigator.of(context).pop(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
               const SizedBox(width: 0),
-              Text(
-                localization[_language]!['app_bar_title']!,
+              const Text(
+                'Preview',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
-                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ],
@@ -333,10 +296,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
           Stack(
             alignment: Alignment.topRight,
             children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart, color: Colors.white),
-                onPressed: _goToCartPage,
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.shopping_cart, color: Colors.white),
+              //   onPressed: _goToCartPage,
+              // ),
               if (_cart.isNotEmpty)
                 Positioned(
                   right: 8,
@@ -349,11 +312,7 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                     ),
                     child: Text(
                       _cart.length.toString(),
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
                     ),
                   ),
                 ),
@@ -381,12 +340,11 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
               child: Row(
                 children: [
                   ChoiceChip(
-                    label: Text(
-                      localization[_language]!['all_category']!,
+                    label: const Text(
+                      'All',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                     selected: _selectedCategoryId == null,
@@ -398,11 +356,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                       color: _selectedCategoryId == null
                           ? Colors.white
                           : isDarkMode
-                              ? Colors.grey[400]
-                              : Colors.deepPurple.shade700,
+                          ? Colors.grey[400]
+                          : Colors.deepPurple.shade700,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
-                      fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                     ),
                     onSelected: (_) => _onCategorySelected(null),
                     padding: const EdgeInsets.symmetric(
@@ -417,10 +374,9 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                       child: ChoiceChip(
                         label: Text(
                           cat.name,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                         ),
                         selected: _selectedCategoryId == cat.id,
@@ -432,11 +388,10 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                           color: _selectedCategoryId == cat.id
                               ? Colors.white
                               : isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.deepPurple.shade700,
+                              ? Colors.grey[400]
+                              : Colors.deepPurple.shade700,
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
-                          fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                         ),
                         onSelected: (_) => _onCategorySelected(cat.id),
                         padding: const EdgeInsets.symmetric(
@@ -459,141 +414,168 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                     ),
                   )
                 : _error != null
-                    ? Center(
-                        child: Text(
-                          localization[_language]!['error_prefix']! + ' $_error',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.black87,
-                            fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ? Center(
+                    child: Text(
+                      'Error: $_error',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.grey[400] : Colors.black87,
+                      ),
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: _categories.map((category.Category cat) {
+                      final itemsInCategory = _filteredItems
+                          .where((item) => item.categoryId == cat.id)
+                          .toList();
+
+                      if (itemsInCategory.isEmpty) return const SizedBox();
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cat.name,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors
+                                        .white // White text in dark mode
+                                  : Colors
+                                        .deepPurple
+                                        .shade700, // Deep purple in light mode
+                            ),
                           ),
-                        ),
-                      )
-                    : ListView(
-                        padding: const EdgeInsets.all(12),
-                        children: _categories.map((category.Category cat) {
-                          final itemsInCategory = _filteredItems
-                              .where((item) => item.categoryId == cat.id)
-                              .toList();
-
-                          if (itemsInCategory.isEmpty) return const SizedBox();
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                cat.name,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).brightness == Brightness.dark
-                                      ? Colors.white
-                                      : Colors.deepPurple.shade700,
-                                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                                ),
+                          const SizedBox(height: 10),
+                          ...itemsInCategory.map((item.Item item) {
+                            final quantity = _selectedItems[item] ?? 0;
+                            return Card(
+                              color: isDarkMode
+                                  ? Colors.grey[800]
+                                  : Colors.white,
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              const SizedBox(height: 10),
-                              ...itemsInCategory.map((item.Item item) {
-                                final quantity = _selectedItems[item] ?? 0;
-                                return Card(
-                                  color: isDarkMode ? Colors.grey[800] : Colors.white,
-                                  elevation: 2,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: ListTile(
-                                    onTap: () => _showItemDetail(item),
-                                    leading: item.imagePath != null
-                                        ? Image.network(
-                                            ApiService.getImageUrl(item.imagePath),
-                                            width: 50,
-                                            height: 50,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) =>
+                              child: ListTile(
+                                onTap: () => _showItemDetail(item),
+                                leading: item.imagePath != null
+                                    ? Image.network(
+                                        ApiService.getImageUrl(item.imagePath),
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
                                                 Icon(
                                                   Icons.broken_image,
-                                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                                  color: isDarkMode
+                                                      ? Colors.grey[400]
+                                                      : Colors.grey[600],
                                                 ),
-                                          )
-                                        : Icon(
-                                            Icons.image_not_supported,
-                                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                          ),
-                                    title: Text(
-                                      item.name,
-                                      style: TextStyle(
-                                        color: isDarkMode ? Colors.white : Colors.black87,
-                                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                                      )
+                                    : Icon(
+                                        Icons.image_not_supported,
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                       ),
-                                    ),
-                                    subtitle: Text(
-                                      '\$${item.price.toStringAsFixed(2)}',
-                                      style: TextStyle(
-                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                                      ),
-                                    ),
-                                    trailing: quantity > 0
-                                        ? Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.deepPurple.shade700.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.remove,
-                                                    size: 18,
-                                                    color: Colors.deepPurple.shade700,
-                                                  ),
-                                                  onPressed: () => _decrementQuantity(item),
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
-                                                ),
-                                                Text(
-                                                  '$quantity',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: isDarkMode ? Colors.white : Colors.black87,
-                                                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                                                  ),
-                                                ),
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.add,
-                                                    size: 18,
-                                                    color: Colors.deepPurple.shade700,
-                                                  ),
-                                                  onPressed: () => _incrementQuantity(item),
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        : IconButton(
-                                            icon: const Icon(
-                                              Icons.add,
-                                              color: Colors.white,
-                                            ),
-                                            onPressed: () => _incrementQuantity(item),
-                                            style: IconButton.styleFrom(
-                                              backgroundColor: Colors.deepPurple.shade700,
-                                              foregroundColor: Colors.white,
-                                            ),
-                                          ),
+                                title: Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black87,
                                   ),
-                                );
-                              }),
-                              const SizedBox(height: 20),
-                            ],
-                          );
-                        }).toList(),
-                      ),
+                                ),
+                                subtitle: Text(
+                                  '\$${item.price.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                                  ),
+                                ),
+                                trailing: quantity > 0
+                                    ? Container(
+  padding: const EdgeInsets.symmetric(horizontal: 3),
+  decoration: BoxDecoration(
+    color: isDarkMode 
+      ? Colors.grey.shade600.withOpacity(0.3)
+      : const Color.fromARGB(255, 56, 50, 81).withOpacity(0.1),
+    borderRadius: BorderRadius.circular(24),
+    border: Border.all(
+      color: isDarkMode 
+        ? Colors.grey.shade600 
+        : Colors.grey.shade300,
+      width: 0.3,
+    ),
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      IconButton(
+        icon: Icon(
+          Icons.remove,
+          size: 18,
+          color: isDarkMode 
+            ? Colors.white 
+            : Colors.deepPurple.shade700,
+        ),
+        onPressed: () => _decrementQuantity(item),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+      ),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(
+          '$quantity',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+        ),
+      ),
+      IconButton(
+        icon: Icon(
+          Icons.add,
+          size: 18,
+          color: isDarkMode 
+            ? Colors.white 
+            : Colors.deepPurple.shade700,
+        ),
+        onPressed: () => _incrementQuantity(item),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+      ),
+    ],
+  ),
+)
+                                    : IconButton(
+                                        icon: const Icon(
+                                          Icons.add,
+                                          color: Colors.white,
+                                        ),
+                                        onPressed: () =>
+                                            _incrementQuantity(item),
+                                        style: IconButton.styleFrom(
+                                          backgroundColor:
+                                              Colors.deepPurple.shade700,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                      ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    }).toList(),
+                  ),
           ),
         ],
       ),
@@ -625,23 +607,19 @@ class _MenuPreviewScreenState extends State<MenuPreviewScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            localization[_language]!['basket_text']!
-                                .replaceAll('{count}', _totalSelectedItems.toString())
-                                .replaceAll('{plural}', _totalSelectedItems > 1 ? 's' : ''),
-                            style: TextStyle(
+                            'Basket • ${_totalSelectedItems} Item${_totalSelectedItems > 1 ? 's' : ''}',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                           Text(
                             '\$${_totalSelectedPrice.toStringAsFixed(2)}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                         ],

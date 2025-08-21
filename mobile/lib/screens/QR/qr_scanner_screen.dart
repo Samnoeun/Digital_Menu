@@ -232,7 +232,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.deepPurple.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.deepPurple.shade800;
     final borderColor = isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade200;
-    final primaryColor = isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple.shade600;
+    final primaryColor = isDarkMode ? Colors.deepPurple[600] : Colors.deepPurple.shade600;
     final hintColor = isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade400;
     final inputFillColor = isDarkMode ? Colors.grey[800] : Colors.white;
 

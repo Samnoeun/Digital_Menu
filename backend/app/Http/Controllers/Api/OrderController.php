@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\OrderHistory;
+use App\Models\OrderItemHistory;
 
 class OrderController extends Controller
 {
@@ -53,22 +55,44 @@ class OrderController extends Controller
         return response()->json($order->load('orderItems.item'), 201);
     }
 
-    public function updateStatus(Order $order, Request $request)
-    {
-        $this->authorizeOrderAccess($order);
-        $request->validate([
-            'status' => 'required|in:pending,preparing,ready,completed',
-        ]);
+// app/Http/Controllers/Api/OrderController.php
+public function updateStatus(Order $order, Request $request)
+{
+    $this->authorizeOrderAccess($order);
+    $request->validate([
+        'status' => 'required|in:pending,preparing,ready,completed',
+    ]);
 
-        $order->update(['status' => $request->status]);
+    $order->update(['status' => $request->status]);
 
-        if ($request->status === 'completed') {
-            $order->delete();
-            return response()->json(['message' => 'Order completed and deleted']);
+    if ($request->status === 'completed') {
+        try {
+            // Archive to history
+            $historyOrder = OrderHistory::create([
+                'restaurant_id' => $order->restaurant_id,
+                'table_number' => $order->table_number,
+                'completed_at' => now(),
+            ]);
+
+            // Copy order items to history
+            foreach ($order->orderItems as $item) {
+                OrderItemHistory::create([
+                    'order_history_id' => $historyOrder->id,
+                    'item_id' => $item->item_id,
+                    'quantity' => $item->quantity,
+                    'special_note' => $item->special_note,
+                ]);
+            }
+
+            $order->delete(); // Delete the original order
+            return response()->json(['message' => 'Order completed and archived']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to archive order: ' . $e->getMessage()], 500);
         }
-
-        return response()->json($order->load('orderItems.item'));
     }
+
+    return response()->json($order->load('orderItems.item'));
+}
 
     public function destroy(Order $order)
     {
@@ -83,4 +107,17 @@ class OrderController extends Controller
             abort(403, 'Unauthorized action.');
         }
     }
+public function history()
+{
+    $user = Auth::user();
+    
+    if (!$user->restaurant) {
+        return response()->json(['data' => []]);
+    }
+
+    return DB::table('order_history')
+        ->where('restaurant_id', $user->restaurant->id)
+        ->orderBy('created_at', 'desc')
+        ->get();
+}
 }

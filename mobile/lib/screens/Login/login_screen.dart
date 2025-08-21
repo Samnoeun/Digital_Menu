@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String? emailError;
   String? passwordError;
   String? generalError;
+  bool _obscurePassword = true;
 
   bool isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
@@ -68,6 +69,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() {
       isLoading = true;
+      emailError = null;
+      passwordError = null;
       generalError = null;
     });
 
@@ -89,9 +92,29 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
-      setState(() {
-        generalError = e.toString();
-      });
+      String errorMessage = e.toString();
+      
+      if (errorMessage.contains("No account found with this email address")) {
+        setState(() {
+          emailError = "Email not found. Please check or register";
+          passwordError = null;
+        });
+      } else if (errorMessage.contains("Invalid password") || 
+                 errorMessage.contains("Incorrect password")) {
+        setState(() {
+          passwordError = "Incorrect password. Please try again";
+          emailError = null;
+        });
+      } else if (errorMessage.contains("account is locked") || 
+                 errorMessage.contains("too many attempts")) {
+        setState(() {
+          passwordError = "Account locked. Try again later or reset password";
+        });
+      } else {
+        setState(() {
+          generalError = "Login failed. Please try again";
+        });
+      }
     } finally {
       if (context.mounted) {
         setState(() => isLoading = false);
@@ -198,15 +221,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text(
                             'Welcome Back',
                             style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                  fontSize: 24,
+                                  fontSize: 30,
                                   fontWeight: FontWeight.bold,
                                   color: isDark ? Colors.white : Colors.deepPurple,
                                 ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 10),
                           Text(
                             'Sign in to your account',
                             style: Theme.of(context).textTheme.bodyMedium,
+                            
                           ),
                           const SizedBox(height: 24),
                           if (generalError != null)
@@ -228,23 +252,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
-                          _buildStyledTextField(
-                            controller: emailController,
-                            label: 'Email',
-                            icon: Icons.email_outlined,
-                            keyboardType: TextInputType.emailAddress,
-                            errorText: emailError,
-                            isDark: isDark,
-                          ),
+                          _buildEmailField(isDark),
                           const SizedBox(height: 16),
-                          _buildStyledTextField(
-                            controller: passwordController,
-                            label: 'Password',
-                            icon: Icons.lock_outline,
-                            isPassword: true,
-                            errorText: passwordError,
-                            isDark: isDark,
-                          ),
+                          _buildPasswordField(isDark),
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
@@ -261,33 +271,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          Container(
+                          // Larger Sign In button
+                          SizedBox(
                             width: double.infinity,
-                            height: 55,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.deepPurple.shade400,
-                                  Colors.deepPurple.shade600,
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.deepPurple.withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
+                            height: 60, // Increased height
                             child: ElevatedButton(
                               onPressed: isLoading ? null : loginUser,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                shadowColor: Colors.transparent,
+                                backgroundColor: Colors.deepPurple,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(15),
                                 ),
+                                elevation: 5,
+                                padding: const EdgeInsets.symmetric(vertical: 18), // Increased padding
                               ),
                               child: isLoading
                                   ? const CircularProgressIndicator(
@@ -296,7 +292,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : const Text(
                                       'Sign In',
                                       style: TextStyle(
-                                        fontSize: 18,
+                                        fontSize: 24, // Larger font
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
@@ -394,51 +390,131 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildStyledTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool isPassword = false,
-    TextInputType? keyboardType,
-    String? errorText,
-    required bool isDark,
-  }) {
+ Widget _buildPasswordField(bool isDark) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: passwordError != null
+                ? Colors.red.shade400
+                : isDark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade200,
+            width: passwordError != null ? 1.5 : 1,
+          ),
+        ),
+        child: TextField(
+          controller: passwordController,
+          obscureText: _obscurePassword,
+          onChanged: (value) {
+            if (passwordError != null) {
+              setState(() {
+                passwordError = null;
+              });
+            }
+          },
+          decoration: InputDecoration(
+            labelText: 'Password',
+            labelStyle: TextStyle(
+              color: passwordError != null
+                  ? Colors.red.shade400
+                  : isDark
+                      ? Colors.white70
+                      : Colors.deepPurple.shade400,
+            ),
+            prefixIcon: Icon(
+              Icons.lock_outline,
+              color: passwordError != null
+                  ? Colors.red.shade400
+                  : isDark
+                      ? Colors.white70
+                      : Colors.deepPurple.shade400,
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                color: isDark ? Colors.white70 : Colors.grey.shade600,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
+            ),
+            errorStyle: TextStyle(
+              color: Colors.red.shade400,
+              fontSize: 12,
+            ),
+          ),
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+      ),
+      if (passwordError != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8, left: 16),
+          child: Text(
+            passwordError!,
+            style: TextStyle(
+              color: Colors.red.shade400,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+  Widget _buildEmailField(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
           decoration: BoxDecoration(
             color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: errorText != null
-                  ? Colors.red.shade300
+              color: emailError != null
+                  ? Colors.red.shade400
                   : isDark
                       ? Colors.grey.shade700
                       : Colors.grey.shade200,
-              width: errorText != null ? 2 : 1,
+              width: emailError != null ? 1.5 : 1,
             ),
           ),
           child: TextField(
-            controller: controller,
-            obscureText: isPassword,
-            keyboardType: keyboardType,
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
             onChanged: (value) {
-              if (errorText != null) {
+              if (emailError != null) {
                 setState(() {
-                  if (controller == emailController) {
-                    emailError = null;
-                  } else if (controller == passwordController) {
-                    passwordError = null;
-                  }
+                  emailError = null;
                 });
               }
             },
             decoration: InputDecoration(
-              labelText: label,
+              labelText: 'Email',
+              labelStyle: TextStyle(
+                color: emailError != null
+                    ? Colors.red.shade400
+                    : isDark
+                        ? Colors.white70
+                        : Colors.deepPurple.shade400,
+              ),
               prefixIcon: Icon(
-                icon,
-                color: errorText != null
+                Icons.email_outlined,
+                color: emailError != null
                     ? Colors.red.shade400
                     : isDark
                         ? Colors.white70
@@ -449,24 +525,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 horizontal: 20,
                 vertical: 16,
               ),
-              labelStyle: TextStyle(
-                color: errorText != null
-                    ? Colors.red.shade600
-                    : isDark
-                        ? Colors.white70
-                        : Colors.grey.shade600,
+              errorStyle: TextStyle(
+                color: Colors.red.shade400,
+                fontSize: 12,
               ),
             ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
         ),
-        if (errorText != null)
+        if (emailError != null)
           Padding(
             padding: const EdgeInsets.only(top: 8, left: 16),
             child: Text(
-              errorText,
+              emailError!,
               style: TextStyle(
-                color: Colors.red.shade600,
+                color: Colors.red.shade400,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),

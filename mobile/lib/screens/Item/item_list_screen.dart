@@ -423,7 +423,7 @@ class _ItemListScreenState extends State<ItemListScreen>
 
     return Scaffold(
       backgroundColor: isDarkMode
-          ? Colors.grey[850]
+          ? const Color.fromARGB(255, 33, 33, 33)
           : Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -747,7 +747,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                   color: isSelected && isDarkMode
                                       ? Colors.grey[800]
                                       : isDarkMode
-                                          ? Colors.grey[850]
+                                          ? const Color.fromARGB(255, 40, 40, 40)
                                           : Colors.white,
                                   child: ListTile(
                                     contentPadding: const EdgeInsets.all(12),
