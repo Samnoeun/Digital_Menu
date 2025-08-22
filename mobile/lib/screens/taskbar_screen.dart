@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'home_screen.dart';
 import 'Order/order_screen.dart';
 import 'item/item_list_screen.dart' as item_screen;
+import 'category/category_list_screen.dart' as category_screen;
 import 'QR/qr_screen.dart';
 import 'Setting/settings_screen.dart';
 import 'Preview/menu_preview_screen.dart';

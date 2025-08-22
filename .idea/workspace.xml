@@ -5,8 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="94e62306-47ec-4100-903b-5d858c93503c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/.last_build_id" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/.last_build_id" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/assets/NOTICES" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/assets/NOTICES" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/assets/fonts/MaterialIcons-Regular.otf" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/assets/fonts/MaterialIcons-Regular.otf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/assets/shaders/ink_sparkle.frag" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/assets/shaders/ink_sparkle.frag" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/canvaskit.js" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/canvaskit.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/canvaskit.js.symbols" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/canvaskit.js.symbols" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/canvaskit.wasm" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/canvaskit.wasm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/chromium/canvaskit.js" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/chromium/canvaskit.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/chromium/canvaskit.js.symbols" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/chromium/canvaskit.js.symbols" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/chromium/canvaskit.wasm" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/chromium/canvaskit.wasm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/skwasm.js" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/skwasm.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/skwasm.js.symbols" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/skwasm.js.symbols" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/canvaskit/skwasm.wasm" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/canvaskit/skwasm.wasm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/flutter.js" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/flutter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/flutter_bootstrap.js" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/flutter_bootstrap.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/flutter_service_worker.js" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/flutter_service_worker.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/build/web/main.dart.js" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/build/web/main.dart.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mobile/lib/services/api_services.dart" beforeDir="false" afterPath="$PROJECT_DIR$/mobile/lib/services/api_services.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,23 +45,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
-    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
-    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
-    &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/language-translation&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/RUN.SAMNOEUN/Desktop/Digital_Menu&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;,
-    &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/RUN.SAMNOEUN/Desktop/Digital_Menu",
+    "settings.editor.selected.configurable": "AndroidSdkUpdater",
+    "show.migrate.to.gradle.popup": "false"
   }
-}</component>
+}]]></component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="94e62306-47ec-4100-903b-5d858c93503c" name="Changes" comment="" />

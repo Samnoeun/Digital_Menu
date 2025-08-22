@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/category_model.dart' as my_models;
 import '../../models/item_model.dart' as item_model;
 import '../../services/api_services.dart';
@@ -15,13 +14,15 @@ import '../../services/image_picker_service.dart'; // For ImagePickerService
 class AddItemScreen extends StatefulWidget {
   final item_model.Item? item;
   final Function(bool)? onThemeToggle;
-  const AddItemScreen({Key? key, this.item, this.onThemeToggle}) : super(key: key);
+  const AddItemScreen({Key? key, this.item, this.onThemeToggle})
+    : super(key: key);
 
   @override
   State<AddItemScreen> createState() => _AddItemScreenState();
 }
 
-class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateMixin {
+class _AddItemScreenState extends State<AddItemScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
@@ -35,84 +36,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
   String? _webImageName;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  String selectedLanguage = 'English';
-
-  final Map<String, Map<String, String>> localization = {
-    'English': {
-      'edit_item': 'Edit Item',
-      'add_item': 'Add Item',
-      'add_image': 'Add Image',
-      'change_image': 'Change Image',
-      'item_name': 'Item Name',
-      'description_optional': 'Description (Optional)',
-      'price': 'Price',
-      'category': 'Category',
-      'update_item': 'Update Item',
-      'create_item': 'Create Item',
-      'select_category': 'Select Category',
-      'name_required': 'Please enter item name',
-      'price_required': 'Please enter price',
-      'price_valid': 'Please enter valid price',
-      'category_required': 'Please select category',
-      'image_required': 'Image is required',
-      'loading': 'Loading...',
-      'success': 'Success',
-      'error': 'Error',
-      'item_created': 'Item created successfully',
-      'item_updated': 'Item updated successfully',
-      'item_deleted': 'Item deleted successfully',
-      'create_failed': 'Failed to create item',
-      'update_failed': 'Failed to update item',
-      'delete_failed': 'Failed to delete item',
-      'categories_failed': 'Failed to load categories',
-      'image_failed': 'Failed to pick image',
-      'fill_required': 'Please fill all required fields',
-      'confirm_delete': 'Confirm Delete',
-      'delete_confirm': 'Delete this item?',
-      'cancel': 'Cancel',
-      'delete': 'Delete',
-      'camera': 'Camera',
-      'gallery': 'Gallery',
-      'choose_image': 'Choose Image',
-    },
-    'Khmer': {
-      'edit_item': 'កែសម្រួលធាតុ',
-      'add_item': 'បន្ថែមធាតុ',
-      'add_image': 'បន្ថែមរូបភាព',
-      'change_image': 'ផ្លាស់ប្តូររូបភាព',
-      'item_name': 'ឈ្មោះធាតុ',
-      'description_optional': 'ការពិពណ៌នា (ជាជម្រើស)',
-      'price': 'តម្លៃ',
-      'category': 'ប្រភេទ',
-      'update_item': 'ធ្វើបច្ចុប្បន្នភាពធាតុ',
-      'create_item': 'បង្កើតធាតុ',
-      'select_category': 'ជ្រើសរើសប្រភេទ',
-      'name_required': 'សូមបញ្ចូលឈ្មោះធាតុ',
-      'price_required': 'សូមបញ្ចូលតម្លៃ',
-      'price_valid': 'សូមបញ្ចូលតម្លៃដែលត្រឹមត្រូវ',
-      'category_required': 'សូមជ្រើសរើសប្រភេទ',
-      'image_required': 'រូបភាពត្រូវបានទាមទារ',
-      'loading': 'កំពុងផ្ទុក...',
-      'success': 'ជោគជ័យ',
-      'error': 'កំហុស',
-      'item_created': 'ធាតុត្រូវបានបង្កើតដោយជោគជ័យ',
-      'item_updated': 'ធាតុត្រូវបានធ្វើបច្ចុប្បន្នភាពដោយជោគជ័យ',
-      'item_deleted': 'ធាតុត្រូវបានលុបដោយជោគជ័យ',
-      'create_failed': 'បរាជ័យក្នុងការបង្កើតធាតុ',
-      'update_failed': 'បរាជ័យក្នុងការធ្វើបច្ចុប្បន្នភាពធាតុ',
-      'delete_failed': 'បរាជ័យក្នុងការលុបធាតុ',
-      'categories_failed': 'បរាជ័យក្នុងការផ្ទុកប្រភេទ',
-      'image_failed': 'បរាជ័យក្នុងការជ្រើសរើសរូបភាព',
-      'fill_required': 'សូមបំពេញគ្រប់ផ្នែកដែលត្រូវការ',
-      'confirm_delete': 'បញ្ជាក់ការលុប',
-      'delete_confirm': 'លុបធាតុនេះ?',
-      'cancel': 'បោះបង់',
-      'delete': 'លុប',
-      'camera': 'កាមេរ៉ា',
-      'gallery': 'វិចិត្រសាល',
-      'choose_image': 'ជ្រើសរើសរូបភាព',
-    },
-  };
+  bool _isDuplicateName = false;
 
   @override
   void initState() {
@@ -124,7 +48,6 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _loadSavedLanguage();
     _initializeForm();
   }
 
@@ -137,24 +60,6 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     super.dispose();
   }
 
-  // Load the saved language from SharedPreferences
-  Future<void> _loadSavedLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
-    setState(() {
-      selectedLanguage = savedLanguage;
-    });
-  }
-
-  TextStyle getTextStyle({bool isBold = false, double? fontSize, Color? color}) {
-    return TextStyle(
-      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-      fontSize: fontSize ?? 16,
-      color: color ?? Theme.of(context).textTheme.bodyLarge!.color,
-      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-    );
-  }
-
   Future<void> _initializeForm() async {
     if (widget.item != null) {
       _nameController.text = widget.item!.name;
@@ -164,6 +69,27 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     }
     await _fetchCategories();
     _animationController.forward();
+  }
+
+  Future<void> _checkDuplicateName(String name) async {
+    if (name.isEmpty) return;
+
+    try {
+      final items = await ApiService.getItems();
+      final exists = items.any(
+        (item) =>
+            item.name.toLowerCase() == name.toLowerCase() &&
+            (widget.item == null || item.id != widget.item!.id),
+      );
+
+      if (mounted) {
+        setState(() {
+          _isDuplicateName = exists;
+        });
+      }
+    } catch (e) {
+      // Handle error if needed
+    }
   }
 
   Future<void> _fetchCategories() async {
@@ -182,15 +108,14 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
         }
       });
     } catch (e) {
-      final lang = localization[selectedLanguage]!;
-      _showErrorSnackbar('${lang['categories_failed']!}: $e');
+      _showErrorSnackbar('Failed to load categories: $e');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
+
   Future<void> _pickImage() async {
-    final lang = localization[selectedLanguage]!;
     try {
       if (kIsWeb) {
         final result = await ImagePickerService.pickImage();
@@ -203,47 +128,26 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           });
         }
       } else {
-        final source = await showModalBottomSheet<ImageSource>(
-          context: context,
-          builder: (context) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: Text(lang['camera']!),
-                onTap: () => Navigator.pop(context, ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: Text(lang['gallery']!),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
-              ),
-            ],
-          ),
+        final picked = await ImagePicker().pickImage(
+          source: ImageSource.gallery,
         );
-
-        if (source != null) {
-          final picked = await ImagePicker().pickImage(source: source);
-          if (picked != null) {
-            setState(() {
-              _imageFile = File(picked.path);
-              _webImageBytes = null;
-              _webImageName = null;
-              _imagePath = null;
-            });
-          }
+        if (picked != null) {
+          setState(() {
+            _imageFile = File(picked.path);
+            _webImageBytes = null;
+            _webImageName = null;
+            _imagePath = null;
+          });
         }
       }
     } catch (e) {
-      _showErrorSnackbar('${lang['image_failed']!}: $e');
+      _showErrorSnackbar('Failed to pick image: $e');
     }
   }
 
   Future<void> _saveItem() async {
-    final lang = localization[selectedLanguage]!;
-    
     if (!_formKey.currentState!.validate() || _selectedCategory == null) {
-      _showErrorSnackbar(lang['fill_required']!);
+      _showErrorSnackbar('Please fill all required fields');
       return;
     }
 
@@ -264,7 +168,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           webImageBytes: _webImageBytes,
           webImageName: _webImageName,
         );
-        _showSuccessSnackbar(lang['item_created']!);
+        _showSuccessSnackbar('Item created successfully');
       } else {
         await ApiService.updateItem(
           widget.item!.id,
@@ -276,20 +180,17 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           webImageBytes: _webImageBytes,
           webImageName: _webImageName,
         );
-        _showSuccessSnackbar(lang['item_updated']!);
+        _showSuccessSnackbar('Item updated successfully');
       }
       Navigator.pop(context, true);
     } catch (e) {
-      final errorMsg = widget.item != null ? lang['update_failed']! : lang['create_failed']!;
-      _showErrorSnackbar('$errorMsg: ${e.toString()}');
+      _showErrorSnackbar('Error: ${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   Future<void> _deleteItem() async {
-    final lang = localization[selectedLanguage]!;
-    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -302,35 +203,32 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              lang['confirm_delete']!,
+              'Confirm Delete',
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white
                     : Colors.black87,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
         ),
         content: Text(
-          '${lang['delete_confirm']!} "${widget.item!.name}"?',
+          'Delete ${widget.item!.name}?',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
                 : Colors.grey[600],
-            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              lang['cancel']!,
+              'Cancel',
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
                     : Colors.grey[600],
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -342,27 +240,22 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: Text(
-              lang['delete']!,
-              style: TextStyle(
-                color: Colors.white,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-              ),
-            ),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
+
 
     if (confirmed != true) return;
 
     setState(() => _isLoading = true);
     try {
       await ApiService.deleteItem(widget.item!.id);
-      _showSuccessSnackbar(lang['item_deleted']!);
+      _showSuccessSnackbar('Item deleted successfully');
       Navigator.pop(context, true);
     } catch (e) {
-      _showErrorSnackbar('${lang['delete_failed']!}: $e');
+      _showErrorSnackbar('Failed to delete item: $e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -375,17 +268,10 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                message,
-                style: TextStyle(
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
-              ),
-            ),
+            Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.deepPurple.shade700,
+        backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 3),
@@ -403,9 +289,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
             Expanded(
               child: Text(
                 message,
-                style: TextStyle(
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
+                style: const TextStyle(
+                  color: Colors.white,
+                ), // Explicit white text
               ),
             ),
           ],
@@ -423,32 +309,28 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
     final isEdit = widget.item != null;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final lang = localization[selectedLanguage]!;
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50,
+      backgroundColor: isDarkMode
+          ? Colors.grey[900]
+          : Colors.deepPurple.shade50,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Row(
           children: [
             IconButton(
-              icon: const Icon(
-                Icons.close,
-                size: 20,
-                color: Colors.white,
-              ),
+              icon: const Icon(Icons.close, size: 20, color: Colors.white),
               onPressed: () => Navigator.pop(context),
               constraints: const BoxConstraints(),
               padding: EdgeInsets.zero,
             ),
             const SizedBox(width: 8),
             Text(
-              isEdit ? lang['edit_item']! : lang['add_item']!,
-              style: TextStyle(
+              isEdit ? 'Edit Item' : 'Add Item',
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 22,
                 color: Colors.white,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
@@ -469,7 +351,7 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.white),
               onPressed: _deleteItem,
-              tooltip: lang['delete']!,
+              tooltip: 'Delete Item',
             ),
           if (widget.onThemeToggle != null)
             IconButton(
@@ -495,12 +377,14 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    lang['loading']!,
+                    'Loading...',
+
                     style: TextStyle(
-                      color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                      color: isDarkMode
+                          ? Colors.grey[400]
+                          : Colors.deepPurple.shade600,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                     ),
                   ),
                 ],
@@ -526,8 +410,14 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: isDarkMode
-                                    ? [Colors.grey.shade700, Colors.grey.shade800]
-                                    : [Colors.deepPurple.shade100, Colors.deepPurple.shade50],
+                                    ? [
+                                        Colors.grey.shade700,
+                                        Colors.grey.shade800,
+                                      ]
+                                    : [
+                                        Colors.deepPurple.shade100,
+                                        Colors.deepPurple.shade50,
+                                      ],
                               ),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
@@ -551,71 +441,73 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                                     ),
                                   )
                                 : _webImageBytes != null
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(18),
-                                        child: Image.memory(
-                                          _webImageBytes!,
-                                          fit: BoxFit.cover,
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(18),
+                                    child: Image.memory(
+                                      _webImageBytes!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  )
+                                : _imagePath != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(18),
+                                    child: Image.network(
+                                      ApiService.getImageUrl(_imagePath!),
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) => Icon(
+                                        Icons.broken_image_rounded,
+                                        size: 50,
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.deepPurple.shade400,
+                                      ),
+                                    ),
+                                  )
+                                : Column(
+
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_photo_alternate_rounded,
+                                        size: 50,
+                                        color: isDarkMode
+                                            ? Colors.grey[400]
+                                            : Colors.deepPurple.shade600,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Add Image',
+                                        style: TextStyle(
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+                                              : Colors.deepPurple.shade600,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
                                         ),
-                                      )
-                                    : _imagePath != null
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(18),
-                                            child: Image.network(
-                                              ApiService.getImageUrl(_imagePath!),
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => Icon(
-                                                Icons.broken_image_rounded,
-                                                size: 50,
-                                                color: isDarkMode
-                                                    ? Colors.grey[400]
-                                                    : Colors.deepPurple.shade400,
-                                              ),
-                                            ),
-                                          )
-                                        : Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.add_photo_alternate_rounded,
-                                                size: 50,
-                                                color: isDarkMode
-                                                    ? Colors.grey[400]
-                                                    : Colors.deepPurple.shade600,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                lang['add_image']!,
-                                                style: TextStyle(
-                                                  color: isDarkMode
-                                                      ? Colors.grey[400]
-                                                      : Colors.deepPurple.shade600,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 16,
-                                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 30),
 
-                      // Name Field
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 400),
                         child: TextFormField(
                           controller: _nameController,
                           decoration: InputDecoration(
-                            labelText: lang['item_name']!,
+                            labelText: 'Item Name',
                             labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade600,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -625,21 +517,62 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             ),
                             filled: true,
-                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            fillColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.white,
                             prefixIcon: Icon(
                               Icons.restaurant_menu,
                               color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
+                            errorText: _isDuplicateName
+                                ? '"${_nameController.text}" already exists'
+                                : null,
+                            errorStyle: TextStyle(
+                              color: isDarkMode
+                                  ? Colors.red[400]
+                                  : Colors.red, // Red color for errors
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.red[400]!
+                                    : Colors.red, // Red border for errors
+                                width: 1.5,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.red[400]!
+                                    : Colors
+                                          .red, // Red border when focused with error
+                                width: 2,
+                              ),
+                            ),
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
-                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return lang['name_required']!;
+                              return 'Please enter item name';
+                            }
+                            if (_isDuplicateName) {
+                              return '"$value" already exists. Please use a different name.';
                             }
                             return null;
+                          },
+                          onChanged: (value) async {
+                            if (_isDuplicateName) {
+                              setState(() {
+                                _isDuplicateName = false;
+                              });
+                              _formKey.currentState?.validate();
+                            }
+                            await _checkDuplicateName(value);
                           },
                         ),
                       ),
@@ -651,14 +584,17 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                         child: TextFormField(
                           controller: _descController,
                           decoration: InputDecoration(
-                            labelText: lang['description_optional']!,
+                            labelText: 'Description (Optional)',
                             labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade600,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -668,7 +604,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             ),
                             filled: true,
-                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            fillColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.white,
                             prefixIcon: Icon(
                               Icons.description_rounded,
                               color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
@@ -676,12 +614,12 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
-                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                           maxLines: 3,
                         ),
                       ),
                       const SizedBox(height: 20),
+
 
                       // Price Field
                       AnimatedContainer(
@@ -689,14 +627,17 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                         child: TextFormField(
                           controller: _priceController,
                           decoration: InputDecoration(
-                            labelText: lang['price']!,
+                            labelText: 'Price',
                             labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade600,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -706,29 +647,54 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             ),
                             filled: true,
-                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            fillColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.white,
                             prefixIcon: Icon(
                               Icons.attach_money_rounded,
                               color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
+                            errorStyle: TextStyle(
+                              color: isDarkMode ? Colors.red[400] : Colors.red,
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.red[400]!
+                                    : Colors.red,
+                                width: 1.5,
+                              ),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.red[400]!
+                                    : Colors.red,
+                                width: 2,
+                              ),
+                            ),
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
-                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return lang['price_required']!;
+                              return 'Please enter price';
                             }
                             if (double.tryParse(value) == null) {
-                              return lang['price_valid']!;
+                              return 'Please enter valid price';
                             }
                             return null;
                           },
                         ),
                       ),
                       const SizedBox(height: 20),
+
 
                       // Category Dropdown
                       AnimatedContainer(
@@ -741,8 +707,9 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               child: Text(
                                 category.name,
                                 style: TextStyle(
-                                  color: isDarkMode ? Colors.white : Colors.black87,
-                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Colors.black87,
                                 ),
                               ),
                             );
@@ -753,14 +720,17 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             });
                           },
                           decoration: InputDecoration(
-                            labelText: lang['category']!,
+                            labelText: 'Category',
                             labelStyle: TextStyle(
-                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade600,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: Colors.deepPurple.shade300),
+                              borderSide: BorderSide(
+                                color: Colors.deepPurple.shade300,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -770,22 +740,27 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                               ),
                             ),
                             filled: true,
-                            fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                            fillColor: isDarkMode
+                                ? Colors.grey[800]
+                                : Colors.white,
                             prefixIcon: Icon(
                               Icons.category_rounded,
                               color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
                             ),
                           ),
-                          dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                          dropdownColor: isDarkMode
+                              ? Colors.grey[800]
+                              : Colors.white,
                           validator: (value) {
                             if (value == null) {
-                              return lang['category_required']!;
+                              return 'Please select category';
                             }
                             return null;
                           },
                         ),
                       ),
                       const SizedBox(height: 30),
+
 
                       // Submit Button
                       AnimatedContainer(
@@ -803,14 +778,15 @@ class _AddItemScreenState extends State<AddItemScreen> with TickerProviderStateM
                             shadowColor: Colors.deepPurple.withOpacity(0.4),
                           ),
                           child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
                               : Text(
-                                  isEdit ? lang['update_item']! : lang['create_item']!,
-                                  style: TextStyle(
+                                  isEdit ? 'Update Item' : 'Create Item',
+                                  style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
-                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                 ),
                         ),
