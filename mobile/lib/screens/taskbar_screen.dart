@@ -35,8 +35,8 @@ class _MenuScreenState extends State<MenuScreen> {
       'menu_preview': 'Menu Preview',
       'qr_code': 'QR Code',
       'settings': 'Settings',
-      'close': 'Close', // Added for potential future use
-      'error': 'Error', // Added for potential future use
+      'close': 'Close',
+      'error': 'Error',
     },
     'Khmer': {
       'home': 'ទំព័រដើម',
@@ -47,8 +47,8 @@ class _MenuScreenState extends State<MenuScreen> {
       'menu_preview': 'មើលមឺនុយជាមុន',
       'qr_code': 'កូដ QR',
       'settings': 'ការកំណត់',
-      'close': 'បិទ', // Added for potential future use
-      'error': 'កំហុស', // Added for potential future use
+      'close': 'បិទ',
+      'error': 'កំហុស',
     },
   };
 
