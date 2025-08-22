@@ -25,16 +25,20 @@ class OrderConfirmationScreen extends StatelessWidget {
     });
 
     // Color definitions
-    
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.white;
+
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] :    Colors.grey[50];
     final cardColor = isDarkMode ? Colors.grey[800] : Colors.grey.shade100;
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final secondaryTextColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
-    final successColor = isDarkMode ? Colors.green[300] : Colors.green;
+    final successColor = isDarkMode ? Colors.green[600] : Colors.green;
     final infoCardColor = isDarkMode ? Colors.blue[900] : Colors.blue.shade50;
-   final Color infoBorderColor = isDarkMode ? Colors.blue[800]! : Colors.blue.shade100;
+    final Color infoBorderColor = isDarkMode
+        ? Colors.blue[800]!
+        : Colors.blue.shade100;
     final infoTextColor = isDarkMode ? Colors.blue[100] : Colors.blue.shade800;
-    final Color primaryColor = isDarkMode ? Colors.deepPurple[300]! : Colors.deepPurple;
+    final Color primaryColor = isDarkMode
+        ? Colors.deepPurple[600]!
+        : Colors.deepPurple;
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
@@ -43,7 +47,12 @@ class OrderConfirmationScreen extends StatelessWidget {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [primaryColor, isDarkMode ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400],
+              colors: [
+                primaryColor,
+                isDarkMode
+                    ? Colors.deepPurple.shade500
+                    : Colors.deepPurple.shade400,
+              ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -96,6 +105,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                         ),
                       ),
 
+
                       // Table number highlight
                       Container(
                         margin: const EdgeInsets.symmetric(vertical: 24),
@@ -121,7 +131,9 @@ class OrderConfirmationScreen extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 48,
                                   fontWeight: FontWeight.bold,
-                                  color: isDarkMode ? Colors.blue[100] : Colors.blue.shade900,
+                                  color: isDarkMode
+                                      ? Colors.blue[100]
+                                      : Colors.blue.shade900,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -170,7 +182,9 @@ class OrderConfirmationScreen extends StatelessWidget {
                             const SizedBox(height: 12),
                             ...orderItems.map(
                               (item) => Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
                                 child: Row(
                                   children: [
                                     Text(
@@ -179,6 +193,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                                         fontSize: 16,
                                         color: textColor,
                                       ),
+
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
@@ -191,7 +206,10 @@ class OrderConfirmationScreen extends StatelessWidget {
                                       ),
                                     ),
                                     Text(
-                                      currencyFormat.format((item['price'] ?? 0.0) * (item['quantity'] ?? 1)),
+                                      currencyFormat.format(
+                                        (item['price'] ?? 0.0) *
+                                            (item['quantity'] ?? 1),
+                                      ),
                                       style: TextStyle(
                                         fontSize: 16,
                                         color: textColor,
@@ -233,6 +251,7 @@ class OrderConfirmationScreen extends StatelessWidget {
               ),
 
               // Back to menu button
+              // Back to menu button
               Padding(
                 padding: const EdgeInsets.only(bottom: 24, top: 16),
                 child: SizedBox(
@@ -240,18 +259,22 @@ class OrderConfirmationScreen extends StatelessWidget {
                   height: 50,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isDarkMode ? Colors.blue[800] : Colors.blue.shade700,
+                      backgroundColor: isDarkMode
+                          ? Colors.blue[800]
+                          : Colors.blue.shade700,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     onPressed: () {
                       onClearCart();
-                      Navigator.pushReplacement(
+                      Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const MenuPreviewScreen(),
                         ),
+                        (route) =>
+                            route.settings?.name == '/menu' || route.isFirst,
                       );
                     },
                     child: const Text(
