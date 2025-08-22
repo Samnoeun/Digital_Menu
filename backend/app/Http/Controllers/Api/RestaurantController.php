@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Restaurant;
 use App\Http\Controllers\Controller;
+use App\Models\Restaurant;
 use App\Http\Requests\StoreRestaurantRequest;
 use App\Http\Requests\UpdateRestaurantRequest;
 use App\Http\Resources\RestaurantResource;
@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\Storage;
 
 class RestaurantController extends Controller
 {
+    // List all restaurants
     public function index()
     {
         return RestaurantResource::collection(Restaurant::all());
     }
 
+    // Create a restaurant
     public function store(Request $request)
     {
         $request->validate([
@@ -26,7 +28,7 @@ class RestaurantController extends Controller
         ]);
 
         $data = $request->only(['restaurant_name', 'address']);
-        $data['user_id'] = auth()->id(); // ✅ link restaurant to the logged-in user
+        $data['user_id'] = auth()->id();
 
         if ($request->hasFile('profile')) {
             $file = $request->file('profile');
@@ -40,31 +42,7 @@ class RestaurantController extends Controller
         return response()->json(['message' => 'Restaurant created', 'data' => $restaurant], 201);
     }
 
-    public function getByUser($userId)
-    {
-        $restaurant = Restaurant::where('user_id', $userId)->first();
-
-        if (!$restaurant) {
-            return response()->json([
-                'message' => 'Restaurant not found',
-                'restaurant' => null
-            ], 404);
-        }
-
-        // Return full public URL for the image
-        return response()->json([
-            'restaurant' => [
-                'id' => $restaurant->id,
-                'restaurant_name' => $restaurant->restaurant_name,
-                'profile' => $restaurant->profile
-                    ? url('storage/profiles/' . $restaurant->profile)
-                    : null,
-                'address' => $restaurant->address,
-                'user_id' => $restaurant->user_id,
-            ]
-        ]);
-    }
-
+    // Get restaurant by user ID
     public function getByUserId($id)
     {
         $restaurant = Restaurant::where('user_id', $id)->first();
@@ -76,12 +54,14 @@ class RestaurantController extends Controller
         return response()->json(['restaurant' => $restaurant]);
     }
 
+    // Show a single restaurant
     public function show($id)
     {
         $restaurant = Restaurant::findOrFail($id);
         return new RestaurantResource($restaurant);
     }
 
+    // Update restaurant
     public function update(Request $request, Restaurant $restaurant)
     {
         $validated = $request->validate([
@@ -89,16 +69,13 @@ class RestaurantController extends Controller
             'address' => 'required|string',
         ]);
 
-        // Handle image upload
         if ($request->hasFile('profile')) {
-            // Delete old image if exists
             if ($restaurant->profile) {
-                Storage::delete('public/profiles/'.$restaurant->profile);
+                Storage::delete('public/profiles/' . $restaurant->profile);
             }
-            
-            // Store new image (consistent with store() method)
+
             $file = $request->file('profile');
-            $filename = time().'.'.$file->getClientOriginalExtension();
+            $filename = time() . '.' . $file->getClientOriginalExtension();
             $file->storeAs('public/profiles', $filename);
             $validated['profile'] = $filename;
         }
@@ -111,6 +88,7 @@ class RestaurantController extends Controller
         ]);
     }
 
+    // Delete restaurant
     public function destroy($id)
     {
         $restaurant = Restaurant::findOrFail($id);
@@ -119,10 +97,10 @@ class RestaurantController extends Controller
         return response()->json(['message' => 'Deleted successfully']);
     }
 
+    // Public API: preview menu (JSON)
     public function menuPreview($id)
     {
-        $restaurant = Restaurant::with(['categories.items'])
-            ->findOrFail($id);
+        $restaurant = Restaurant::with(['categories.items'])->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -152,5 +130,17 @@ class RestaurantController extends Controller
                 ]
             ]
         ], 200);
+    }
+
+    // Web view for menu preview (Blade)
+    public function webMenuPreview($id)
+    {
+        $restaurant = Restaurant::with(['categories.items'])->findOrFail($id);
+
+        return view('menu-preview', [
+            'restaurant' => $restaurant,
+            'categories' => $restaurant->categories,
+            'items' => $restaurant->categories->flatMap(fn($cat) => $cat->items)
+        ]);
     }
 }
