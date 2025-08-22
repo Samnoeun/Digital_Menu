@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:universal_html/html.dart' as html;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/api_services.dart';
 import '../taskbar_screen.dart';
 
@@ -24,6 +25,47 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
   File? _profileImage;
   Uint8List? _webImageBytes;
   String? _webImageName;
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'setup_restaurant': 'Setup Restaurant',
+      'pick_image': 'Pick Image',
+      'restaurant_name': 'Restaurant Name',
+      'enter_restaurant_name': 'Please enter restaurant name',
+      'address': 'Address',
+      'enter_address': 'Please enter address',
+      'save_restaurant': 'Save Restaurant',
+      'failed_pick_image': 'Failed to pick image: ',
+      'failed_create_restaurant': 'Failed to create restaurant: ',
+    },
+    'Khmer': {
+      'setup_restaurant': 'កំណត់ភោជនីយដ្ឋាន',
+      'pick_image': 'ជ្រើសរើសរូបភាព',
+      'restaurant_name': 'ឈ្មោះភោជនីយដ្ឋាន',
+      'enter_restaurant_name': 'សូមបញ្ចូលឈ្មោះភោជនីយដ្ឋាន',
+      'address': 'អាសយដ្ឋាន',
+      'enter_address': 'សូមបញ្ចូលអាសយដ្ឋាន',
+      'save_restaurant': 'រក្សាទុកភោជនីយដ្ឋាន',
+      'failed_pick_image': 'បរាជ័យក្នុងការជ្រើសរូបភាព៖ ',
+      'failed_create_restaurant': 'បរាជ័យក្នុងការបង្កើតភោជនីយដ្ឋាន៖ ',
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage(); // Load saved language on initialization
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
+  }
 
   Future<void> _pickImage() async {
     try {
@@ -69,9 +111,10 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
       }
     } catch (e) {
       if (context.mounted) {
+        final lang = localization[selectedLanguage]!;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
+        ).showSnackBar(SnackBar(content: Text('${lang['failed_pick_image']!}$e')));
       }
     }
   }
@@ -97,24 +140,41 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
         }
       } catch (e) {
         if (context.mounted) {
+          final lang = localization[selectedLanguage]!;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to create restaurant: $e')),
+            SnackBar(content: Text('${lang['failed_create_restaurant']!}$e')),
           );
         }
       }
     }
   }
 
+  TextStyle getTextStyle({bool isSubtitle = false, bool isGray = false}) {
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: isSubtitle ? 14 : 16,
+      color: isGray
+          ? Theme.of(context).textTheme.bodyMedium!.color
+          : isSubtitle
+              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+              : Theme.of(context).textTheme.bodyLarge!.color,
+      fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final lang = localization[selectedLanguage]!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: Text(
-          'Setup Restaurant',
-          style: Theme.of(context).appBarTheme.titleTextStyle,
+          lang['setup_restaurant']!,
+          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+          ),
         ),
         backgroundColor: Colors.deepPurple.shade700, 
         foregroundColor: Colors.white,
@@ -155,18 +215,18 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Restaurant Name',
+                  labelText: lang['restaurant_name']!,
                   prefixIcon: Icon(
                     Icons.restaurant,
                     color: isDark ? Colors.white : Colors.deepPurple,
                   ),
                   border: const OutlineInputBorder(),
-                  labelStyle: Theme.of(context).textTheme.bodyMedium,
+                  labelStyle: getTextStyle(),
                 ),
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: getTextStyle(),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter restaurant name';
+                    return lang['enter_restaurant_name']!;
                   }
                   return null;
                 },
@@ -175,19 +235,18 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               TextFormField(
                 controller: _addressController,
                 decoration: InputDecoration(
-                  labelText: 'Address',
-
+                  labelText: lang['address']!,
                   prefixIcon: Icon(
                     Icons.location_on,
                     color: isDark ? Colors.white : Colors.deepPurple,
                   ),
                   border: const OutlineInputBorder(),
-                  labelStyle: Theme.of(context).textTheme.bodyMedium,
+                  labelStyle: getTextStyle(),
                 ),
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: getTextStyle(),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter address';
+                    return lang['enter_address']!;
                   }
                   return null;
                 },
@@ -196,7 +255,12 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               ElevatedButton(
                 onPressed: _submit,
                 style: Theme.of(context).elevatedButtonTheme.style,
-                child: const Text('Save Restaurant'),
+                child: Text(
+                  lang['save_restaurant']!,
+                  style: TextStyle(
+                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
+                ),
               ),
             ],
           ),
