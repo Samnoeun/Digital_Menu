@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\OrderHistory;
 use App\Models\OrderItemHistory;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {

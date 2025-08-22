@@ -65,11 +65,3 @@ Route::middleware('auth:sanctum')->group(function () {
 
     
 });
-Route::get('/reports/sales-summary', [ReportController::class, 'salesSummary']);
-        // Order history routes
-    // routes/api.php
-// Route::get('/order-history', [OrderHistoryController::class, 'index']);
-
-
-
-    
