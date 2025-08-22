@@ -51,13 +51,17 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // User routes
     Route::apiResource('users', UserController::class);
-    Route::get('/reports/sales-summary', [ReportController::class, 'salesSummary']);
-        // Order history routes
+    // Route::get('/reports/sales-summary', [ReportController::class, 'salesSummary']);
+    //     // Order history routes
     // routes/api.php
     Route::get('/order-history', [OrderHistoryController::class, 'index']);
 
     
 });
+Route::get('/reports/sales-summary', [ReportController::class, 'salesSummary']);
+        // Order history routes
+    // routes/api.php
+// Route::get('/order-history', [OrderHistoryController::class, 'index']);
 
 
 

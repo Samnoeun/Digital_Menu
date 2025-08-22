@@ -84,7 +84,7 @@ void initState() {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ReportOrderScreen()),
+                    MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
                   );
                 },
               ),

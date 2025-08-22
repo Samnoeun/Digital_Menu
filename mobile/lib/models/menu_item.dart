@@ -14,4 +14,15 @@ class MenuItem {
     required this.category,
     required this.imageUrl,
   });
+
+  factory MenuItem.fromJson(Map<String, dynamic> json) {
+    return MenuItem(
+      id: json['id'],
+      name: json['name'],
+      price: (json['price'] as num).toDouble(),
+      description: json['description'],
+      category: json['category'],
+      imageUrl: json['image'] ?? '',
+    );
+  }
 }
