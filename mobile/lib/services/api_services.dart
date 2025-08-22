@@ -9,9 +9,11 @@ import '../models/item_model.dart' as item;
 import '../models/restaurant_model.dart';
 import 'dart:typed_data'; // For Uint8List
 import 'package:flutter/foundation.dart'; // For kIsWeb
+import '../models/order_history_model.dart';
+import '../screens/ReportOrderHistory/report_order_screen.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://qrmenu.zapto.org/api';
+  static const String baseUrl = 'http://192.168.108.155:8000/api';
 
   static String? _token;
 
@@ -688,4 +690,38 @@ static Future<void> updateRestaurant({
       throw Exception(data['message'] ?? 'Failed to send reset password email');
     }
   }
+/// Fetch all order history from API
+  static Future<List<OrderHistory>> getOrderHistory() async {
+    try {
+      final token = await getAuthToken();
+      if (token == null) throw Exception('Please login first');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/order-history'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        if (jsonResponse is! Map<String, dynamic> || !jsonResponse.containsKey('data')) {
+          throw Exception('Invalid API response format');
+        }
+
+        final data = jsonResponse['data'] as List<dynamic>;
+        return data.map((e) => OrderHistory.fromJson(e)).toList();
+      } else if (response.statusCode == 401) {
+        await clearAuthToken();
+        throw Exception('Session expired. Please login again');
+      } else {
+        throw Exception('Failed to load order history: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error in getOrderHistory: $e');
+      rethrow;
+    }
+  }
+
 }

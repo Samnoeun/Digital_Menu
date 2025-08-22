@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/order_history_model.dart';
 import '../../models/menu_item.dart';
 
 class QRMenuViewScreen extends StatefulWidget {
