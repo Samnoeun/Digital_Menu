@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/api_services.dart';
 import 'restaurant_screen.dart';
 import 'login_screen.dart';
@@ -25,6 +26,73 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? generalError;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'app_title': 'QR Menu App',
+      'create_account': 'Create Account',
+      'username': 'Username',
+      'username_required': 'Username is required',
+      'email': 'Email',
+      'email_required': 'Email is required',
+      'valid_email': 'Please enter a valid email address',
+      'password': 'Password',
+      'password_required': 'Password is required',
+      'password_length': 'Password must be at least 6 characters',
+      'confirm_password': 'Confirm Password',
+      'confirm_password_required': 'Confirm password is required',
+      'passwords_match': 'Passwords do not match',
+      'continue': 'Continue',
+      'or_continue_with': 'Or continue with',
+      'google': 'Google',
+      'apple': 'Apple',
+      'have_account': 'Already have an account? ',
+      'login': 'Login',
+      'email_taken': 'This email is already registered',
+      'registration_failed': 'Registration failed. Please try again',
+      'registration_success': 'Registration successful!',
+    },
+    'Khmer': {
+      'app_title': 'កម្មវិធីម៉ឺនុយ QR',
+      'create_account': 'បង្កើតគណនី',
+      'username': 'ឈ្មោះអ្នកប្រើ',
+      'username_required': 'ឈ្មោះអ្នកប្រើប្រាស់ត្រូវបានទាមទារ',
+      'email': 'អ៊ីមែល',
+      'email_required': 'អ៊ីមែលត្រូវបានទាមទារ',
+      'valid_email': 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលដែលត្រឹមត្រូវ',
+      'password': 'ពាក្យសម្ងាត់',
+      'password_required': 'ពាក្យសម្ងាត់ត្រូវបានទាមទារ',
+      'password_length': 'ពាក្យសម្ងាត់ត្រូវតែមានយ៉ាងហោចណាស់ ៦ តួអក្សរ',
+      'confirm_password': 'បញ្ជាក់ពាក្យសម្ងាត់',
+      'confirm_password_required': 'ត្រូវការបញ្ជាក់ពាក្យសម្ងាត់',
+      'passwords_match': 'ពាក្យសម្ងាត់មិនត្រូវគ្នា',
+      'continue': 'បន្ត',
+      'or_continue_with': 'ឬបន្តជាមួយ',
+      'google': 'Google',
+      'apple': 'Apple',
+      'have_account': 'មានគណនីរួចហើយ? ',
+      'login': 'ចូល',
+      'email_taken': 'អ៊ីមែលនេះត្រូវបានចុះឈ្មោះរួចហើយ',
+      'registration_failed': 'ការចុះឈ្មោះបរាជ័យ។ សូមព្យាយាមម្តងទៀត',
+      'registration_success': 'ការចុះឈ្មោះជោគជ័យ!',
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage(); // Load saved language on initialization
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
+  }
 
   bool isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
@@ -44,46 +112,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     bool isValid = true;
+    final lang = localization[selectedLanguage]!;
 
     if (nameController.text.trim().isEmpty) {
       setState(() {
-        nameError = 'Username is required';
+        nameError = lang['username_required'];
       });
       isValid = false;
     }
 
     if (emailController.text.trim().isEmpty) {
       setState(() {
-        emailError = 'Email is required';
+        emailError = lang['email_required'];
       });
       isValid = false;
     } else if (!isValidEmail(emailController.text.trim())) {
       setState(() {
-        emailError = 'Please enter a valid email address';
+        emailError = lang['valid_email'];
       });
       isValid = false;
     }
 
     if (passwordController.text.isEmpty) {
       setState(() {
-        passwordError = 'Password is required';
+        passwordError = lang['password_required'];
       });
       isValid = false;
     } else if (!isValidPassword(passwordController.text)) {
       setState(() {
-        passwordError = 'Password must be at least 6 characters';
+        passwordError = lang['password_length'];
       });
       isValid = false;
     }
 
     if (confirmPasswordController.text.isEmpty) {
       setState(() {
-        confirmPasswordError = 'Confirm password is required';
+        confirmPasswordError = lang['confirm_password_required'];
       });
       isValid = false;
     } else if (confirmPasswordController.text != passwordController.text) {
       setState(() {
-        confirmPasswordError = 'Passwords do not match';
+        confirmPasswordError = lang['passwords_match'];
       });
       isValid = false;
     }
@@ -108,8 +177,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (mounted) {
+        final lang = localization[selectedLanguage]!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registration successful!")),
+          SnackBar(content: Text(lang['registration_success']!)),
         );
         Navigator.pushReplacement(
           context,
@@ -120,16 +190,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final lang = localization[selectedLanguage]!;
         setState(() {
           // Handle specific error cases
           if (e.toString().contains("email is already taken") || 
               e.toString().contains("email already exists")) {
-            emailError = "This email is already registered";
+            emailError = lang['email_taken'];
           } else if (!isValidEmail(emailController.text.trim())) {
-            emailError = "Please enter a valid email";
+            emailError = lang['valid_email'];
           } else {
             // For other errors, still show on email field but generic message
-            emailError = "Registration failed. Please try again";
+            emailError = lang['registration_failed'];
           }
         });
       }
@@ -140,7 +211,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Widget _buildEmailField(bool isDark) {
+  TextStyle getTextStyle({bool isSubtitle = false, bool isGray = false}) {
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: isSubtitle ? 14 : 16,
+      color: isGray
+          ? Theme.of(context).textTheme.bodyMedium!.color
+          : isSubtitle
+              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+              : Theme.of(context).textTheme.bodyLarge!.color,
+      fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
+    );
+  }
+
+  Widget _buildEmailField(bool isDark, Map<String, String> lang) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -173,14 +257,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 size: 28,
               ),
               border: InputBorder.none,
-              hintText: 'Email',
+              hintText: lang['email'],
               hintStyle: TextStyle(
                 fontSize: 18,
                 color: Colors.grey.shade600,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
             style: TextStyle(
               fontSize: 18,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
             ),
           ),
         ),
@@ -189,9 +275,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               emailError!,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.red,
                 fontSize: 16,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -207,6 +294,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     TextInputType? keyboardType,
     String? errorText,
     required bool isDark,
+    required Map<String, String> lang,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,7 +314,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: TextField(
             controller: controller,
             obscureText: isPassword 
-                ? (label == 'Password' ? _obscurePassword : _obscureConfirmPassword)
+                ? (label == lang['password'] ? _obscurePassword : _obscureConfirmPassword)
                 : false,
             keyboardType: keyboardType,
             onChanged: (value) {
@@ -243,7 +331,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 horizontal: 24,
                 vertical: 24,
               ),
-              prefixIcon: label.contains('Password') ? null : Icon(
+              prefixIcon: label.contains(lang['password']!) ? null : Icon(
                 icon,
                 color: errorText != null
                     ? Colors.red
@@ -252,7 +340,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               suffixIcon: isPassword ? IconButton(
                 icon: Icon(
-                  label == 'Password'
+                  label == lang['password']
                     ? _obscurePassword ? Icons.visibility_off : Icons.visibility
                     : _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
                   color: isDark ? Colors.white70 : Colors.grey.shade600,
@@ -260,7 +348,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 onPressed: () {
                   setState(() {
-                    if (label == 'Password') {
+                    if (label == lang['password']) {
                       _obscurePassword = !_obscurePassword;
                     } else {
                       _obscureConfirmPassword = !_obscureConfirmPassword;
@@ -273,10 +361,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               hintStyle: TextStyle(
                 fontSize: 18,
                 color: Colors.grey.shade600,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
             style: TextStyle(
               fontSize: 18,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
             ),
           ),
         ),
@@ -285,9 +375,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
             padding: const EdgeInsets.only(top: 8, left: 4),
             child: Text(
               errorText,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.red,
                 fontSize: 16,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -301,6 +392,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required Color color,
     required VoidCallback onTap,
     required bool isDark,
+    required Map<String, String> lang,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -329,7 +421,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(width: 10),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              style: getTextStyle().copyWith(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -342,6 +434,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = localization[selectedLanguage]!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -405,12 +498,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ],
                       ),
                       child: Text(
-                        'QR Menu App',
+                        lang['app_title']!,
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                               color: isDark ? Colors.white : Colors.deepPurple,
                               letterSpacing: 1.2,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                       ),
                     ),
@@ -433,11 +527,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Column(
                           children: [
                             Text(
-                              'Create Account',
+                              lang['create_account']!,
                               style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                                     fontSize: 30,
                                     fontWeight: FontWeight.bold,
                                     color: isDark ? Colors.white : Colors.deepPurple,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                             ),
                             const SizedBox(height: 30),
@@ -456,35 +551,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   style: TextStyle(
                                     color: Colors.red.shade700,
                                     fontSize: 16,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                 ),
                               ),
                             _buildStyledTextField(
                               controller: nameController,
-                              label: 'Username',
+                              label: lang['username']!,
                               icon: Icons.person_outline,
                               errorText: nameError,
                               isDark: isDark,
+                              lang: lang,
                             ),
                             const SizedBox(height: 25),
-                            _buildEmailField(isDark),
+                            _buildEmailField(isDark, lang),
                             const SizedBox(height: 25),
                             _buildStyledTextField(
                               controller: passwordController,
-                              label: 'Password',
+                              label: lang['password']!,
                               icon: Icons.lock_outline,
                               isPassword: true,
                               errorText: passwordError,
                               isDark: isDark,
+                              lang: lang,
                             ),
                             const SizedBox(height: 25),
                             _buildStyledTextField(
                               controller: confirmPasswordController,
-                              label: 'Confirm Password',
+                              label: lang['confirm_password']!,
                               icon: Icons.lock_outline,
                               isPassword: true,
                               errorText: confirmPasswordError,
                               isDark: isDark,
+                              lang: lang,
                             ),
                             const SizedBox(height: 35),
                             SizedBox(
@@ -505,12 +604,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         color: Colors.white,
                                         strokeWidth: 3,
                                       )
-                                    : const Text(
-                                        'Continue',
+                                    : Text(
+                                        lang['continue']!,
                                         style: TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                         ),
                                       ),
                               ),
@@ -527,8 +627,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 16),
                                   child: Text(
-                                    'Or continue with',
-                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                    lang['or_continue_with']!,
+                                    style: getTextStyle().copyWith(
                                       fontSize: 16,
                                     ),
                                   ),
@@ -547,17 +647,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               children: [
                                 _buildSocialButton(
                                   icon: Icons.g_mobiledata,
-                                  label: 'Google',
+                                  label: lang['google']!,
                                   color: Colors.red,
                                   onTap: () {},
                                   isDark: isDark,
+                                  lang: lang,
                                 ),
                                 _buildSocialButton(
                                   icon: Icons.apple,
-                                  label: 'Apple',
+                                  label: lang['apple']!,
                                   color: isDark ? Colors.white70 : Colors.black,
                                   onTap: () {},
                                   isDark: isDark,
+                                  lang: lang,
                                 ),
                               ],
                             ),
@@ -570,8 +672,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Already have an account? ',
-                          style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          lang['have_account']!,
+                          style: getTextStyle().copyWith(
                             fontSize: 16,
                           ),
                         ),
@@ -587,11 +689,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             );
                           },
                           child: Text(
-                            'Login',
+                            lang['login']!,
                             style: TextStyle(
                               color: isDark ? Colors.white70 : Colors.deepPurple,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                         ),
