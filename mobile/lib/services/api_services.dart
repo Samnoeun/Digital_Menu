@@ -11,7 +11,7 @@ import 'dart:typed_data'; // For Uint8List
 import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class ApiService {
-  static const String baseUrl = 'https://qrmenu.zapto.org/api';
+  static const String baseUrl = 'http://10.24.192.127:8080/api';
 
   static String? _token;
 
