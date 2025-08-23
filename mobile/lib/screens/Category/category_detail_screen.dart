@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/category_model.dart' as category_model;
 import '../../models/item_model.dart' as item_model;
 import '../../services/api_services.dart';
@@ -7,7 +8,7 @@ import '../Item/add_item_screen.dart';
 class CategoryDetailScreen extends StatefulWidget {
   final category_model.Category category;
   const CategoryDetailScreen({Key? key, required this.category})
-    : super(key: key);
+      : super(key: key);
 
   @override
   State<CategoryDetailScreen> createState() => _CategoryDetailScreenState();
@@ -19,6 +20,43 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'loading_items': 'Loading items...',
+      'no_items': 'No items in this category',
+      'add_items_prompt': 'Add items to "{name}" via the Items screen',
+      'delete_item': 'Delete Item',
+      'confirm_delete': 'Are you sure you want to delete "{name}"?',
+      'cancel': 'Cancel',
+      'delete': 'Delete',
+      'edit': 'Edit',
+      'refresh_items': 'Refresh items',
+      'item_deleted': '{name} deleted successfully',
+      'failed_delete_item': 'Error deleting item: {error}',
+      'failed_reload_items': 'Failed to reload items: {error}',
+    },
+    'Khmer': {
+      'loading_items': 'កំពុងផ្ទុកធាតុ...',
+      'no_items': 'គ្មានធាតុនៅក្នុងប្រភេទនេះទេ',
+      'add_items_prompt': 'បន្ថែមធាតុទៅ "{name}" តាមរយៈអេក្រង់ធាតុ',
+      'delete_item': 'លុបធាតុ',
+      'confirm_delete': 'តើអ្នកប្រាកដថាចង់លុប "{name}" មែនទេ?',
+      'cancel': 'បោះបង់',
+      'delete': 'លុប',
+      'edit': 'កែសម្រួល',
+      'refresh_items': 'ធ្វើឱ្យធាតុស្រស់',
+      'item_deleted': 'បានលុប {name} ដោយជោគជ័យ',
+      'failed_delete_item': 'កំហុសក្នុងការលុបធាតុ: {error}',
+      'failed_reload_items': 'បរាជ័យក្នុងការផ្ទុកធាតុឡើងវិញ: {error}',
+    },
+  };
+
+  String getTranslatedString(String key) {
+    final translations = localization[selectedLanguage] ?? localization['English']!;
+    return translations[key] ?? 'Translation missing: $key';
+  }
 
   @override
   void initState() {
@@ -32,6 +70,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSavedLanguage();
       _reloadItems();
     });
   }
@@ -40,6 +79,15 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
   }
 
   Future<void> _reloadItems() async {
@@ -53,7 +101,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
       });
       _animationController.forward();
     } catch (e) {
-      _showErrorSnackbar('Failed to reload items: $e');
+      _showErrorSnackbar(getTranslatedString('failed_reload_items').replaceFirst('{error}', e.toString()));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -68,12 +116,12 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
 
     try {
       await ApiService.deleteItem(itemId);
-      _showSuccessSnackbar('$itemName deleted successfully');
+      _showSuccessSnackbar(getTranslatedString('item_deleted').replaceFirst('{name}', itemName));
       setState(() {
         _items.removeWhere((item) => item.id == itemId);
       });
     } catch (e) {
-      _showErrorSnackbar('Error deleting item: $e');
+      _showErrorSnackbar(getTranslatedString('failed_delete_item').replaceFirst('{error}', e.toString()));
     }
   }
 
@@ -86,20 +134,32 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
           const SizedBox(width: 8),
           Text(
-            'Delete Item',
-            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            getTranslatedString('delete_item'),
+            style: TextStyle(
+              color: isDark ? Colors.white : Colors.black,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
           ),
         ],
       ),
       content: Text(
-        'Are you sure you want to delete "$itemName"?',
-        style: TextStyle(color: isDark ? Colors.grey[300] : Colors.grey[800]),
+        getTranslatedString('confirm_delete').replaceFirst('{name}', itemName),
+        style: TextStyle(
+          color: isDark ? Colors.grey[300] : Colors.grey[800],
+          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+        ),
       ),
       backgroundColor: isDark ? Colors.grey[800] : Colors.white,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: Text('Cancel', style: TextStyle(color: Colors.grey.shade600)),
+          child: Text(
+            getTranslatedString('cancel'),
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
+          ),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, true),
@@ -109,7 +169,13 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          child: Text(
+            getTranslatedString('delete'),
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
+          ),
         ),
       ],
     );
@@ -144,7 +210,14 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           children: [
             const Icon(Icons.check_circle_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.green.shade600,
@@ -161,7 +234,14 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(error)),
+            Expanded(
+              child: Text(
+                error,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.red.shade600,
@@ -192,10 +272,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
       appBar: AppBar(
         title: Text(
           widget.category.name,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 22,
             color: Colors.white,
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
         backgroundColor: primaryColor,
@@ -224,20 +305,20 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _reloadItems,
-            tooltip: 'Refresh items',
+            tooltip: getTranslatedString('refresh_items'),
           ),
         ],
       ),
       body: _isLoading
           ? _buildLoadingIndicator(isDark)
           : _items.isEmpty
-          ? _buildEmptyState(
-              isDark,
-              emptyStateColor,
-              textColor,
-              secondaryTextColor,
-            )
-          : _buildItemList(isDark, cardColor, textColor, secondaryTextColor),
+              ? _buildEmptyState(
+                  isDark,
+                  emptyStateColor,
+                  textColor,
+                  secondaryTextColor,
+                )
+              : _buildItemList(isDark, cardColor, textColor, secondaryTextColor),
     );
   }
 
@@ -252,13 +333,14 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           ),
           const SizedBox(height: 16),
           Text(
-            'Loading items...',
+            getTranslatedString('loading_items'),
             style: TextStyle(
               color: isDark
                   ? Colors.deepPurple[300]
                   : Colors.deepPurple.shade600,
               fontSize: 16,
               fontWeight: FontWeight.w500,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
             ),
           ),
         ],
@@ -292,19 +374,24 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              'No items in this category',
+              getTranslatedString('no_items'),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: textColor,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'Add items to "${widget.category.name}" via the Items screen',
-                style: TextStyle(fontSize: 16, color: secondaryTextColor),
+                getTranslatedString('add_items_prompt').replaceFirst('{name}', widget.category.name),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: secondaryTextColor,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -423,6 +510,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: textColor,
+          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
         ),
       ),
       subtitle: Column(
@@ -433,7 +521,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
               padding: const EdgeInsets.only(top: 6),
               child: Text(
                 item.description!,
-                style: TextStyle(color: secondaryTextColor, fontSize: 14),
+                style: TextStyle(
+                  color: secondaryTextColor,
+                  fontSize: 14,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -457,10 +549,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
               ),
               child: Text(
                 '\$${item.price.toStringAsFixed(2)}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ),
@@ -522,10 +615,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
               ),
               const SizedBox(width: 8),
               Text(
-                'Edit',
+                getTranslatedString('edit'),
                 style: TextStyle(
                   color: isDark ? Colors.white : Colors.deepPurple.shade700,
                   fontWeight: FontWeight.w500,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ],
@@ -538,10 +632,11 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
               Icon(Icons.delete_rounded, color: Colors.red.shade600, size: 20),
               const SizedBox(width: 8),
               Text(
-                'Delete',
+                getTranslatedString('delete'),
                 style: TextStyle(
                   color: Colors.red.shade600,
                   fontWeight: FontWeight.w500,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ],
