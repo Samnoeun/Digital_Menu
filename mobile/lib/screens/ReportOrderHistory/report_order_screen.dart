@@ -90,7 +90,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
 
       final items = itemsAndCategories[0] as List<item.Item>;
       final categories = itemsAndCategories[1] as List<category.Category>;
-      final orderHistory = itemsAndCategories[2] as List<OrderHistory>;
+          final orderHistoryData = itemsAndCategories[2] as List<dynamic>; // ← FIX THIS LINE
+
+    // Convert raw JSON to OrderHistory objects
+    final orderHistory = orderHistoryData.map((json) => OrderHistory.fromJson(json)).toList();
 
       setState(() {
         totalItems = items.length;

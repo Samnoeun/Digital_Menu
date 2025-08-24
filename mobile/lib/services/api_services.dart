@@ -692,7 +692,7 @@ static Future<void> updateRestaurant({
     }
   }
 /// Fetch all order history from API
-static Future<List<OrderHistory>> getOrderHistory() async {
+static Future<List<dynamic>> getOrderHistory() async {
   try {
     final token = await getAuthToken();
     if (token == null) throw Exception('Please login first');
@@ -716,18 +716,18 @@ static Future<List<OrderHistory>> getOrderHistory() async {
 
       final data = jsonResponse['data'] as List<dynamic>;
       
-      // Debug: Print the first order to see the structure
+      // Debug prints
       if (data.isNotEmpty) {
         print('First order data: ${data.first}');
-        if (data.first.containsKey('order_items') && data.first['order_items'] is List) {
-          final firstOrderItems = data.first['order_items'] as List;
-          if (firstOrderItems.isNotEmpty) {
+        if (data.first is Map && (data.first as Map).containsKey('order_items')) {
+          final firstOrderItems = (data.first as Map)['order_items'];
+          if (firstOrderItems is List && firstOrderItems.isNotEmpty) {
             print('First order item: ${firstOrderItems.first}');
           }
         }
       }
       
-      return data.map((e) => OrderHistory.fromJson(e)).toList();
+      return data; // Still return raw data
     } else if (response.statusCode == 401) {
       await clearAuthToken();
       throw Exception('Session expired. Please login again');
