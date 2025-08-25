@@ -381,137 +381,127 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 75,
-            collapsedHeight: 75,
-            floating: false,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            backgroundColor: Colors.deepPurple.shade700,
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.deepPurple.shade700,
-                    Colors.deepPurple.shade500,
-                  ],
-                ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: restaurant == null
-                      ? const Center(
-                          child: CircularProgressIndicator(color: Colors.white),
-                        )
-                      : Row(
-                          children: [
-                            Hero(
-                              tag: 'restaurant_avatar',
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
+    SliverAppBar(
+  expandedHeight: 75,
+  collapsedHeight: 75,
+  floating: false,
+  pinned: true,
+  automaticallyImplyLeading: false,
+  backgroundColor: Colors.deepPurple.shade700,
+  flexibleSpace: Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.deepPurple.shade700,
+          Colors.deepPurple.shade500,
+        ],
+      ),
+    ),
+    child: SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: restaurant == null
+            ? const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              )
+            : Row(
+                children: [
+                  Hero(
+                    tag: 'restaurant_avatar',
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 28,
+                        backgroundColor: isDarkMode
+                            ? const Color.fromARGB(255, 246, 246, 246)
+                            : Colors.white,
+                        backgroundImage: restaurant!.profile != null
+                            ? NetworkImage(
+                                ApiService.getImageUrl(
+                                  restaurant!.profile!,
                                 ),
-                                child: CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: isDarkMode
-                                      ? const Color.fromARGB(255, 246, 246, 246)
-                                      : Colors.white,
-                                  backgroundImage: restaurant!.profile != null
-                                      ? NetworkImage(
-                                          ApiService.getImageUrl(
-                                            restaurant!.profile!,
-                                          ),
-                                        )
-                                      : null,
-                                  child: restaurant!.profile == null
-                                      ? Icon(
-                                          Icons.restaurant,
-                                          size: 28,
-                                          color: Colors.deepPurple.shade700,
-                                        )
-                                      : null,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    localization[_language]?.containsKey(
-                                              'welcome_message',
-                                            ) ==
-                                            true
-                                        ? localization[_language]!['welcome_message']!
-                                              .replaceAll(
-                                                '{restaurantName}',
-                                                restaurant?.restaurantName ??
-                                                    'Admin',
-                                              )
-                                        : 'Welcome, Admin',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontFamily: _language == 'Khmer'
-                                          ? 'NotoSansKhmer'
-                                          : null,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    localization[_language]?.containsKey(
-                                              'dashboard_subtitle',
-                                            ) ==
-                                            true
-                                        ? localization[_language]!['dashboard_subtitle']!
-                                        : 'Dashboard Overview',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white70,
-                                      fontFamily: _language == 'Khmer'
-                                          ? 'NotoSansKhmer'
-                                          : null,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.refresh,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () {
-                                  _loadRestaurantInfo();
-                                  _loadData();
-                                },
-                              ),
-                            ),
-                          ],
+                              )
+                            : null,
+                        child: restaurant!.profile == null
+                            ? Icon(
+                                Icons.restaurant,
+                                size: 28,
+                                color: Colors.deepPurple.shade700,
+                              )
+                            : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          restaurant?.restaurantName ?? 'Admin',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: _language == 'Khmer'
+                                ? 'NotoSansKhmer'
+                                : null,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                ),
+                        Text(
+                          localization[_language]?.containsKey(
+                                'dashboard_subtitle',
+                              ) ==
+                              true
+                          ? localization[_language]!['dashboard_subtitle']!
+                          : 'Dashboard Overview',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                            fontFamily: _language == 'Khmer'
+                                ? 'NotoSansKhmer'
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.refresh,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                        _loadRestaurantInfo();
+                        _loadData();
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ),
+      ),
+    ),
+  ),
+),
           SliverToBoxAdapter(
             child: isLoading
                 ? _buildLoadingState()

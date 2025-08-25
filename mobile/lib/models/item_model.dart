@@ -4,7 +4,7 @@ class Item {
   final int id;
   final int categoryId;
   final String name;
-  final String? imagePath;
+  final String? imagePath; // <- add this
   final String? description;
   final double price;
   final Category? category;
@@ -24,10 +24,10 @@ class Item {
       id: json['id'],
       categoryId: json['category_id'],
       name: json['name'],
-      imagePath: json['image_path'],
+      imagePath: json['image_path'], // <- match backend key
       description: json['description'],
       price: double.parse(json['price'].toString()),
-      category: json['category'] != null 
+      category: json['category'] != null
           ? Category.fromJson(json['category'])
           : null,
     );
@@ -51,5 +51,16 @@ class Item {
       price: price ?? this.price,
       category: category ?? this.category,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'price': price,
+      'category_id': categoryId,
+      'image_path': imagePath, // <- match backend key
+    };
   }
 }
