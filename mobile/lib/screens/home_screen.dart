@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_services.dart';
 import '../models/item_model.dart' as item;
 import '../models/category_model.dart' as category;
@@ -22,13 +23,65 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool isLoading = true;
   String selectedFilter = 'Today';
   DateTime? customDate;
-  String? restaurantName;
   Restaurant? restaurant;
-  String? restaurantProfile;
+  String _language = 'English'; // Default language
+  bool _isLanguageLoaded = false; // Track if language is loaded
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  // Localization map for English and Khmer
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'dashboard_subtitle': 'Dashboard Overview',
+      'welcome_message': 'Welcome, {restaurantName}',
+      'performance_overview': "Here's your restaurant's performance overview",
+      'filter_by_label': 'Filter by',
+      'total_items': 'Total Items',
+      'total_categories': 'Total Categories',
+      'orders': 'Orders ({filter})',
+      'top_item': 'Top Item',
+      'top_items_title': 'Top 5 Ordered Items',
+      'no_orders_message': 'No orders found for selected period',
+      'orders_suffix': 'orders',
+      'error_prefix': 'Error:',
+      'snackbar_error': 'Error: {error}',
+      'network_error': 'Network Error: Unable to connect to the server',
+      'api_error': 'API Error: Failed to fetch data',
+      'today': 'Today',
+      'this_week': 'This Week',
+      'this_month': 'This Month',
+      'custom_date': 'Custom Date',
+      'no_data': 'No data',
+      'loading': 'Loading...',
+      'no_category': 'No category',
+    },
+    'Khmer': {
+      'dashboard_subtitle': 'ទិដ្ឋភាពទូទៅនៃផ្ទាំងគ្រប់គ្រង',
+      'welcome_message': 'សូមស្វាគមន៍, {restaurantName}',
+      'performance_overview': 'នេះជាទិដ្ឋភាពនៃការអនុវត្តភោជនីយដ្ឋានរបស់អ្នក',
+      'filter_by_label': 'តម្រងតាម',
+      'total_items': 'មុខទំនិញសរុប',
+      'total_categories': 'ប្រភេទសរុប',
+      'orders': 'ការកម្ម៉ង់ ({filter})',
+      'top_item': 'មុខទំនិញកំពូល',
+      'top_items_title': 'មុខទំនិញកម្ម៉ង់ច្រើនបំផុត ៥',
+      'no_orders_message': 'រកមិនឃើញការកម្ម៉ង់សម្រាប់រយៈពេលដែលបានជ្រើសរើសទេ',
+      'orders_suffix': 'ការកម្ម៉ង់',
+      'error_prefix': 'កំហុស:',
+      'snackbar_error': 'កំហុស: {error}',
+      'network_error': 'កំហុសបណ្តាញ: មិនអាចភ្ជាប់ទៅសេវាកម្មបានទេ',
+      'api_error': 'កំហុស API: បរាជ័យក្នុងការទាញទិន្នន័យ',
+      'today': 'ថ្ងៃនេះ',
+      'this_week': 'សប្តាហ៍នេះ',
+      'this_month': 'ខែនេះ',
+      'custom_date': 'កាលបរិច្ឆេទផ្ទាល់ខ្លួន',
+      'no_data': 'គ្មានទិន្នន័យ',
+      'loading': 'កំពុងផ្ទុក...',
+      'no_category': 'គ្មានប្រភេទ',
+    },
+  };
 
   final List<String> filterOptions = [
     'Today',
@@ -41,8 +94,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _initAnimations();
-    _loadRestaurantInfo();
-    _loadData();
+    _loadSavedLanguage().then((_) {
+      if (mounted) {
+        setState(() {
+          _isLanguageLoaded = true;
+        });
+        debugPrint('Language loaded: $_language'); // Log language value
+        _loadRestaurantInfo();
+        _loadData();
+      }
+    });
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedLanguage = prefs.getString('selectedLanguage');
+      if (savedLanguage != null && localization.containsKey(savedLanguage)) {
+        setState(() {
+          _language = savedLanguage;
+        });
+      } else {
+        setState(() {
+          _language = 'English'; // Fallback to English
+        });
+        if (savedLanguage != null) {
+          debugPrint(
+            'Invalid language found in SharedPreferences: $savedLanguage',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading language from SharedPreferences: $e');
+      setState(() {
+        _language = 'English'; // Fallback to English
+      });
+    }
   }
 
   void _initAnimations() {
@@ -55,11 +143,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
   }
 
   @override
@@ -78,9 +166,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
     } catch (e) {
       if (mounted) {
+        final errorMessage = e.toString().contains('SocketException')
+            ? (localization[_language]?.containsKey('network_error') == true
+                  ? localization[_language]!['network_error']!
+                  : 'Network Error: Unable to connect to the server')
+            : (localization[_language]?.containsKey('snackbar_error') == true
+                  ? localization[_language]!['snackbar_error']!.replaceAll(
+                      '{error}',
+                      e.toString(),
+                    )
+                  : 'Error: $e');
+        debugPrint('Error in _loadRestaurantInfo (language: $_language): $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(
+              errorMessage,
+              style: TextStyle(
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
             backgroundColor: Colors.deepPurple.shade700,
           ),
         );
@@ -89,7 +193,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _loadData() async {
-    setState(() => isLoading = true);
+    if (!mounted) return;
+    setState(() {
+      isLoading = true;
+      topItem = localization[_language]?.containsKey('loading') == true
+          ? localization[_language]!['loading']!
+          : 'Loading...';
+    });
     _animationController.reset();
 
     try {
@@ -97,13 +207,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ApiService.getItems(),
         ApiService.getCategories(),
         ApiService.getOrders(),
+        ApiService.getOrderHistory(),
       ]);
       final items = results[0] as List<item.Item>;
       final categories = results[1] as List<category.Category>;
-      final orders = results[2] as List<dynamic>;
+      final activeOrders = results[2] as List<dynamic>;
+      final historicalOrders = results[3] as List<dynamic>;
+      
+      final allOrders = [...activeOrders, ...historicalOrders];
 
       final categoryMap = {for (var cat in categories) cat.id: cat};
-      final filteredOrders = _filterOrdersByDate(orders);
+      final filteredOrders = _filterOrdersByDate(allOrders);
 
       final itemMap = {
         for (var item in items)
@@ -131,34 +245,49 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       final sortedItems = itemCounts.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
+      if (mounted) {
+        setState(() {
+          totalItems = items.length;
+          totalCategories = categories.length;
+          totalOrders = filteredOrders.length;
+          topItem = sortedItems.isNotEmpty
+              ? sortedItems.first.key
+              : (localization[_language]?.containsKey('no_data') == true
+                    ? localization[_language]!['no_data']!
+                    : 'No data');
+          topItems = sortedItems.take(5).map((e) {
+            final item = itemData[e.key]!;
+            return {
+              'name': item.name,
+              'count': e.value,
+              'image': item.imagePath,
+              'item': item,
+              'category':
+                  item.category?.name ??
+                  (localization[_language]?.containsKey('no_category') == true
+                      ? localization[_language]!['no_category']!
+                      : 'No category'),
+            };
+          }).toList();
+          isLoading = false;
+        });
 
-
-      setState(() {
-        totalItems = items.length;
-        totalCategories = categories.length;
-        totalOrders = filteredOrders.length;
-        topItem = sortedItems.isNotEmpty ? sortedItems.first.key : "No orders";
-        topItems = sortedItems.take(5).map((e) {
-          final item = itemData[e.key]!;
-          return {
-            'name': item.name,
-            'count': e.value,
-            'image': item.imagePath,
-            'item': item,
-            'category': item.category?.name ?? 'No category',
-          };
-        }).toList();
-        isLoading = false;
-      });
-
-      _animationController.forward();
+        _animationController.forward();
+      }
     } catch (e) {
+      final errorMessage = e.toString().contains('SocketException')
+          ? (localization[_language]?.containsKey('network_error') == true
+                ? localization[_language]!['network_error']!
+                : 'Network Error: Unable to connect to the server')
+          : (localization[_language]?.containsKey('error_prefix') == true
+                ? '${localization[_language]!['error_prefix']!} $e'
+                : 'Error: $e');
+      debugPrint('Error in _loadData (language: $_language): $e');
       setState(() {
-        topItem = "Error loading data";
+        topItem = errorMessage;
         topItems = [];
         isLoading = false;
       });
-      debugPrint('Error loading home data: $e');
     }
   }
 
@@ -210,12 +339,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: Colors.deepPurple.shade700,
-                  onPrimary: Colors.white,
-                  surface: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.white,
-                ),
+              primary: Colors.deepPurple.shade700,
+              onPrimary: Colors.white,
+              surface: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.white,
+            ),
+            textTheme: TextTheme(
+              bodyMedium: TextStyle(
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+              labelLarge: TextStyle(
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
           ),
           child: child!,
         );
@@ -235,6 +372,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
+    // Show a loading indicator until language is loaded
+    if (!_isLanguageLoaded) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[50],
@@ -252,7 +393,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+                  colors: [
+                    Colors.deepPurple.shade700,
+                    Colors.deepPurple.shade500,
+                  ],
                 ),
               ),
               child: SafeArea(
@@ -279,8 +423,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                                 child: CircleAvatar(
                                   radius: 28,
-                                  backgroundColor:
-                                      isDarkMode ? const Color.fromARGB(255, 246, 246, 246) : Colors.white,
+                                  backgroundColor: isDarkMode
+                                      ? const Color.fromARGB(255, 246, 246, 246)
+                                      : Colors.white,
                                   backgroundImage: restaurant!.profile != null
                                       ? NetworkImage(
                                           ApiService.getImageUrl(
@@ -305,21 +450,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    restaurant!.restaurantName,
-                                    style: const TextStyle(
+                                    localization[_language]?.containsKey(
+                                              'welcome_message',
+                                            ) ==
+                                            true
+                                        ? localization[_language]!['welcome_message']!
+                                              .replaceAll(
+                                                '{restaurantName}',
+                                                restaurant?.restaurantName ??
+                                                    'Admin',
+                                              )
+                                        : 'Welcome, Admin',
+                                    style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
+                                      fontFamily: _language == 'Khmer'
+                                          ? 'NotoSansKhmer'
+                                          : null,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                                  const Text(
-                                    'Dashboard Overview',
+                                  Text(
+                                    localization[_language]?.containsKey(
+                                              'dashboard_subtitle',
+                                            ) ==
+                                            true
+                                        ? localization[_language]!['dashboard_subtitle']!
+                                        : 'Dashboard Overview',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.white70,
-
+                                      fontFamily: _language == 'Khmer'
+                                          ? 'NotoSansKhmer'
+                                          : null,
                                     ),
                                   ),
                                 ],
@@ -444,7 +609,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-
   Widget _buildWelcomeBanner(ThemeData theme) {
     final isDarkMode = theme.brightness == Brightness.dark;
     return Container(
@@ -500,11 +664,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Row(
                   children: [
                     Text(
-                      "Welcome, ${restaurant?.restaurantName ?? 'Admin'}",
-                      style: const TextStyle(
+                      localization[_language]?.containsKey('welcome_message') ==
+                              true
+                          ? localization[_language]!['welcome_message']!
+                                .replaceAll(
+                                  '{restaurantName}',
+                                  restaurant?.restaurantName ?? 'Admin',
+                                )
+                          : 'Welcome, Admin',
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
+                        fontFamily: _language == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -524,9 +698,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  "Here's your restaurant's performance overview",
-                  style: TextStyle(fontSize: 14, color: Colors.white70),
+                Text(
+                  localization[_language]?.containsKey(
+                            'performance_overview',
+                          ) ==
+                          true
+                      ? localization[_language]!['performance_overview']!
+                      : "Here's your restaurant's performance overview",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white70,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                 ),
               ],
             ),
@@ -536,9 +719,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-
   Widget _buildDateFilter(ThemeData theme) {
     final isDarkMode = theme.brightness == Brightness.dark;
+    final translatedFilterOptions = [
+      localization[_language]?.containsKey('today') == true
+          ? localization[_language]!['today']!
+          : 'Today',
+      localization[_language]?.containsKey('this_week') == true
+          ? localization[_language]!['this_week']!
+          : 'This Week',
+      localization[_language]?.containsKey('this_month') == true
+          ? localization[_language]!['this_month']!
+          : 'This Month',
+      localization[_language]?.containsKey('custom_date') == true
+          ? localization[_language]!['custom_date']!
+          : 'Custom Date',
+    ];
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -557,10 +754,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Expanded(
             child: DropdownButtonFormField<String>(
               value: selectedFilter,
-              items: filterOptions.map((String value) {
+              items: filterOptions.asMap().entries.map((entry) {
                 return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
+                  value: filterOptions[entry.key],
+                  child: Text(
+                    translatedFilterOptions[entry.key],
+                    style: TextStyle(
+                      fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                    ),
+                  ),
                 );
               }).toList(),
               onChanged: (String? newValue) {
@@ -575,8 +777,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 }
               },
               decoration: InputDecoration(
-                labelText: 'Filter by',
-                labelStyle: TextStyle(color: const Color.fromARGB(255, 162, 122, 255)),
+                labelText:
+                    localization[_language]?.containsKey('filter_by_label') ==
+                        true
+                    ? localization[_language]!['filter_by_label']!
+                    : 'Filter by',
+                labelStyle: TextStyle(
+                  color: const Color.fromARGB(255, 162, 122, 255),
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
@@ -585,11 +794,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
-              iconEnabledColor:
-                  isDarkMode ? Colors.white : Colors.deepPurple.shade700,
+              iconEnabledColor: isDarkMode
+                  ? Colors.white
+                  : Colors.deepPurple.shade700,
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.deepPurple.shade700,
                 fontWeight: FontWeight.w500,
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -601,7 +812,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 child: Chip(
                   label: Text(
                     DateFormat('MMM d, yyyy').format(customDate!),
-                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                    ),
                   ),
                   backgroundColor: Colors.deepPurple.shade700,
                   deleteIconColor: Colors.white,
@@ -624,26 +839,48 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final isDarkMode = theme.brightness == Brightness.dark;
     final cards = [
       {
-        'title': 'Total Items',
+        'title': localization[_language]?.containsKey('total_items') == true
+            ? localization[_language]!['total_items']!
+            : 'Total Items',
         'value': totalItems.toString(),
         'icon': Icons.restaurant_menu,
         'color': const Color.fromARGB(255, 151, 106, 255),
       },
       {
-        'title': 'Total Categories',
+        'title':
+            localization[_language]?.containsKey('total_categories') == true
+            ? localization[_language]!['total_categories']!
+            : 'Total Categories',
         'value': totalCategories.toString(),
         'icon': Icons.category,
         'color': const Color.fromARGB(255, 151, 106, 255),
       },
       {
-        'title': 'Orders (${selectedFilter.toLowerCase()})',
+        'title': localization[_language]?.containsKey('orders') == true
+            ? localization[_language]!['orders']!.replaceAll(
+                '{filter}',
+                localization[_language]?.containsKey(
+                          selectedFilter.toLowerCase(),
+                        ) ==
+                        true
+                    ? localization[_language]![selectedFilter.toLowerCase()]!
+                          .toLowerCase()
+                    : selectedFilter.toLowerCase(),
+              )
+            : 'Orders ($selectedFilter)',
         'value': totalOrders.toString(),
         'icon': Icons.receipt_long,
         'color': const Color.fromARGB(255, 151, 106, 255),
       },
       {
-        'title': 'Top Item',
-        'value': topItem.isNotEmpty ? topItem : "No data",
+        'title': localization[_language]?.containsKey('top_item') == true
+            ? localization[_language]!['top_item']!
+            : 'Top Item',
+        'value': topItem.isNotEmpty
+            ? topItem
+            : (localization[_language]?.containsKey('no_data') == true
+                  ? localization[_language]!['no_data']!
+                  : 'No data'),
         'icon': Icons.star,
         'color': const Color.fromARGB(255, 151, 106, 255),
       },
@@ -655,7 +892,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       children: cards.asMap().entries.map((entry) {
         final index = entry.key;
         final card = entry.value;
-
 
         return TweenAnimationBuilder(
           duration: Duration(milliseconds: 600 + (index * 100)),
@@ -671,6 +907,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   icon: card['icon'] as IconData,
                   iconColor: card['color'] as Color,
                   backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                  language: _language,
                 ),
               ),
             );
@@ -689,11 +926,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "🏆 Top 5 Ordered Items",
+              "🏆 ${localization[_language]?.containsKey('top_items_title') == true ? localization[_language]!['top_items_title']! : 'Top 5 Ordered Items'}",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: const Color.fromARGB(255, 131, 78, 255),
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
             Container(
@@ -703,11 +941,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                selectedFilter.toLowerCase(),
+                localization[_language]?.containsKey(
+                          selectedFilter.toLowerCase(),
+                        ) ==
+                        true
+                    ? localization[_language]![selectedFilter.toLowerCase()]!
+                          .toLowerCase()
+                    : selectedFilter.toLowerCase(),
                 style: TextStyle(
                   fontSize: 12,
                   color: const Color.fromARGB(255, 133, 81, 255),
                   fontWeight: FontWeight.w600,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ),
@@ -731,15 +976,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             child: Column(
               children: [
-                Icon(Icons.inbox_outlined,
-                    size: 64, color: isDarkMode ? Colors.grey[400] : Colors.grey[600]),
+                Icon(
+                  Icons.inbox_outlined,
+                  size: 64,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
                 const SizedBox(height: 16),
                 Text(
-                  "No orders found for selected period",
+                  localization[_language]?.containsKey('no_orders_message') ==
+                          true
+                      ? localization[_language]!['no_orders_message']!
+                      : 'No orders found for selected period',
                   style: TextStyle(
                     fontSize: 16,
                     color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                     fontWeight: FontWeight.w500,
+                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                   ),
                 ),
               ],
@@ -750,7 +1002,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: topItems.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
-
 
               return TweenAnimationBuilder(
                 duration: Duration(milliseconds: 800 + (index * 100)),
@@ -767,6 +1018,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         itemData: item['item'],
                         categoryName: item['category'],
                         rank: index + 1,
+                        language: _language,
                       ),
                     ),
                   );
@@ -785,6 +1037,7 @@ class ModernSummaryCard extends StatelessWidget {
   final IconData icon;
   final Color? iconColor;
   final Color? backgroundColor;
+  final String? language;
 
   const ModernSummaryCard({
     super.key,
@@ -793,6 +1046,7 @@ class ModernSummaryCard extends StatelessWidget {
     required this.icon,
     this.iconColor,
     this.backgroundColor,
+    this.language,
   });
 
   @override
@@ -822,7 +1076,9 @@ class ModernSummaryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(0.1),
+                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(
+                  0.1,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -840,6 +1096,7 @@ class ModernSummaryCard extends StatelessWidget {
                     ? Colors.grey[400]
                     : Colors.grey[600],
                 fontWeight: FontWeight.w500,
+                fontFamily: language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -851,6 +1108,7 @@ class ModernSummaryCard extends StatelessWidget {
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: iconColor ?? Colors.deepPurple.shade700,
+                fontFamily: language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -869,6 +1127,7 @@ class ModernTopItemTile extends StatelessWidget {
   final item.Item? itemData;
   final String categoryName;
   final int rank;
+  final String? language;
 
   const ModernTopItemTile({
     super.key,
@@ -878,6 +1137,7 @@ class ModernTopItemTile extends StatelessWidget {
     required this.rank,
     this.image,
     this.itemData,
+    this.language,
   });
 
   @override
@@ -892,6 +1152,11 @@ class ModernTopItemTile extends StatelessWidget {
       Colors.deepPurple.shade700, // Default
     ];
 
+    // Localization map for ModernTopItemTile
+    final Map<String, Map<String, String>> localization = {
+      'English': {'orders_suffix': 'orders'},
+      'Khmer': {'orders_suffix': 'ការកម្ម៉ង់'},
+    };
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -941,13 +1206,17 @@ class ModernTopItemTile extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Icon(
-                                  Icons.fastfood,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                ),
+                                      Icons.fastfood,
+                                      color: isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
                               )
                             : Icon(
                                 Icons.fastfood,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                       ),
                     ),
@@ -971,10 +1240,13 @@ class ModernTopItemTile extends StatelessWidget {
                         child: Center(
                           child: Text(
                             '$rank',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
+                              fontFamily: language == 'Khmer'
+                                  ? 'NotoSansKhmer'
+                                  : null,
                             ),
                           ),
                         ),
@@ -992,11 +1264,15 @@ class ModernTopItemTile extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: isDarkMode ? Colors.white : const Color(0xFF2D2D2D),
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF2D2D2D),
+                          fontFamily: language == 'Khmer'
+                              ? 'NotoSansKhmer'
+                              : null,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-
                       ),
                       const SizedBox(height: 6),
                       Container(
@@ -1005,7 +1281,12 @@ class ModernTopItemTile extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 126, 74, 248).withOpacity(0.1),
+                          color: const Color.fromARGB(
+                            255,
+                            126,
+                            74,
+                            248,
+                          ).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -1014,6 +1295,9 @@ class ModernTopItemTile extends StatelessWidget {
                             fontSize: 12,
                             color: const Color.fromARGB(255, 126, 71, 255),
                             fontWeight: FontWeight.w500,
+                            fontFamily: language == 'Khmer'
+                                ? 'NotoSansKhmer'
+                                : null,
                           ),
                         ),
                       ),
@@ -1029,13 +1313,25 @@ class ModernTopItemTile extends StatelessWidget {
                         color: const Color.fromARGB(255, 119, 65, 246),
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
+                        fontFamily: language == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                     Text(
-                      'orders',
+                      localization[language ?? 'English']?.containsKey(
+                                'orders_suffix',
+                              ) ==
+                              true
+                          ? localization[language ??
+                                'English']!['orders_suffix']!
+                          : 'orders',
                       style: TextStyle(
                         color: const Color.fromARGB(255, 129, 75, 255),
                         fontSize: 12,
+                        fontFamily: language == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                   ],

@@ -114,6 +114,7 @@ class _AddItemScreenState extends State<AddItemScreen>
     }
   }
 
+
   Future<void> _pickImage() async {
     try {
       if (kIsWeb) {
@@ -244,6 +245,7 @@ class _AddItemScreenState extends State<AddItemScreen>
         ],
       ),
     );
+
 
     if (confirmed != true) return;
 
@@ -376,6 +378,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                   const SizedBox(height: 16),
                   Text(
                     'Loading...',
+
                     style: TextStyle(
                       color: isDarkMode
                           ? Colors.grey[400]
@@ -461,6 +464,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                                     ),
                                   )
                                 : Column(
+
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(
@@ -539,6 +543,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                             ),
                             focusedErrorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
+
                               borderSide: BorderSide(
                                 color: isDarkMode
                                     ? Colors.red[400]!
@@ -615,6 +620,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                       ),
                       const SizedBox(height: 20),
 
+
                       // Price Field
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 600),
@@ -689,6 +695,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                       ),
                       const SizedBox(height: 20),
 
+
                       // Category Dropdown
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 700),
@@ -753,6 +760,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                         ),
                       ),
                       const SizedBox(height: 30),
+
 
                       // Submit Button
                       AnimatedContainer(

@@ -105,6 +105,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                         ),
                       ),
 
+
                       // Table number highlight
                       Container(
                         margin: const EdgeInsets.symmetric(vertical: 24),
@@ -192,6 +193,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                                         fontSize: 16,
                                         color: textColor,
                                       ),
+
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(

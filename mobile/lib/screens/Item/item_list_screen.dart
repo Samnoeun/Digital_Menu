@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'add_item_screen.dart';
 import '../../models/category_model.dart';
 import '../../models/item_model.dart' as item;
@@ -25,6 +26,58 @@ class _ItemListScreenState extends State<ItemListScreen>
   int? _selectedCategoryId;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  String selectedLanguage = 'English';
+  
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'items': 'Items',
+      'selected': 'Selected',
+      'search_items': 'Search items...',
+      'all': 'All',
+      'loading_items': 'Loading items...',
+      'no_items_found': 'No items found',
+      'no_matching_items': 'No matching items',
+      'add_new_item': 'Tap the + button to add a new item',
+      'try_different_search': 'Try a different search term',
+      'confirm_delete': 'Confirm Delete',
+      'delete_item': 'Delete Item',
+      'delete_selected': 'Delete selected items?',
+      'delete_single': 'Delete this item?',
+      'cancel': 'Cancel',
+      'delete': 'Delete',
+      'edit': 'Edit',
+      'select': 'Select',
+      'items_deleted': 'Selected items deleted successfully',
+      'item_deleted': 'Item deleted successfully',
+      'delete_failed': 'Failed to delete items',
+      'error': 'Error',
+      'unauthorized': 'Unauthorized access',
+    },
+    'Khmer': {
+      'items': 'ធាតុ',
+      'selected': 'បានជ្រើសរើស',
+      'search_items': 'ស្វែងរកធាតុ...',
+      'all': 'ទាំងអស់',
+      'loading_items': 'កំពុងផ្ទុកធាតុ...',
+      'no_items_found': 'មិនមានធាតុណាមួយត្រូវបានរកឃើញ',
+      'no_matching_items': 'មិនមានធាតុដែលត្រូវគ្នា',
+      'add_new_item': 'ចុចប៊ូតុង + ដើម្បីបន្ថែមធាតុថ្មី',
+      'try_different_search': 'សាកល្បងពាក្យស្វែងរកផ្សេងទៀត',
+      'confirm_delete': 'បញ្ជាក់ការលុប',
+      'delete_item': 'លុបធាតុ',
+      'delete_selected': 'លុបធាតុដែលបានជ្រើសរើស?',
+      'delete_single': 'លុបធាតុនេះ?',
+      'cancel': 'បោះបង់',
+      'delete': 'លុប',
+      'edit': 'កែសម្រួល',
+      'select': 'ជ្រើសរើស',
+      'items_deleted': 'ធាតុដែលបានជ្រើសរើសត្រូវបានលុបដោយជោគជ័យ',
+      'item_deleted': 'ធាតុត្រូវបានលុបដោយជោគជ័យ',
+      'delete_failed': 'បរាជ័យក្នុងការលុបធាតុ',
+      'error': 'កំហុស',
+      'unauthorized': 'ការចូលប្រើប្រាស់មិនត្រឹមត្រូវ',
+    },
+  };
 
   @override
   void initState() {
@@ -36,6 +89,7 @@ class _ItemListScreenState extends State<ItemListScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    _loadSavedLanguage();
     _loadData();
     _searchController.addListener(_onSearchChanged);
   }
@@ -45,6 +99,27 @@ class _ItemListScreenState extends State<ItemListScreen>
     _searchController.dispose();
     _animationController.dispose();
     super.dispose();
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
+  }
+
+  TextStyle getTextStyle({bool isBold = false, bool isSecondary = false, double? fontSize, Color? color}) {
+    final lang = localization[selectedLanguage]!;
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: fontSize ?? (isSecondary ? 16 : 18),
+      color: color ?? (isSecondary 
+          ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+          : Theme.of(context).textTheme.bodyLarge!.color),
+      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+    );
   }
 
   void _toggleSelectionMode() {
@@ -68,6 +143,7 @@ class _ItemListScreenState extends State<ItemListScreen>
 
   Future<void> _deleteSelectedItems() async {
     if (_selectedItemIds.isEmpty) return;
+    final lang = localization[selectedLanguage]!;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -81,32 +157,35 @@ class _ItemListScreenState extends State<ItemListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              'Confirm Delete',
+              lang['confirm_delete']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[200]
                     : Colors.black87,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
         ),
         content: Text(
-          'Delete ${_selectedItemIds.length} selected ${_selectedItemIds.length == 1 ? 'item' : 'items'}?',
+          '${_selectedItemIds.length} ${lang['delete_selected']!}',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
                 : Colors.grey[600],
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              lang['cancel']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
                     : Colors.grey[600],
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -118,7 +197,13 @@ class _ItemListScreenState extends State<ItemListScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              lang['delete']!,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
           ),
         ],
       ),
@@ -131,10 +216,10 @@ class _ItemListScreenState extends State<ItemListScreen>
         }
         _selectedItemIds.clear();
         _isSelectionMode = false;
-        _showSuccessSnackbar('Selected items deleted successfully');
+        _showSuccessSnackbar(lang['items_deleted']!);
         _loadData();
       } catch (e) {
-        _showErrorSnackbar('Failed to delete items: ${e.toString()}');
+        _showErrorSnackbar('${lang['delete_failed']!}: ${e.toString()}');
       }
     }
   }
@@ -157,11 +242,12 @@ class _ItemListScreenState extends State<ItemListScreen>
       });
       _animationController.forward();
     } catch (e) {
+      final lang = localization[selectedLanguage]!;
       if (e.toString().contains('Unauthenticated')) {
         await ApiService.clearAuthToken();
         Navigator.pushReplacementNamed(context, '/login');
       } else {
-        _showErrorSnackbar('Error: ${e.toString()}');
+        _showErrorSnackbar('${lang['error']!}: ${e.toString()}');
       }
     } finally {
       setState(() => _isLoading = false);
@@ -198,6 +284,8 @@ class _ItemListScreenState extends State<ItemListScreen>
   }
 
   Future<void> _deleteItem(int id, String itemName) async {
+    final lang = localization[selectedLanguage]!;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -210,32 +298,35 @@ class _ItemListScreenState extends State<ItemListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              'Delete Item',
+              lang['delete_item']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[200]
                     : Colors.black87,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
         ),
         content: Text(
-          'Are you sure you want to delete "$itemName"?',
+          '${lang['delete_single']!} "$itemName"?',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
                 : Colors.grey[600],
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              lang['cancel']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
                     : Colors.grey[600],
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -247,7 +338,13 @@ class _ItemListScreenState extends State<ItemListScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              lang['delete']!,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
           ),
         ],
       ),
@@ -257,10 +354,10 @@ class _ItemListScreenState extends State<ItemListScreen>
 
     try {
       await ApiService.deleteItem(id);
-      _showSuccessSnackbar('$itemName deleted successfully');
+      _showSuccessSnackbar('$itemName ${lang['item_deleted']!}');
       _loadData();
     } catch (e) {
-      _showErrorSnackbar('Error deleting item: $e');
+      _showErrorSnackbar('${lang['error']!} ${lang['delete_item']!}: $e');
     }
   }
 
@@ -271,7 +368,14 @@ class _ItemListScreenState extends State<ItemListScreen>
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -291,7 +395,14 @@ class _ItemListScreenState extends State<ItemListScreen>
           children: [
             const Icon(Icons.check_circle_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Theme.of(context).brightness == Brightness.dark
@@ -308,6 +419,8 @@ class _ItemListScreenState extends State<ItemListScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
+
     return Scaffold(
       backgroundColor: isDarkMode
           ? const Color.fromARGB(255, 33, 33, 33)
@@ -328,12 +441,13 @@ class _ItemListScreenState extends State<ItemListScreen>
               padding: const EdgeInsets.only(left: 10),
               child: Text(
                 _isSelectionMode
-                    ? '${_selectedItemIds.length} Selected'
-                    : 'Items',
-                style: const TextStyle(
+                    ? '${_selectedItemIds.length} ${lang['selected']!}'
+                    : lang['items']!,
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 24,
                   color: Colors.white,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ),
@@ -356,17 +470,18 @@ class _ItemListScreenState extends State<ItemListScreen>
               IconButton(
                 icon: const Icon(Icons.delete, color: Colors.white),
                 onPressed: _deleteSelectedItems,
-                tooltip: 'Delete Selected',
+                tooltip: lang['delete']!,
               ),
           ] else ...[
             TextButton(
               onPressed: _toggleSelectionMode,
-              child: const Text(
-                'Select',
+              child: Text(
+                lang['select']!,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
             ),
@@ -416,10 +531,11 @@ class _ItemListScreenState extends State<ItemListScreen>
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search items...',
+                    hintText: lang['search_items']!,
                     hintStyle: TextStyle(
                       color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
                       fontSize: 14,
+                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
@@ -451,6 +567,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                   style: TextStyle(
                     fontSize: 14,
                     color: isDarkMode ? Colors.grey[200] : Colors.black87,
+                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                   ),
                 ),
               ),
@@ -468,13 +585,14 @@ class _ItemListScreenState extends State<ItemListScreen>
                 children: [
                   FilterChip(
                     label: Text(
-                      'All',
+                      lang['all']!,
                       style: TextStyle(
                         color: _selectedCategoryId == null
                             ? Colors.white
                             : isDarkMode
                                 ? Colors.grey[400]
                                 : Colors.deepPurple.shade700,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                     selected: _selectedCategoryId == null,
@@ -500,6 +618,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                 : isDarkMode
                                     ? Colors.grey[400]
                                     : Colors.deepPurple.shade700,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                         ),
                         selected: _selectedCategoryId == cat.id,
@@ -532,11 +651,12 @@ class _ItemListScreenState extends State<ItemListScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Loading items...',
+                          lang['loading_items']!,
                           style: TextStyle(
                             color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                         ),
                       ],
@@ -564,22 +684,24 @@ class _ItemListScreenState extends State<ItemListScreen>
                               const SizedBox(height: 24),
                               Text(
                                 _searchQuery.isEmpty
-                                    ? 'No items found'
-                                    : 'No matching items',
+                                    ? lang['no_items_found']!
+                                    : lang['no_matching_items']!,
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
                                   color: isDarkMode ? Colors.grey[200] : Colors.deepPurple.shade700,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 _searchQuery.isEmpty
-                                    ? 'Tap the + button to add a new item'
-                                    : 'Try a different search term',
+                                    ? lang['add_new_item']!
+                                    : lang['try_different_search']!,
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
@@ -688,6 +810,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                           fontWeight: FontWeight.w700,
                                           fontSize: 18,
                                           color: isDarkMode ? Colors.grey[100] : Colors.deepPurple.shade900,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -704,6 +827,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                                                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                               ),
                                               maxLines: 2,
                                               overflow: TextOverflow.ellipsis,
@@ -744,6 +868,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                               color: isDarkMode ? Colors.grey[200] : Colors.deepPurple.shade800,
                                               fontWeight: FontWeight.w600,
                                               fontSize: 14,
+                                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                             ),
                                           ),
                                         ),
@@ -802,9 +927,10 @@ class _ItemListScreenState extends State<ItemListScreen>
                                                     ),
                                                     const SizedBox(width: 8),
                                                     Text(
-                                                      'Edit',
+                                                      lang['edit']!,
                                                       style: TextStyle(
                                                         color: isDarkMode ? Colors.blue[300] : Colors.black87,
+                                                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                                       ),
                                                     ),
                                                   ],
@@ -821,9 +947,10 @@ class _ItemListScreenState extends State<ItemListScreen>
                                                     ),
                                                     const SizedBox(width: 8),
                                                     Text(
-                                                      'Delete',
+                                                      lang['delete']!,
                                                       style: TextStyle(
                                                         color: Colors.red.shade600,
+                                                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                                       ),
                                                     ),
                                                   ],

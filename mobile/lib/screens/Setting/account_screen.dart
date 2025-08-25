@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/api_services.dart';
 import '../../models/restaurant_model.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import '../../services/image_picker_service.dart';
 
 class AccountScreen extends StatefulWidget {
   final String selectedLanguage;
@@ -23,7 +26,8 @@ class _AccountScreenState extends State<AccountScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
-  File? _profileImage;
+  Uint8List? _imageBytes; // For web
+  dynamic _profileImage;  
   Restaurant? _restaurant;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -93,10 +97,16 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     try {
-      final pickedImage = await picker.pickImage(source: ImageSource.gallery);
-      if (pickedImage != null) {
+      final result = await ImagePickerService.pickImage();
+      if (result != null) {
         setState(() {
-          _profileImage = File(pickedImage.path);
+          if (kIsWeb) {
+            _imageBytes = result.webBytes;
+            _profileImage = null;
+          } else {
+            _profileImage = result.mobileFile;
+            _imageBytes = null;
+          }
         });
       }
     } catch (e) {
@@ -134,7 +144,7 @@ class _AccountScreenState extends State<AccountScreen> {
         id: _restaurant?.id ?? 1,
         restaurantName: _nameController.text.trim(),
         address: _addressController.text.trim(),
-        profileImage: _profileImage,
+        profileImage: kIsWeb ? null : _profileImage,
       );
 
       await _loadRestaurantData();
@@ -423,6 +433,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
   ImageProvider? _getProfileImage() {
     if (_profileImage != null) return FileImage(_profileImage!);
+    if (_imageBytes != null) return MemoryImage(_imageBytes!);
     if (_restaurant?.profile != null && _restaurant!.profile!.isNotEmpty) {
       return NetworkImage(ApiService.getImageUrl(_restaurant!.profile!));
     }
@@ -430,7 +441,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget? _showProfilePlaceholder(bool isDarkMode) {
-    if (_profileImage != null) return null;
+    if (_profileImage != null || _imageBytes != null) return null;
     if (_restaurant?.profile == null || _restaurant!.profile!.isEmpty) {
       return Icon(
         Icons.restaurant,

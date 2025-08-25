@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_services.dart';
 import 'Login/login_screen.dart';
 import 'taskbar_screen.dart';
@@ -14,10 +14,34 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'loading': 'Loading...',
+    },
+    'Khmer': {
+      'loading': 'កំពុងផ្ទុក...',
+    },
+  };
+
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    _loadSavedLanguage().then((_) => _checkAuthStatus());
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+      setState(() {
+        selectedLanguage = savedLanguage;
+      });
+    } catch (e) {
+      print('Error loading language: $e');
+    }
   }
 
   Future<void> _checkAuthStatus() async {
@@ -85,9 +109,20 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
+  TextStyle getTextStyle() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      color: isDark ? Colors.white : Theme.of(context).textTheme.bodyLarge!.color,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
 
     return Scaffold(
       body: Center(
@@ -103,8 +138,8 @@ class _SplashScreenState extends State<SplashScreen> {
             const CircularProgressIndicator(),
             const SizedBox(height: 20),
             Text(
-              'Loading...',
-              style: Theme.of(context).textTheme.bodyLarge,
+              lang['loading']!,
+              style: getTextStyle(),
             ),
           ],
         ),

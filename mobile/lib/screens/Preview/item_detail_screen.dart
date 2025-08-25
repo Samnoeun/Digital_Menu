@@ -21,10 +21,12 @@ class _ItemDetailBottomSheetState extends State<ItemDetailBottomSheet> {
     'English': {
       'description_label': 'Description',
       'no_description': 'No description available.',
+      'category_label': 'Category',
     },
     'Khmer': {
       'description_label': 'ការពិពណ៌នា',
       'no_description': 'គ្មានការពិពណ៌នាទេ។',
+      'category_label': 'ប្រភេទ',
     },
   };
 
@@ -48,6 +50,7 @@ class _ItemDetailBottomSheetState extends State<ItemDetailBottomSheet> {
     final currencyFormat = NumberFormat.currency(locale: _language == 'Khmer' ? 'km_KH' : 'en', symbol: _language == 'Khmer' ? '៛' : '\$');
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[_language]!;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.6,
@@ -149,7 +152,7 @@ class _ItemDetailBottomSheetState extends State<ItemDetailBottomSheet> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          widget.item.category!.name,
+                          lang['category_label']!,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.deepPurple.shade700,
                             fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
@@ -174,7 +177,7 @@ class _ItemDetailBottomSheetState extends State<ItemDetailBottomSheet> {
 
           // Description
           Text(
-            localization[_language]!['description_label']!,
+            lang['description_label']!,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: isDarkMode ? Colors.white : Colors.black87,
@@ -185,7 +188,7 @@ class _ItemDetailBottomSheetState extends State<ItemDetailBottomSheet> {
           Expanded(
             child: SingleChildScrollView(
               child: Text(
-                widget.item.description ?? localization[_language]!['no_description']!,
+                widget.item.description ?? lang['no_description']!,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                   fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
