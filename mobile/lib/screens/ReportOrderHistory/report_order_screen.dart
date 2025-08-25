@@ -71,29 +71,20 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
     try {
       print('Loading order history from: ${ApiService.baseUrl}/order-history');
 
-      final testResponse = await http.get(
-        Uri.parse('${ApiService.baseUrl}/order-history'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      );
-
-      print('Raw API response status: ${testResponse.statusCode}');
-      print('Raw API response body: ${testResponse.body}');
-
       final itemsAndCategories = await Future.wait([
         ApiService.getItems(),
         ApiService.getCategories(),
-        ApiService.getOrderHistory(),
+        ApiService.getOrderHistory(), // This returns List<dynamic> (raw data)
       ]);
 
       final items = itemsAndCategories[0] as List<item.Item>;
       final categories = itemsAndCategories[1] as List<category.Category>;
-          final orderHistoryData = itemsAndCategories[2] as List<dynamic>; // ← FIX THIS LINE
+      final orderHistoryData = itemsAndCategories[2] as List<dynamic>;
 
-    // Convert raw JSON to OrderHistory objects
-    final orderHistory = orderHistoryData.map((json) => OrderHistory.fromJson(json)).toList();
+      // Convert raw data to OrderHistory objects using helper function
+      final orderHistory = orderHistoryData
+          .map((json) => _parseOrderHistory(json))
+          .toList();
 
       setState(() {
         totalItems = items.length;
@@ -115,56 +106,82 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
     }
   }
 
-  List<OrderHistory> _filterOrdersByDate(List<OrderHistory> orders) {
-    if (orders.isEmpty) return [];
-
-    final now = DateTime.now();
-    switch (selectedFilter) {
-      case 'Today':
-        return orders.where((order) {
-          final date = order.createdAt;
-          return date.year == now.year &&
-              date.month == now.month &&
-              date.day == now.day;
-        }).toList();
-      case 'This Week':
-        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-        return orders.where((order) {
-          final date = order.createdAt;
-          return date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-              date.isBefore(now.add(const Duration(days: 1)));
-        }).toList();
-      case 'This Month':
-        return orders.where((order) {
-          final date = order.createdAt;
-          return date.year == now.year && date.month == now.month;
-        }).toList();
-      case 'Custom Date':
-        if (customDate != null) {
-          return orders.where((order) {
-            final date = order.createdAt;
-            return date.year == customDate!.year &&
-                date.month == customDate!.month &&
-                date.day == customDate!.day;
-          }).toList();
-        }
-        return orders;
-      case 'Custom Range':
-        if (customRange != null) {
-          return orders.where((order) {
-            final date = order.createdAt;
-            return (date.isAfter(
-                      customRange!.start.subtract(const Duration(days: 1)),
-                    ) ||
-                    date.isAtSameMomentAs(customRange!.start)) &&
-                (date.isBefore(customRange!.end.add(const Duration(days: 1))) ||
-                    date.isAtSameMomentAs(customRange!.end));
-          }).toList();
-        }
-        return orders;
-      default:
-        return orders;
+  // Add these helper functions to your _OrderHistoryScreenState class
+  OrderHistory _parseOrderHistory(dynamic json) {
+    if (json is! Map<String, dynamic>) {
+      return OrderHistory(
+        id: 0,
+        tableNumber: 0,
+        status: 'unknown',
+        createdAt: DateTime.now(),
+        orderItems: [],
+      );
     }
+
+    return OrderHistory(
+      id: json['id'] ?? 0,
+      tableNumber: _parseTableNumber(json['table_number']),
+      status: json['status'] ?? 'completed',
+      createdAt: _parseDateTime(json['created_at'] ?? json['completed_at']),
+      orderItems: _parseOrderItems(json['order_items']),
+    );
+  }
+
+  int _parseTableNumber(dynamic tableNumber) {
+    if (tableNumber is int) return tableNumber;
+    if (tableNumber is String) return int.tryParse(tableNumber) ?? 0;
+    return 0;
+  }
+
+  DateTime _parseDateTime(dynamic dateString) {
+    try {
+      if (dateString is String) return DateTime.parse(dateString);
+      return DateTime.now();
+    } catch (e) {
+      return DateTime.now();
+    }
+  }
+
+  List<OrderItemHistory> _parseOrderItems(dynamic itemsData) {
+    if (itemsData is! List<dynamic>) return [];
+
+    return itemsData.map((itemJson) {
+      if (itemJson is! Map<String, dynamic>) {
+        return OrderItemHistory(
+          itemId: 0,
+          quantity: 0,
+          specialNote: '',
+          itemName: 'Invalid Item',
+          // itemCategory: 'No category',
+        );
+      }
+
+      return OrderItemHistory(
+        itemId: itemJson['item_id'] ?? 0,
+        quantity: itemJson['quantity'] ?? 0,
+        specialNote: itemJson['special_note'] ?? '',
+        itemName: _getItemName(itemJson),
+        // itemCategory: _getItemCategory(itemJson),
+      );
+    }).toList();
+  }
+
+  String _getItemName(Map<String, dynamic> itemJson) {
+    if (itemJson['item'] is Map<String, dynamic>) {
+      return itemJson['item']['name'] ?? 'Unknown Item';
+    }
+    return 'Unknown Item';
+  }
+
+  String _getItemCategory(Map<String, dynamic> itemJson) {
+    if (itemJson['item'] is Map<String, dynamic>) {
+      final itemData = itemJson['item'];
+      if (itemData['category'] is Map<String, dynamic>) {
+        return itemData['category']['name'] ?? 'No category';
+      }
+      return itemData['category_name'] ?? 'No category';
+    }
+    return 'No category';
   }
 
   Future<void> _selectCustomDate(BuildContext context) async {
@@ -229,6 +246,58 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
     }
   }
 
+  List<OrderHistory> _filterOrdersByDate(List<OrderHistory> orders) {
+    if (orders.isEmpty) return [];
+
+    final now = DateTime.now();
+    switch (selectedFilter) {
+      case 'Today':
+        return orders.where((order) {
+          final date = order.createdAt;
+          return date.year == now.year &&
+              date.month == now.month &&
+              date.day == now.day;
+        }).toList();
+      case 'This Week':
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        return orders.where((order) {
+          final date = order.createdAt;
+          return date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+              date.isBefore(now.add(const Duration(days: 1)));
+        }).toList();
+      case 'This Month':
+        return orders.where((order) {
+          final date = order.createdAt;
+          return date.year == now.year && date.month == now.month;
+        }).toList();
+      case 'Custom Date':
+        if (customDate != null) {
+          return orders.where((order) {
+            final date = order.createdAt;
+            return date.year == customDate!.year &&
+                date.month == customDate!.month &&
+                date.day == customDate!.day;
+          }).toList();
+        }
+        return orders;
+      case 'Custom Range':
+        if (customRange != null) {
+          return orders.where((order) {
+            final date = order.createdAt;
+            return (date.isAfter(
+                      customRange!.start.subtract(const Duration(days: 1)),
+                    ) ||
+                    date.isAtSameMomentAs(customRange!.start)) &&
+                (date.isBefore(customRange!.end.add(const Duration(days: 1))) ||
+                    date.isAtSameMomentAs(customRange!.end));
+          }).toList();
+        }
+        return orders;
+      default:
+        return orders;
+    }
+  }
+
   Future<Map<String, String>> _getItemDetails(String itemId) async {
     try {
       // This should be implemented to fetch item details from your API
@@ -263,20 +332,23 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
 
     // Color definitions
     final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.grey[50];
-  
+
     final infoCardColor = isDarkMode ? Colors.blue[900] : Colors.blue.shade50;
     final Color infoBorderColor = isDarkMode
         ? Colors.blue[800]!
         : Colors.blue.shade100;
     final infoTextColor = isDarkMode ? Colors.blue[100] : Colors.blue.shade800;
-  
 
-     // Color definitions with null assertion operator
-  final cardColor = isDarkMode ? Colors.grey[800]! : Colors.grey.shade100;
-  final textColor = isDarkMode ? Colors.white : Colors.black;
-  final secondaryTextColor = isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
-  final primaryColor = isDarkMode ? Colors.deepPurple[600]! : Colors.deepPurple;
-  final successColor = isDarkMode ? Colors.green[600]! : Colors.green;
+    // Color definitions with null assertion operator
+    final cardColor = isDarkMode ? Colors.grey[800]! : Colors.grey.shade100;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final secondaryTextColor = isDarkMode
+        ? Colors.grey[400]!
+        : Colors.grey[600]!;
+    final primaryColor = isDarkMode
+        ? Colors.deepPurple[600]!
+        : Colors.deepPurple;
+    final successColor = isDarkMode ? Colors.green[600]! : Colors.green;
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
@@ -425,7 +497,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                         margin: const EdgeInsets.all(20),
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: cardColor,
+                          color: isDarkMode
+                              ? cardColor
+                              : Colors.white, // ✅ White in light mode
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
@@ -452,7 +526,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                     size: 20,
                                   ),
                                 ),
-                                SizedBox(width: 12),
+                                const SizedBox(width: 12),
                                 Text(
                                   'Filter Orders',
                                   style: TextStyle(
@@ -463,7 +537,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                 ),
                               ],
                             ),
-                            SizedBox(height: 16),
+                            const SizedBox(height: 16),
                             LayoutBuilder(
                               builder: (context, constraints) {
                                 return Column(
@@ -480,7 +554,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                             primaryColor,
                                             textColor,
                                           ),
-                                          SizedBox(width: 8),
+                                          const SizedBox(width: 8),
                                           _buildFilterChip(
                                             'Today',
                                             Icons.today,
@@ -488,7 +562,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                             primaryColor,
                                             textColor,
                                           ),
-                                          SizedBox(width: 8),
+                                          const SizedBox(width: 8),
                                           _buildFilterChip(
                                             'This Week',
                                             Icons.date_range,
@@ -496,7 +570,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                             primaryColor,
                                             textColor,
                                           ),
-                                          SizedBox(width: 8),
+                                          const SizedBox(width: 8),
                                           _buildFilterChip(
                                             'This Month',
                                             Icons.calendar_month,
@@ -507,7 +581,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                         ],
                                       ),
                                     ),
-                                    SizedBox(height: 8),
+                                    const SizedBox(height: 8),
                                     // Second row - custom filters
                                     Row(
                                       children: [
@@ -523,7 +597,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                             isFullWidth: true,
                                           ),
                                         ),
-                                        SizedBox(width: 8),
+                                        const SizedBox(width: 8),
                                         Expanded(
                                           child: _buildFilterChip(
                                             'Custom Range',
@@ -540,7 +614,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                     ),
                                     if (selectedFilter == 'Custom Date' &&
                                         customDate != null) ...[
-                                      SizedBox(height: 8),
+                                      const SizedBox(height: 8),
                                       Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
@@ -561,7 +635,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                               size: 16,
                                               color: primaryColor,
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Text(
                                               'Selected: ${DateFormat('MMM dd, yyyy').format(customDate!)}',
                                               style: TextStyle(
@@ -570,7 +644,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                                 fontSize: 13,
                                               ),
                                             ),
-                                            Spacer(),
+                                            const Spacer(),
                                             GestureDetector(
                                               onTap: () {
                                                 setState(() {
@@ -605,7 +679,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                     ],
                                     if (selectedFilter == 'Custom Range' &&
                                         customRange != null) ...[
-                                      SizedBox(height: 8),
+                                      const SizedBox(height: 8),
                                       Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
@@ -626,7 +700,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                                               size: 16,
                                               color: primaryColor,
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Expanded(
                                               child: Text(
                                                 'Range: ${DateFormat('MMM dd').format(customRange!.start)} - ${DateFormat('MMM dd, yyyy').format(customRange!.end)}',
@@ -677,123 +751,87 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                         ),
                       ),
 
-                      // Summary Cards
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            _buildSummaryCard(
-                              'Total Items',
-                              totalItems.toString(),
-                              Icons.inventory_2,
-                              const Color(0xFFFF6B6B),
-                              isDarkMode
-                                  ? Colors.grey[800]!
-                                  : const Color(0xFFFFF5F5),
-                              isDarkMode,
-                            ),
-                            SizedBox(width: 8),
-                            _buildSummaryCard(
-                              'Categories',
-                              totalCategories.toString(),
-                              Icons.category,
-                              const Color(0xFF4ECDC4),
-                              isDarkMode
-                                  ? Colors.grey[800]!
-                                  : const Color(0xFFF0FDFA),
-                              isDarkMode,
-                            ),
-                            SizedBox(width: 8),
-                            _buildSummaryCard(
-                              'Orders',
-                              totalOrders.toString(),
-                              Icons.receipt_long,
-                              const Color(0xFF45B7D1),
-                              isDarkMode
-                                  ? Colors.grey[800]!
-                                  : const Color(0xFFF0F9FF),
-                              isDarkMode,
-                            ),
-                          ],
-                        ),
-                      ),
-
                       SizedBox(height: 20),
 
-                      // Orders List
-                      // Inside your build method, add these color definitions:
-
-
-// Then fix the ListView.builder:
-filteredOrders.isNotEmpty
-    ? ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        itemCount: filteredOrders.length,
-        itemBuilder: (context, index) {
-          final order = filteredOrders[index];
-         return _buildOrderCard(
-  order, 
-  index, 
-  isDarkMode, 
-  cardColor, 
-  textColor, 
-  secondaryTextColor!, // Add ! here
-  primaryColor, 
-  successColor
-);
-        },
-      )
-    : Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(40),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[700]! : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.inbox_outlined,
-                size: 38,
-                color: secondaryTextColor,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'No Orders Found',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'No orders match your current filter criteria',
-              style: TextStyle(
-                fontSize: 14,
-                color: secondaryTextColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+                      // Then fix the ListView.builder:
+                      filteredOrders.isNotEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: 50,
+                              ), // Add bottom padding
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                ),
+                                itemCount: filteredOrders.length,
+                                itemBuilder: (context, index) {
+                                  final order = filteredOrders[index];
+                                  return _buildOrderCard(
+                                    order,
+                                    index,
+                                    isDarkMode,
+                                    cardColor,
+                                    textColor,
+                                    secondaryTextColor,
+                                    primaryColor,
+                                    successColor,
+                                  );
+                                },
+                              ),
+                            )
+                          : Container(
+                              margin: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(40),
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: isDarkMode
+                                          ? Colors.grey[700]!
+                                          : const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      Icons.inbox_outlined,
+                                      size: 38,
+                                      color: secondaryTextColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No Orders Found',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'No orders match your current filter criteria',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: secondaryTextColor,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
                     ],
                   ),
                 ),
@@ -1187,248 +1225,153 @@ filteredOrders.isNotEmpty
                     ],
                   ),
                   SizedBox(height: 16),
+                  // Replace the FutureBuilder with direct access to item details
                   ...order.orderItems.map((orderItem) {
-                    return FutureBuilder<Map<String, String>>(
-                      future: _getItemDetails(orderItem.itemId.toString()),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: isDarkMode
-                                  ? Colors.grey[700]!
-                                  : Colors.white.withOpacity(0.7),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      primaryColor.withOpacity(0.6),
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Text(
-                                  'Loading item...',
-                                  style: TextStyle(
-                                    color: secondaryTextColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-
-                        final itemDetails =
-                            snapshot.data ??
-                            {'name': 'Unknown Item', 'category': 'No category'};
-
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: isDarkMode
-                                  ? [Colors.grey[700]!, Colors.grey[800]!]
-                                  : [
-                                      Colors.white,
-                                      const Color(0xFFF8FAFC).withOpacity(0.8),
-                                    ],
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: primaryColor.withOpacity(0.1),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: primaryColor.withOpacity(0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDarkMode
+                              ? [Colors.grey[700]!, Colors.grey[800]!]
+                              : [
+                                  Colors.white,
+                                  const Color(0xFFF8FAFC).withOpacity(0.8),
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: primaryColor.withOpacity(0.1),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      _getCategoryColor(
-                                        itemDetails['category']!,
-                                      ).withOpacity(0.8),
-                                      _getCategoryColor(
-                                        itemDetails['category']!,
-                                      ),
-                                    ],
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [],
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  orderItem
+                                      .itemName, // Use the item name directly
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                    color: textColor,
+                                    letterSpacing: -0.1,
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: _getCategoryColor(
-                                        itemDetails['category']!,
-                                      ).withOpacity(0.3),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
                                 ),
-                                child: Icon(
-                                  _getCategoryIcon(itemDetails['category']!),
-                                  size: 18,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      itemDetails['name']!,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 15,
-                                        color: textColor,
-                                        letterSpacing: -0.1,
+                                SizedBox(height: 4),
+
+                                if (orderItem.specialNote.isNotEmpty) ...[
+                                  SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: isDarkMode
+                                            ? [
+                                                Colors.amber[800]!,
+                                                Colors.amber[900]!,
+                                              ]
+                                            : [
+                                                const Color(0xFFFEF3C7),
+                                                const Color(
+                                                  0xFFFDE68A,
+                                                ).withOpacity(0.7),
+                                              ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFFD97706,
+                                        ).withOpacity(0.2),
+                                        width: 1,
                                       ),
                                     ),
-                                    SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _getCategoryColor(
-                                          itemDetails['category']!,
-                                        ).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: _getCategoryColor(
-                                            itemDetails['category']!,
-                                          ).withOpacity(0.2),
-                                          width: 1,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.note_alt_outlined,
+                                          size: 12,
+                                          color: isDarkMode
+                                              ? Colors.amber[100]!
+                                              : const Color(0xFF92400E),
                                         ),
-                                      ),
-                                      child: Text(
-                                        itemDetails['category']!,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: _getCategoryColor(
-                                            itemDetails['category']!,
-                                          ),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    if (orderItem.specialNote.isNotEmpty) ...[
-                                      SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: isDarkMode
-                                                ? [
-                                                    Colors.amber[800]!,
-                                                    Colors.amber[900]!,
-                                                  ]
-                                                : [
-                                                    const Color(0xFFFEF3C7),
-                                                    const Color(
-                                                      0xFFFDE68A,
-                                                    ).withOpacity(0.7),
-                                                  ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          border: Border.all(
-                                            color: const Color(
-                                              0xFFD97706,
-                                            ).withOpacity(0.2),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.note_alt_outlined,
-                                              size: 12,
+                                        SizedBox(width: 4),
+                                        Flexible(
+                                          child: Text(
+                                            orderItem.specialNote,
+                                            style: TextStyle(
+                                              fontSize: 11,
                                               color: isDarkMode
                                                   ? Colors.amber[100]!
                                                   : const Color(0xFF92400E),
+                                              fontWeight: FontWeight.w600,
                                             ),
-                                            SizedBox(width: 4),
-                                            Flexible(
-                                              child: Text(
-                                                orderItem.specialNote,
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  color: isDarkMode
-                                                      ? Colors.amber[100]!
-                                                      : const Color(0xFF92400E),
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      successColor,
-                                      successColor.withOpacity(0.8),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: successColor.withOpacity(0.3),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: Text(
-                                  'x${orderItem.quantity}',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                    letterSpacing: 0.2,
                                   ),
-                                ),
-                              ),
-                            ],
+                                ],
+                              ],
+                            ),
                           ),
-                        );
-                      },
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  successColor,
+                                  successColor.withOpacity(0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: successColor.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              'x${orderItem.quantity}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13,
+                                color: Colors.white,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   }).toList(),
                 ],
