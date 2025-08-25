@@ -27,9 +27,9 @@ class ItemController extends Controller
             Item::whereHas('category', function ($query) use ($user) {
                 $query->where('restaurant_id', $user->restaurant->id);
             })
-            ->with('category')
-            ->orderBy('created_at', 'desc')
-            ->get()
+                ->with('category')
+                ->orderBy('created_at', 'desc')
+                ->get()
         );
     }
 
@@ -55,6 +55,7 @@ class ItemController extends Controller
                 $imagePath = $request->file('image')->store('items', 'public');
                 $validated['image_path'] = $imagePath;
             }
+
 
             // Create item safely
             $item = Item::create($validated);
