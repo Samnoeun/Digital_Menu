@@ -1,9 +1,9 @@
+import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'qr_menu_view_screen.dart';
-import '../../models/menu_item.dart';
-
+import 'package:universal_html/html.dart' as html;
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
@@ -13,59 +13,65 @@ class QRScannerScreen extends StatefulWidget {
 }
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
-  final TextEditingController _qrDataController = TextEditingController();
-  String _language = 'English'; // Default language, will be overridden by SharedPreferences
+  final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _brandNameController = TextEditingController();
+  String _language = 'English'; // Default language
+  String qrText = ''; // QR code data for generation
+  bool showQR = false; // Whether to show generated QR code
+  String customBrandName = ''; // Custom brand name
+  Color _qrColor = Colors.purple; // Default QR code color
 
   // Localization map for English and Khmer
   final Map<String, Map<String, String>> localization = {
     'English': {
-      'app_bar_title': 'QR Scanner Demo',
-      'info_text': 'In a real app, this would use the camera to scan QR codes. For demo purposes, paste the QR data below.',
-      'paste_label': 'Paste QR Code Data:',
-      'hint_text': 'Paste QR code data here...',
-      'process_button': 'Process QR Data',
-      'how_to_test': 'How to test:',
-      'test_instructions': '1. Go to Menu page\n'
-          '2. Select some menu items\n'
-          '3. Generate QR code\n'
-          '4. Copy the data\n'
-          '5. Come back here and paste it\n'
-          '6. Click "Process QR Data"',
-      'empty_input_error': 'Please paste QR code data',
-      'dialog_title': 'QR Code Content',
-      'scanned_data_label': 'Scanned Data:',
-      'url_message': 'This appears to be a URL. You can open it in a browser.',
-      'close_button': 'Close',
-      'open_url_button': 'Open URL',
-      'url_snackbar': 'Would open URL in browser',
+      'app_bar_title': 'QR Code Generator',
+      'info_text': 'Enter a URL and optional brand name to generate a QR code. Customize the color and download the QR code as an image.',
+      'url_label': 'Enter URL for QR Code:',
+      'url_hint': 'Enter a URL (e.g., https://example.com)',
+      'brand_name_label': 'Custom Brand Name:',
+      'brand_name_hint': 'Enter your brand name or message',
+      'generate_button': 'Generate QR Code',
+      'how_to_test': 'How to generate a QR code:',
+      'test_instructions': '1. Enter a URL in the text field below.\n'
+          '2. Optionally, enter a brand name to display below the QR code.\n'
+          '3. Select a color for the QR code.\n'
+          '4. Click "Generate QR Code" to create and display it.\n'
+          '5. Use the download button in the top bar to save the QR code as an image.',
+      'empty_input_error': 'Please enter a URL',
+      'download_button': 'Download QR Code',
+      'download_success': 'QR code saved to downloads!',
+      'download_failed': 'Failed to save QR code.',
+      'download_web_only': 'Download is only supported on web.',
+      'color_picker_label': 'QR Code Color',
     },
     'Khmer': {
-      'app_bar_title': 'ស្កេន QR Code',
-      'info_text': 'នៅក្នុងកម្មវិធីពិតប្រាកដ វានឹងប្រើកាមេរ៉ាដើម្បីស្កេន QR Code។ សម្រាប់គោលបំណងសាកល្បង សូមបិទភ្ជាប់ទិន្នន័យ QR ខាងក្រោម។',
-      'paste_label': 'បិទភ្ជាប់ទិន្នន័យ QR Code:',
-      'hint_text': 'បិទភ្ជាប់ទិន្នន័យ QR Code នៅទីនេះ...',
-      'process_button': 'ដំណើរការទិន្នន័យ QR',
-      'how_to_test': 'វិធីសាកល្បង:',
-      'test_instructions': '1. ចូលទៅកាន់ទំព័រម៉ឺនុយ\n'
-          '2. ជ្រើសរើសមុខម្ហូបមួយចំនួន\n'
-          '3. បង្កើត QR Code\n'
-          '4. ចម្លងទិន្នន័យ\n'
-          '5. ត្រលប់មកទីនេះ ហើយបិទភ្ជាប់វា\n'
-          '6. ចុច "ដំណើរការទិន្នន័យ QR"',
-      'empty_input_error': 'សូមបិទភ្ជាប់ទិន្នន័យ QR Code',
-      'dialog_title': 'ខ្លឹមសារនៃ QR Code',
-      'scanned_data_label': 'ទិន្នន័យស្កេន:',
-      'url_message': 'នេះហាក់ដូចជា URL។ អ្នកអាចបើកវានៅក្នុងកម្មវិធីរុករក។',
-      'close_button': 'បិទ',
-      'open_url_button': 'បើក URL',
-      'url_snackbar': 'នឹងបើក URL នៅក្នុងកម្មវិធីរុករក',
+      'app_bar_title': 'បង្កើត QR Code',
+      'info_text': 'បញ្ចូល URL និងឈ្មោះម៉ាក (ស្រេចចិត្ត) ដើម្បីបង្កើត QR Code។ ប្តូរពណ៌ និងទាញយក QR Code ជារូបភាព។',
+      'url_label': 'បញ្ចូល URL សម្រាប់ QR Code:',
+      'url_hint': 'បញ្ចូល URL (ឧ. https://example.com)',
+      'brand_name_label': 'ឈ្មោះម៉ាកផ្ទាល់ខ្លួន:',
+      'brand_name_hint': 'បញ្ចូលឈ្មោះម៉ាក ឬសាររបស់អ្នក',
+      'generate_button': 'បង្កើត QR Code',
+      'how_to_test': 'វិធីបង្កើត QR Code:',
+      'test_instructions': '1. បញ្ចូល URL នៅក្នុងប្រអប់អត្ថបទខាងក្រោម។\n'
+          '2. ស្រេចចិត្ត បញ្ចូលឈ្មោះម៉ាកដើម្បីបង្ហាញនៅខាងក្រោម QR Code។\n'
+          '3. ជ្រើសរើសពណ៌សម្រាប់ QR Code។\n'
+          '4. ចុច "បង្កើត QR Code" ដើម្បីបង្កើតនិងបង្ហាញវា។\n'
+          '5. ប្រើប៊ូតុងទាញយកនៅរបារខាងលើដើម្បីរក្សាទុក QR Code ជារូបភាព។',
+      'empty_input_error': 'សូមបញ្ចូល URL',
+      'download_button': 'ទាញយក QR Code',
+      'download_success': 'QR Code ត្រូវបានរក្សាទុកទៅក្នុងផ្នែកទាញយក!',
+      'download_failed': 'បរាជ័យក្នុងការរក្សាទុក QR Code។',
+      'download_web_only': 'ការទាញយកគាំទ្រតែនៅលើវេបសាយប៉ុណ្ណោះ។',
+      'color_picker_label': 'ពណ៌ QR Code',
     },
   };
 
   @override
   void initState() {
     super.initState();
-    _loadSavedLanguage(); // Load saved language on initialization
+    _loadSavedLanguage();
+    _loadCustomBrandName();
   }
 
   // Load the saved language from SharedPreferences
@@ -77,16 +83,27 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _qrDataController.dispose();
-    super.dispose();
+  // Load saved brand name from SharedPreferences
+  Future<void> _loadCustomBrandName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedBrandName = prefs.getString('qr_brand_name') ?? '';
+    setState(() {
+      customBrandName = savedBrandName;
+      _brandNameController.text = savedBrandName;
+    });
   }
 
-  void _processQRData() {
-    final String qrData = _qrDataController.text.trim();
+  // Save brand name to SharedPreferences
+  Future<void> _saveCustomBrandName(String text) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('qr_brand_name', text);
+  }
 
-    if (qrData.isEmpty) {
+  // Generate QR code from URL
+  void _generateQRCode() {
+    final String url = _urlController.text.trim();
+
+    if (url.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(localization[_language]!['empty_input_error']!),
@@ -97,132 +114,131 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       return;
     }
 
+    setState(() {
+      qrText = url;
+      showQR = true;
+    });
+  }
+
+  // Download QR code as image with white border and brand name
+  Future<void> _downloadQRCode() async {
     try {
-      final dynamic jsonData = jsonDecode(qrData);
-
-      if (jsonData is Map && jsonData['menu_items'] != null) {
-        final List<MenuItem> menuItems = (jsonData['menu_items'] as List)
-            .map(
-              (item) => MenuItem(
-                id: item['id'],
-                name: item['name'],
-                price: item['price'].toDouble(),
-                description: item['description'],
-                category: item['category'],
-                imageUrl: item['image_url'],
-              ),
-            )
-            .toList();
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => PublicMenuViewScreen(menuItems: menuItems),
+      if (!kIsWeb) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(localization[_language]!['download_web_only']!),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
           ),
         );
-      } else {
-        _showRegularQRData(qrData);
+        return;
       }
+
+      // Generate QR code image data
+      final qrValidationResult = QrValidator.validate(
+        data: qrText,
+        version: QrVersions.auto,
+        errorCorrectionLevel: QrErrorCorrectLevel.M,
+      );
+      if (!qrValidationResult.isValid) {
+        throw Exception('Invalid QR code data');
+      }
+      final qrCode = qrValidationResult.qrCode;
+      final qrPainter = QrPainter.withQr(
+        qr: qrCode!,
+        emptyColor: Colors.white,
+        gapless: true,
+        dataModuleStyle: QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: _qrColor,
+        ),
+      );
+
+      // Create a canvas to draw QR code and brand name
+      final recorder = PictureRecorder();
+      final canvas = Canvas(recorder);
+      const qrSize = 250.0;
+      const borderSize = 20.0; // White border width
+      const textMarginTop = 20.0; // Extra margin top for text
+      final textHeight = customBrandName.isNotEmpty ? 50.0 : 0.0; // Space for text
+      final totalWidth = qrSize + 2 * borderSize;
+      final totalHeight = qrSize + 2 * borderSize + textHeight + (customBrandName.isNotEmpty ? textMarginTop : 0.0);
+
+      // Draw white background for border
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, totalWidth, totalHeight),
+        Paint()..color = Colors.white,
+      );
+
+      // Draw QR code with offset for border
+      final qrImage = await qrPainter.toImage(qrSize);
+      canvas.drawImage(qrImage, Offset(borderSize, borderSize), Paint());
+
+      // Draw brand name below QR code
+      if (customBrandName.isNotEmpty) {
+        final textSpan = TextSpan(
+          text: customBrandName,
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+            fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+          ),
+        );
+        final textPainter = TextPainter(
+          text: textSpan,
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.ltr,
+        );
+        textPainter.layout(maxWidth: totalWidth);
+        final textOffset = Offset(
+          (totalWidth - textPainter.width) / 2, // Center horizontally
+          qrSize + borderSize + textMarginTop, // Add margin top
+        );
+        textPainter.paint(canvas, textOffset);
+      }
+
+      // Convert canvas to image
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(totalWidth.toInt(), totalHeight.toInt());
+      final byteData = await image.toByteData(format: ImageByteFormat.png);
+      if (byteData == null) {
+        throw Exception('Failed to convert image to bytes');
+      }
+
+      // For web, trigger download
+      final fileName = 'qr_code_${DateTime.now().millisecondsSinceEpoch}.png';
+      final bytes = byteData.buffer.asUint8List();
+      final blob = html.Blob([bytes], 'image/png');
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', fileName)
+        ..click();
+      html.Url.revokeObjectUrl(url);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(localization[_language]!['download_success']!),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
-      _showRegularQRData(qrData);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(localization[_language]!['download_failed']!),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
-  void _showRegularQRData(String data) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final cardColor = isDarkMode ? Colors.grey[800] : Colors.deepPurple.shade50;
-    final textColor = isDarkMode ? Colors.white : Colors.deepPurple.shade800;
-    final borderColor = isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade100;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
-          title: Text(
-            localization[_language]!['dialog_title']!,
-            style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black,
-              fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                localization[_language]!['scanned_data_label']!,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Text(
-                  data,
-                  style: TextStyle(
-                    color: textColor,
-                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (data.startsWith('http'))
-                Text(
-                  localization[_language]!['url_message']!,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                  ),
-                ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                localization[_language]!['close_button']!,
-                style: TextStyle(
-                  color: isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple.shade600,
-                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
-              ),
-            ),
-            if (data.startsWith('http'))
-              ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(localization[_language]!['url_snackbar']!),
-                      backgroundColor: isDarkMode ? Colors.grey[800] : null,
-                    ),
-                  );
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isDarkMode ? Colors.deepPurple[300] : Colors.deepPurple.shade600,
-                ),
-                child: Text(
-                  localization[_language]!['open_url_button']!,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.black : Colors.white,
-                    fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
-    );
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _brandNameController.dispose();
+    super.dispose();
   }
 
   @override
@@ -270,8 +286,16 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          if (showQR)
+            IconButton(
+              icon: const Icon(Icons.download),
+              tooltip: localization[_language]!['download_button'],
+              onPressed: _downloadQRCode,
+            ),
+        ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,8 +325,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            // URL input for QR code generation
             Text(
-              localization[_language]!['paste_label']!,
+              localization[_language]!['url_label']!,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -312,7 +337,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: _qrDataController,
+              controller: _urlController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -322,8 +347,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: borderColor),
                 ),
-                hintText: localization[_language]!['hint_text']!,
-                prefixIcon: Icon(Icons.qr_code_scanner, color: primaryColor),
+                hintText: localization[_language]!['url_hint']!,
+                prefixIcon: Icon(Icons.link, color: primaryColor),
                 filled: true,
                 fillColor: inputFillColor,
                 hintStyle: TextStyle(
@@ -331,26 +356,173 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                   fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  vertical: 16.0, horizontal: 16.0),
+                  vertical: 16.0,
+                  horizontal: 16.0,
+                ),
               ),
               style: TextStyle(
                 color: textColor,
                 fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
-              maxLines: 5,
+              maxLines: 1,
             ),
             const SizedBox(height: 16),
+            // Brand name input
+            Text(
+              localization[_language]!['brand_name_label']!,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _brandNameController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                hintText: localization[_language]!['brand_name_hint']!,
+                prefixIcon: Icon(Icons.edit, color: primaryColor),
+                filled: true,
+                fillColor: inputFillColor,
+                hintStyle: TextStyle(
+                  color: hintColor,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 16.0,
+                  horizontal: 16.0,
+                ),
+              ),
+              style: TextStyle(
+                color: textColor,
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+              maxLines: 1,
+              onChanged: (value) {
+                setState(() {
+                  customBrandName = value;
+                });
+                _saveCustomBrandName(value);
+              },
+            ),
+            const SizedBox(height: 16),
+            // Color picker
+            GestureDetector(
+              onTap: () async {
+                final Color? pickedColor = await showDialog<Color>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(
+                      localization[_language]!['color_picker_label']!,
+                      style: TextStyle(
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
+                    ),
+                    content: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              Colors.purple,
+                              Colors.blue,
+                              Colors.green,
+                              Colors.red,
+                              Colors.orange,
+                              Colors.black,
+                            ].map((color) {
+                              return GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).pop(color);
+                                },
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: _qrColor == color ? Colors.white : Colors.grey,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text('Cancel'),
+                      ),
+                    ],
+                  ),
+                );
+                if (pickedColor != null) {
+                  setState(() {
+                    _qrColor = pickedColor;
+                  });
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      localization[_language]!['color_picker_label']!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: primaryColor,
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
+                    ),
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: _qrColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Generate button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                icon: const Icon(Icons.search),
+                icon: const Icon(Icons.qr_code),
                 label: Text(
-                  localization[_language]!['process_button']!,
+                  localization[_language]!['generate_button']!,
                   style: TextStyle(
                     fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                   ),
                 ),
-                onPressed: _processQRData,
+                onPressed: _generateQRCode,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,
                   foregroundColor: isDarkMode ? Colors.black : Colors.white,
@@ -362,6 +534,73 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            // Generated QR code
+            if (showQR) ...[
+              Center(
+                child: Card(
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(color: borderColor, width: 1),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: isDarkMode
+                            ? [Colors.grey[800]!, Colors.grey[850]!]
+                            : [Colors.white, Colors.deepPurple.shade50],
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20), // White border around QR code
+                          color: Colors.white,
+                          child: QrImageView(
+                            data: qrText,
+                            version: QrVersions.auto,
+                            size: 250.0,
+                            backgroundColor: Colors.white,
+                            foregroundColor: _qrColor,
+                            errorCorrectionLevel: QrErrorCorrectLevel.M,
+                          ),
+                        ),
+                        if (customBrandName.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            customBrandName,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: textColor,
+                              fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                qrText,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: textColor,
+                  fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 16),
+            // Test instructions
             Text(
               localization[_language]!['how_to_test']!,
               style: TextStyle(

@@ -96,6 +96,7 @@ class OrderController extends Controller
 
     public function destroy(Order $order)
     {
+        $this->authorizeOrderAccess($order);
         $order->delete();
         return response()->json(['message' => 'Order deleted']);
     }
@@ -123,7 +124,6 @@ class OrderController extends Controller
             ->get();
     }
 
-    // Web route methods
     public function webTableNumber($id)
     {
         $restaurant = \App\Models\Restaurant::findOrFail($id);
@@ -143,6 +143,7 @@ class OrderController extends Controller
         $restaurant = \App\Models\Restaurant::findOrFail($id);
 
         try {
+            DB::beginTransaction();
             $order = Order::create([
                 'restaurant_id' => $restaurant->id,
                 'table_number' => $validated['table_number'],
@@ -156,14 +157,21 @@ class OrderController extends Controller
                     'special_note' => $item['special_note'] ?? null,
                 ]);
             }
+            DB::commit();
 
-            return redirect()->route('web.order-confirmation', [
-                'id' => $id,
-                'table_number' => $validated['table_number'],
-                'items' => $validated['items'],
-            ]);
+            return response()->json([
+                'message' => 'Order submitted successfully',
+                'redirect_url' => route('web.order-confirmation', [
+                    'id' => $id,
+                    'table_number' => $validated['table_number'],
+                    'items' => $validated['items'],
+                ]),
+            ], 201);
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Failed to submit order: ' . $e->getMessage()]);
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Failed to submit order: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

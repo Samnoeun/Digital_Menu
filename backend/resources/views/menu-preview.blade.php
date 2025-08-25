@@ -8,7 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
         }
@@ -25,7 +24,6 @@
         .dark ::-webkit-scrollbar-thumb {
             background: #a78bfa;
         }
-        /* Smooth transitions for modals */
         .modal {
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
@@ -33,12 +31,25 @@
             opacity: 0;
             transform: translateY(20px);
         }
+        /* Success modal animations */
+        .success-modal {
+            animation: scaleIn 0.3s ease-in-out;
+        }
+        @keyframes scaleIn {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .success-icon {
+            animation: bounce 0.5s ease;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
     </style>
 </head>
 <body class="bg-purple-50 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
-    <!-- Main Container -->
     <div class="min-h-screen flex flex-col">
-        <!-- Header -->
         <header class="bg-gradient-to-r from-purple-700 to-purple-500 text-white sticky top-0 z-20 shadow-lg">
             <div class="container mx-auto px-4 py-4 flex items-center justify-between">
                 <div class="flex items-center space-x-2">
@@ -67,9 +78,7 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="container mx-auto px-4 py-6 flex-grow">
-            <!-- Search Bar -->
             <div class="mb-6">
                 <div class="relative">
                     <input type="text" id="search-input" placeholder="Search items..." class="w-full p-3 pl-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900 dark:text-white">
@@ -84,7 +93,6 @@
                 </div>
             </div>
 
-            <!-- Category Filters -->
             <div class="mb-6 overflow-x-auto whitespace-nowrap">
                 <div class="flex space-x-3">
                     <button class="category-chip px-4 py-2 rounded-full bg-purple-100 dark:bg-gray-700 text-purple-700 dark:text-gray-300 font-semibold hover:bg-purple-600 hover:text-white transition" data-category-id="">All</button>
@@ -94,7 +102,6 @@
                 </div>
             </div>
 
-            <!-- Menu Items -->
             <div id="menu-items">
                 @foreach ($categories as $category)
                     @if ($category->items->isNotEmpty())
@@ -120,7 +127,6 @@
             </div>
         </main>
 
-        <!-- Cart Summary (Sticky Bottom Bar) -->
         <div id="cart-summary" class="hidden bg-purple-700 text-white p-4 fixed bottom-0 left-0 right-0 shadow-lg">
             <div class="container mx-auto flex justify-between items-center">
                 <div>
@@ -131,7 +137,6 @@
             </div>
         </div>
 
-        <!-- Cart Modal -->
         <div id="cart-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
             <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
                 <div class="p-6">
@@ -155,7 +160,6 @@
             </div>
         </div>
 
-        <!-- Product Detail Modal -->
         <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
             <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
                 <div class="p-6">
@@ -181,7 +185,6 @@
             </div>
         </div>
 
-        <!-- Table Number Modal -->
         <div id="table-number-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
             <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -208,32 +211,42 @@
             </div>
         </div>
 
-        <!-- Success Modal -->
         <div id="success-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
-            <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Order Confirmed</h2>
-                    <button id="close-success-modal" class="text-gray-600 dark:text-gray-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto shadow-xl success-modal">
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 rounded-t-lg">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-white">Order Confirmed!</h2>
+                        <button id="close-success-modal" class="text-white hover:text-gray-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="flex justify-center mt-4">
+                        <svg class="w-16 h-16 text-white success-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                    </button>
+                    </div>
                 </div>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Your order has been placed successfully!</p>
-                <p class="text-gray-600 dark:text-gray-400 mb-4">Table Number: <span id="success-table-number"></span></p>
-                <div id="success-order-items" class="space-y-2"></div>
-                <p class="text-lg font-semibold text-purple-600 dark:text-purple-400 mt-4">Total: <span id="success-total"></span></p>
-                <a href="{{ route('web.menu-preview', ['id' => $restaurant->id]) }}" class="w-full mt-4 bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition block text-center">Back to Menu</a>
+                <div class="p-6">
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">Your order has been placed successfully!</p>
+                    <p class="text-gray-600 dark:text-gray-400 mb-4">Table Number: <span id="success-table-number" class="font-semibold"></span></p>
+                    <div id="success-order-items" class="space-y-4 mb-4"></div>
+                    <div class="flex justify-between text-lg font-semibold text-gray-900 dark:text-white border-t border-gray-300 dark:border-gray-700 pt-4">
+                        <span>Total:</span>
+                        <span id="success-total" class="text-purple-600 dark:text-purple-400"></span>
+                    </div>
+                    <p class="text-gray-600 dark:text-gray-400 mt-4 text-center">Thanks for support {{ $restaurant->restaurant_name }}!</p>
+                    <button id="back-to-menu" class="w-full mt-6 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition transform hover:scale-105">Back to Menu</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Initialize cart
         let cart = [];
         let selectedCategoryId = null;
 
-        // Theme toggle
         const themeToggle = document.getElementById('theme-toggle');
         const themeIcon = document.getElementById('theme-icon');
         themeToggle.addEventListener('click', () => {
@@ -248,7 +261,6 @@
             themeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>`;
         }
 
-        // Cart management
         function updateCart() {
             const cartCount = document.getElementById('cart-count');
             const cartSummary = document.getElementById('cart-summary');
@@ -323,7 +335,6 @@
             });
         }
 
-        // Item click to show product modal
         document.querySelectorAll('.item-card').forEach(card => {
             card.addEventListener('click', () => {
                 const item = {
@@ -368,7 +379,6 @@
             });
         });
 
-        // Search functionality
         document.getElementById('search-input').addEventListener('input', () => {
             const searchText = document.getElementById('search-input').value.toLowerCase();
             document.getElementById('clear-search').classList.toggle('hidden', !searchText);
@@ -384,7 +394,6 @@
             document.querySelectorAll('.item-card, .category-section').forEach(el => el.classList.remove('hidden'));
         });
 
-        // Category filter
         document.querySelectorAll('.category-chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('bg-purple-600', 'text-white'));
@@ -398,7 +407,6 @@
             });
         });
 
-        // Modal controls
         document.getElementById('close-product').addEventListener('click', () => {
             const modal = document.getElementById('product-modal');
             modal.classList.add('hidden');
@@ -432,9 +440,17 @@
             const modal = document.getElementById('success-modal');
             modal.classList.add('hidden');
             setTimeout(() => modal.classList.add('modal-hidden'), 300);
+            cart = [];
+            updateCart();
+        });
+        document.getElementById('back-to-menu').addEventListener('click', () => {
+            const modal = document.getElementById('success-modal');
+            modal.classList.add('hidden');
+            setTimeout(() => modal.classList.add('modal-hidden'), 300);
+            cart = [];
+            updateCart();
         });
 
-        // Table number submission
         document.getElementById('table-number-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const tableNumber = document.getElementById('table-number').value;
@@ -477,6 +493,7 @@
                     }
                 });
 
+                // Show success modal with order confirmation
                 const successModal = document.getElementById('success-modal');
                 document.getElementById('success-table-number').textContent = tableNumber;
                 document.getElementById('success-total').textContent = `$${cart.reduce((sum, item) => sum + item.price, 0).toFixed(2)}`;
@@ -488,11 +505,14 @@
                 }, {})).forEach(([itemId, data]) => {
                     const item = cart.find(i => i.id == itemId);
                     const div = document.createElement('div');
-                    div.className = 'flex justify-between text-gray-600 dark:text-gray-400';
+                    div.className = 'flex items-center space-x-3 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg';
                     div.innerHTML = `
-                        <span>${item.name} x${data.quantity}</span>
-                        <span>$${item.price.toFixed(2)}</span>
-                        ${data.note ? `<p class="text-sm">Note: ${data.note}</p>` : ''}
+                        <img src="${item.image || 'https://via.placeholder.com/50'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg">
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-900 dark:text-white">${item.name} x${data.quantity}</p>
+                            <p class="text-gray-600 dark:text-gray-400">$${item.price.toFixed(2)}</p>
+                            ${data.note ? `<p class="text-sm text-gray-500 dark:text-gray-400">Note: ${data.note}</p>` : ''}
+                        </div>
                     `;
                     successItems.appendChild(div);
                 });

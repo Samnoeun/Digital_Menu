@@ -11,19 +11,17 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   image_picker: ^1.0.4
-  google_fonts: ^6.2.1
+  google_fonts: ^6.2.1 # Optional, for using Google Fonts dynamically
   permission_handler: ^11.3.1
   qr_flutter: ^4.1.0
   http: ^1.4.0
-  # intl: ^0.18.1
-  # shared_preferences: ^2.1.0
   shared_preferences: ^2.2.3
   intl: ^0.20.2
-  # shared_preferences: ^2.1.0
   image_picker_web: ^3.0.0
   universal_html: ^2.2.1
   mobile_scanner: ^3.5.5
-  dio: ^5.9.0  # Add this line
+  dio: ^5.9.0
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
@@ -37,6 +35,48 @@ flutter:
   assets:
     - assets/logo/app_logo.png
     - assets/home/banner.png
+    - fonts/Poppins-Regular.ttf
+    - fonts/Montserrat-Regular.ttf
+    - fonts/Roboto-Regular.ttf
+    - fonts/OpenSans-Regular.ttf
+    - fonts/Lato-Regular.ttf
+    - fonts/Nunito-Regular.ttf
+    - fonts/Inter-Regular.ttf
+    - fonts/Raleway-Regular.ttf
+    - fonts/Ubuntu-Regular.ttf
+    - fonts/SourceSansPro-Regular.ttf
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: fonts/Poppins-Regular.ttf
+    - family: Montserrat
+      fonts:
+        - asset: fonts/Montserrat-Regular.ttf
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto-Regular.ttf
+    - family: Open Sans
+      fonts:
+        - asset: fonts/OpenSans-Regular.ttf
+    - family: Lato
+      fonts:
+        - asset: fonts/Lato-Regular.ttf
+    - family: Nunito
+      fonts:
+        - asset: fonts/Nunito-Regular.ttf
+    - family: Inter
+      fonts:
+        - asset: fonts/Inter-Regular.ttf
+    - family: Raleway
+      fonts:
+        - asset: fonts/Raleway-Regular.ttf
+    - family: Ubuntu
+      fonts:
+        - asset: fonts/Ubuntu-Regular.ttf
+    - family: Source Sans Pro
+      fonts:
+        - asset: fonts/SourceSansPro-Regular.ttf
 
 flutter_launcher_icons:
   android: true
