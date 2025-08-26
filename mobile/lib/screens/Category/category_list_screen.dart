@@ -44,55 +44,112 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     super.dispose();
   }
 
-  // Helper function to get restaurant/food related icons
-  IconData _getCategoryIcon(String categoryName) {
+  // Helper function to get restaurant/food related icons with better colors
+  Map<String, dynamic> _getCategoryIcon(String categoryName) {
     final name = categoryName.toLowerCase();
+    
+    // Define a map for icon and color pairs
+    const iconColors = {
+      'pizza': Colors.redAccent,
+      'burger': Colors.amber,
+      'sandwich': Colors.amber,
+      'coffee': Colors.brown,
+      'cafe': Colors.brown,
+      'drink': Colors.blueAccent,
+      'beverage': Colors.blueAccent,
+      'juice': Colors.blueAccent,
+      'dessert': Colors.pinkAccent,
+      'cake': Colors.pinkAccent,
+      'sweet': Colors.pinkAccent,
+      'salad': Colors.green,
+      'vegetable': Colors.green,
+      'healthy': Colors.green,
+      'pasta': Colors.orange,
+      'noodle': Colors.orange,
+      'chicken': Colors.red,
+      'meat': Colors.red,
+      'grill': Colors.red,
+      'seafood': Colors.blue,
+      'fish': Colors.blue,
+      'sushi': Colors.blue,
+      'bread': Colors.brown,
+      'bakery': Colors.brown,
+      'ice cream': Colors.cyanAccent,
+      'frozen': Colors.cyanAccent,
+      'wine': Colors.purple,
+      'alcohol': Colors.purple,
+      'bar': Colors.purple,
+      'breakfast': Colors.yellow,
+      'morning': Colors.yellow,
+      'soup': Colors.orangeAccent,
+      'snack': Colors.teal,
+      'appetizer': Colors.teal,
+      'fast food': Colors.red,
+      'quick': Colors.red,
+    };
 
-    // Food categories
+    // Default values
+    IconData icon = Icons.restaurant;
+    Color color = Colors.deepPurple;
+
+    // Find matching category
+    for (var entry in iconColors.entries) {
+      if (name.contains(entry.key)) {
+        icon = _getIconForCategory(entry.key);
+        color = entry.value;
+        break;
+      }
+    }
+
+    return {'icon': icon, 'color': color};
+  }
+
+  // Helper function to get specific icons
+  IconData _getIconForCategory(String categoryName) {
+    final name = categoryName.toLowerCase();
     if (name.contains('pizza')) return Icons.local_pizza;
-    if (name.contains('burger') || name.contains('sandwich'))
+    if (name.contains('burger') || name.contains('sandwich')) 
       return Icons.lunch_dining;
-    if (name.contains('coffee') || name.contains('cafe'))
+    if (name.contains('coffee') || name.contains('cafe')) 
       return Icons.local_cafe;
-    if (name.contains('drink') ||
-        name.contains('beverage') ||
-        name.contains('juice'))
+    if (name.contains('drink') || 
+        name.contains('beverage') || 
+        name.contains('juice')) 
       return Icons.local_drink;
-    if (name.contains('dessert') ||
-        name.contains('cake') ||
-        name.contains('sweet'))
+    if (name.contains('dessert') || 
+        name.contains('cake') || 
+        name.contains('sweet')) 
       return Icons.cake;
-    if (name.contains('salad') ||
-        name.contains('vegetable') ||
-        name.contains('healthy'))
+    if (name.contains('salad') || 
+        name.contains('vegetable') || 
+        name.contains('healthy')) 
       return Icons.eco;
-    if (name.contains('pasta') || name.contains('noodle'))
+    if (name.contains('pasta') || name.contains('noodle')) 
       return Icons.ramen_dining;
-    if (name.contains('chicken') ||
-        name.contains('meat') ||
-        name.contains('grill'))
+    if (name.contains('chicken') || 
+        name.contains('meat') || 
+        name.contains('grill')) 
       return Icons.outdoor_grill;
-    if (name.contains('seafood') ||
-        name.contains('fish') ||
-        name.contains('sushi'))
+    if (name.contains('seafood') || 
+        name.contains('fish') || 
+        name.contains('sushi')) 
       return Icons.set_meal;
-    if (name.contains('bread') || name.contains('bakery'))
+    if (name.contains('bread') || name.contains('bakery')) 
       return Icons.bakery_dining;
-    if (name.contains('ice cream') || name.contains('frozen'))
+    if (name.contains('ice cream') || name.contains('frozen')) 
       return Icons.icecream;
-    if (name.contains('wine') ||
-        name.contains('alcohol') ||
-        name.contains('bar'))
+    if (name.contains('wine') || 
+        name.contains('alcohol') || 
+        name.contains('bar')) 
       return Icons.wine_bar;
-    if (name.contains('breakfast') || name.contains('morning'))
+    if (name.contains('breakfast') || name.contains('morning')) 
       return Icons.free_breakfast;
     if (name.contains('soup')) return Icons.soup_kitchen;
-    if (name.contains('snack') || name.contains('appetizer'))
+    if (name.contains('snack') || name.contains('appetizer')) 
       return Icons.tapas;
-    if (name.contains('fast food') || name.contains('quick'))
+    if (name.contains('fast food') || name.contains('quick')) 
       return Icons.fastfood;
-
-    // Default restaurant icon
+    
     return Icons.restaurant;
   }
 
@@ -180,7 +237,6 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     if (confirmed == true) {
       try {
         setState(() => _isLoading = true);
-        // Delete all selected categories
         for (int categoryId in _selectedCategoryIds) {
           await ApiService.deleteCategory(categoryId);
         }
@@ -202,7 +258,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       if (mounted) {
         setState(() {
           _categories = categories;
-          _filteredCategories = categories;
+          _filteredCategories = List.from(categories); // Ensure it's a copy
           _isLoading = false;
         });
         _animationController.forward();
@@ -326,6 +382,16 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     );
   }
 
+  void _reorderCategories(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) newIndex -= 1;
+    final category = _filteredCategories.removeAt(oldIndex);
+    setState(() {
+      _filteredCategories.insert(newIndex, category);
+    });
+    // Optionally sync the new order with the backend
+    // ApiService.updateCategoryOrder(_filteredCategories.map((c) => c.id).toList());
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -336,7 +402,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           ? Colors.grey[900]
           : Colors.deepPurple.shade50,
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Disable default leading button
+        automaticallyImplyLeading: false,
         title: Row(
           children: [
             if (_isSelectionMode)
@@ -347,7 +413,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 padding: EdgeInsets.zero,
               )
             else
-              const SizedBox(width: 0), // Tight spacing between icon and text
+              const SizedBox(width: 0),
             Padding(
               padding: const EdgeInsets.only(left: 10),
               child: Text(
@@ -400,7 +466,6 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       ),
       body: Column(
         children: [
-          // Search Bar in CategoryListScreen
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -415,7 +480,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
               child: Container(
-                height: 45, // Set fixed height for shorter search bar
+                height: 45,
                 decoration: BoxDecoration(
                   color: isDarkMode ? Colors.grey[800] : Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -437,13 +502,11 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors
-                                .white // White in dark mode
-                          : Colors.deepPurple.shade600, // Purple in light mode
+                      color: isDarkMode
+                          ? Colors.white
+                          : Colors.deepPurple.shade600,
                       size: 20,
                     ),
-
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(
@@ -464,14 +527,14 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                     fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
-                      vertical: 8, // Reduced vertical padding
+                      vertical: 8,
                     ),
-                    isDense: true, // Makes the field more compact
+                    isDense: true,
                   ),
                   style: TextStyle(
                     fontSize: 14,
                     color: isDarkMode ? Colors.white : Colors.black87,
-                  ), // Smaller text size
+                  ),
                 ),
               ),
             ),
@@ -501,363 +564,343 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                     ),
                   )
                 : _filteredCategories.isEmpty
-                ? Center(
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: isDarkMode
-                                  ? Colors.deepPurple.shade800
-                                  : Colors.deepPurple.shade100,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.restaurant_menu,
-                              size: 64,
-                              color: isDarkMode
-                                  ? Colors.deepPurple.shade300
-                                  : Colors.deepPurple.shade400,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            _searchQuery.isEmpty
-                                ? 'No categories found'
-                                : 'No matching categories',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: isDarkMode
-                                  ? Colors.white
-                                  : Colors.deepPurple.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _searchQuery.isEmpty
-                                ? 'Tap the + button to add a new category'
-                                : 'Try a different search term',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _fetchCategories,
-                    color: Colors.deepPurple.shade600,
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: ReorderableListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _filteredCategories.length,
-                        onReorder: _isSelectionMode
-                            ? (int oldIndex, int newIndex) {}
-                            : (int oldIndex, int newIndex) {
-                                setState(() {
-                                  if (oldIndex < newIndex) {
-                                    newIndex -= 1;
-                                  }
-                                  final Category item = _filteredCategories
-                                      .removeAt(oldIndex);
-                                  _filteredCategories.insert(newIndex, item);
-                                  // Also update the main categories list if no search is active
-                                  if (_searchQuery.isEmpty) {
-                                    final Category mainItem = _categories
-                                        .removeAt(oldIndex);
-                                    _categories.insert(newIndex, mainItem);
-                                  }
-                                });
-                              },
-                        itemBuilder: (context, index) {
-                          final category = _filteredCategories[index];
-                          final isSelected = _selectedCategoryIds.contains(
-                            category.id,
-                          );
-                          return AnimatedContainer(
-                            key: ValueKey(category.id),
-                            duration: Duration(
-                              milliseconds: 300 + (index * 50),
-                            ),
-                            curve: Curves.easeOutBack,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: Card(
-                              elevation: isSelected ? 6 : 3,
-                              shadowColor: isSelected
-                                  ? Colors.deepPurple.withOpacity(0.3)
-                                  : Colors.deepPurple.withOpacity(0.15),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: isSelected
-                                    ? BorderSide(
-                                        color: Colors.deepPurple.shade600,
-                                        width: 2,
-                                      )
-                                    : BorderSide.none,
-                              ),
-                              color: isDarkMode ? Colors.grey[800] : null,
-                              child: Container(
+                    ? Center(
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(24),
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  gradient: isSelected
-                                      ? LinearGradient(
-                                          colors: isDarkMode
-                                              ? [
-                                                  Colors.deepPurple.shade800,
-                                                  Colors.deepPurple.shade700,
-                                                ]
-                                              : [
-                                                  Colors.deepPurple.shade100,
-                                                  Colors.deepPurple.shade50,
-                                                ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        )
-                                      : isDarkMode
-                                      ? null
-                                      : LinearGradient(
-                                          colors: [
-                                            Colors.white,
-                                            Colors.deepPurple.shade50,
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                  color: isDarkMode ? Colors.grey[800] : null,
+                                  color: isDarkMode
+                                      ? Colors.deepPurple.shade800
+                                      : Colors.deepPurple.shade100,
+                                  shape: BoxShape.circle,
                                 ),
-                                child: ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
+                                child: Icon(
+                                  Icons.restaurant_menu,
+                                  size: 64,
+                                  color: isDarkMode
+                                      ? Colors.deepPurple.shade300
+                                      : Colors.deepPurple.shade400,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                _searchQuery.isEmpty
+                                    ? 'No categories found'
+                                    : 'No matching categories',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Colors.deepPurple.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _searchQuery.isEmpty
+                                    ? 'Tap the + button to add a new category'
+                                    : 'Try a different search term',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: _fetchCategories,
+                        color: Colors.deepPurple.shade600,
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: ReorderableListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _filteredCategories.length,
+                            itemBuilder: (context, index) {
+                              final category = _filteredCategories[index];
+                              final isSelected =
+                                  _selectedCategoryIds.contains(category.id);
+                              final iconData = _getCategoryIcon(category.name);
+                              return SizedBox(
+                                key: ValueKey(category.id),
+                                child: Card(
+                                  elevation: isSelected ? 8 : 4,
+                                  shadowColor: Colors.black.withOpacity(0.2),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    side: isSelected
+                                        ? BorderSide(
+                                            color: Colors.deepPurple.shade700,
+                                            width: 2,
+                                          )
+                                        : BorderSide.none,
                                   ),
-                                  leading: _isSelectionMode
-                                      ? Checkbox(
-                                          value: isSelected,
-                                          onChanged: (bool? value) {
-                                            _toggleCategorySelection(
-                                              category.id,
-                                            );
-                                          },
-                                          activeColor:
-                                              Colors.deepPurple.shade600,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              4,
-                                            ),
-                                          ),
-                                        )
-                                      : Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [
-                                                Colors.deepPurple.shade600,
-                                                Colors.deepPurple.shade400,
-                                              ],
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            _getCategoryIcon(category.name),
-                                            color: Colors.white,
-                                            size: 18,
-                                          ),
-                                        ),
-                                  title: Text(
-                                    category.name,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDarkMode
-                                          ? Colors.white
-                                          : Colors.deepPurple.shade800,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    '${category.items.length} items',
-                                    style: TextStyle(
-                                      color: isDarkMode
-                                          ? Colors.grey[400]
-                                          : Colors.deepPurple.shade600,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  trailing: _isSelectionMode
-                                      ? null
-                                      : PopupMenuButton(
-                                          icon: Icon(
-                                            Icons.more_vert_rounded,
-                                            color: isDarkMode
-                                                ? Colors.grey[400]
-                                                : Colors.deepPurple.shade600,
-                                            size: 20,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          itemBuilder: (context) => [
-                                            PopupMenuItem(
-                                              value: 'edit',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.edit_rounded,
-                                                    color: Colors
-                                                        .deepPurple
-                                                        .shade600,
-                                                    size: 18,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    'Edit',
-                                                    style: TextStyle(
-                                                      color: isDarkMode
-                                                          ? Colors.white
-                                                          : Colors.black87,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            PopupMenuItem(
-                                              value: 'delete',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.delete_rounded,
-                                                    color: Colors.red.shade600,
-                                                    size: 18,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    'Delete',
-                                                    style: TextStyle(
-                                                      color:
-                                                          Colors.red.shade600,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                          onSelected: (value) async {
-                                            if (value == 'edit') {
-                                              final result = await Navigator.push(
-                                                context,
-                                                PageRouteBuilder(
-                                                  pageBuilder:
-                                                      (
-                                                        context,
-                                                        animation,
-                                                        secondaryAnimation,
-                                                      ) => AddCategoryScreen(
-                                                        category: category,
-                                                      ),
-                                                  transitionsBuilder:
-                                                      (
-                                                        context,
-                                                        animation,
-                                                        secondaryAnimation,
-                                                        child,
-                                                      ) {
-                                                        return SlideTransition(
-                                                          position: animation.drive(
-                                                            Tween(
-                                                              begin:
-                                                                  const Offset(
-                                                                    1.0,
-                                                                    0.0,
-                                                                  ),
-                                                              end: Offset.zero,
-                                                            ).chain(
-                                                              CurveTween(
-                                                                curve: Curves
-                                                                    .easeInOut,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          child: child,
-                                                        );
-                                                      },
+                                  color: isDarkMode ? Colors.grey[850] : Colors.white,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(16),
+                                    onTap: _isSelectionMode
+                                        ? () =>
+                                            _toggleCategorySelection(category.id)
+                                        : () {
+                                            Navigator.push(
+                                              context,
+                                              PageRouteBuilder(
+                                                pageBuilder: (
+                                                  context,
+                                                  animation,
+                                                  secondaryAnimation,
+                                                ) =>
+                                                    CategoryDetailScreen(
+                                                  category: category,
                                                 ),
-                                              );
-                                              if (result == true)
-                                                _fetchCategories();
-                                            } else if (value == 'delete') {
-                                              _deleteCategory(
-                                                category.id,
-                                                category.name,
-                                              );
-                                            }
-                                          },
-                                        ),
-                                  onTap: _isSelectionMode
-                                      ? () => _toggleCategorySelection(
-                                          category.id,
-                                        )
-                                      : () {
-                                          Navigator.push(
-                                            context,
-                                            PageRouteBuilder(
-                                              pageBuilder:
-                                                  (
-                                                    context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                  ) => CategoryDetailScreen(
-                                                    category: category,
-                                                  ),
-                                              transitionsBuilder:
-                                                  (
-                                                    context,
-                                                    animation,
-                                                    secondaryAnimation,
-                                                    child,
-                                                  ) {
-                                                    return SlideTransition(
-                                                      position: animation.drive(
-                                                        Tween(
-                                                          begin: const Offset(
-                                                            1.0,
-                                                            0.0,
-                                                          ),
-                                                          end: Offset.zero,
-                                                        ).chain(
-                                                          CurveTween(
-                                                            curve: Curves
-                                                                .easeInOut,
-                                                          ),
+                                                transitionsBuilder: (
+                                                  context,
+                                                  animation,
+                                                  secondaryAnimation,
+                                                  child,
+                                                ) {
+                                                  return SlideTransition(
+                                                    position: animation.drive(
+                                                      Tween(
+                                                        begin:
+                                                            const Offset(1.0, 0.0),
+                                                        end: Offset.zero,
+                                                      ).chain(
+                                                        CurveTween(
+                                                          curve: Curves.easeInOut,
                                                         ),
                                                       ),
-                                                      child: child,
+                                                    ),
+                                                    child: child,
+                                                  );
+                                                },
+                                              ),
+                                            );
+                                          },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      child: Stack(
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                width: 64,
+                                                height: 64,
+                                                decoration: BoxDecoration(
+                                                  color: isDarkMode
+                                                      ? Colors.grey[800]
+                                                      : Colors.grey[100],
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                ),
+                                                child: Icon(
+                                                  iconData['icon'],
+                                                  color: iconData['color'],
+                                                  size: 36,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      category.name,
+                                                      style: TextStyle(
+                                                        fontSize: 15,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: isDarkMode
+                                                            ? Colors.white
+                                                            : Colors
+                                                                .deepPurple
+                                                                .shade900,
+                                                      ),
+                                                      maxLines: 2,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      '${category.items.length} items',
+                                                      style: TextStyle(
+                                                        color: isDarkMode
+                                                            ? Colors.grey[400]
+                                                            : Colors
+                                                                .deepPurple
+                                                                .shade700,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          if (_isSelectionMode)
+                                            Positioned(
+                                              top: 4,
+                                              right: 4,
+                                              child: Checkbox(
+                                                value: isSelected,
+                                                onChanged: (bool? value) {
+                                                  _toggleCategorySelection(
+                                                      category.id);
+                                                },
+                                                activeColor:
+                                                    Colors.deepPurple.shade700,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                                materialTapTargetSize:
+                                                    MaterialTapTargetSize
+                                                        .shrinkWrap,
+                                              ),
+                                            )
+                                          else
+                                            Positioned(
+                                              top: 4,
+                                              right: 4,
+                                              child: PopupMenuButton(
+                                                icon: Icon(
+                                                  Icons.more_vert_rounded,
+                                                  color: isDarkMode
+                                                      ? Colors.grey[400]
+                                                      : Colors
+                                                          .deepPurple.shade700,
+                                                  size: 18,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                itemBuilder: (context) => [
+                                                  PopupMenuItem(
+                                                    value: 'edit',
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.edit_rounded,
+                                                          color: Colors
+                                                              .deepPurple
+                                                              .shade700,
+                                                          size: 16,
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        Text(
+                                                          'Edit',
+                                                          style: TextStyle(
+                                                            color: isDarkMode
+                                                                ? Colors.white
+                                                                : Colors.black87,
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  PopupMenuItem(
+                                                    value: 'delete',
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.delete_rounded,
+                                                          color:
+                                                              Colors.red.shade700,
+                                                          size: 16,
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        Text(
+                                                          'Delete',
+                                                          style: TextStyle(
+                                                            color: Colors
+                                                                .red.shade700,
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                                onSelected: (value) async {
+                                                  if (value == 'edit') {
+                                                    final result =
+                                                        await Navigator.push(
+                                                      context,
+                                                      PageRouteBuilder(
+                                                        pageBuilder: (
+                                                          context,
+                                                          animation,
+                                                          secondaryAnimation,
+                                                        ) =>
+                                                            AddCategoryScreen(
+                                                          category: category,
+                                                        ),
+                                                        transitionsBuilder: (
+                                                          context,
+                                                          animation,
+                                                          secondaryAnimation,
+                                                          child,
+                                                        ) {
+                                                          return SlideTransition(
+                                                            position:
+                                                                animation.drive(
+                                                              Tween(
+                                                                begin:
+                                                                    const Offset(
+                                                                        1.0, 0.0),
+                                                                end: Offset.zero,
+                                                              ).chain(
+                                                                CurveTween(
+                                                                  curve: Curves
+                                                                      .easeInOut,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            child: child,
+                                                          );
+                                                        },
+                                                      ),
                                                     );
-                                                  },
+                                                    if (result == true)
+                                                      _fetchCategories();
+                                                  } else if (value == 'delete') {
+                                                    _deleteCategory(
+                                                      category.id,
+                                                      category.name,
+                                                    );
+                                                  }
+                                                },
+                                              ),
                                             ),
-                                          );
-                                        },
+                                          ReorderableDragStartListener(
+                                            index: index,
+                                            child: const SizedBox.shrink(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                          );
-                        },
+                              );
+                            },
+                            onReorder: _reorderCategories,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
           ),
         ],
       ),
@@ -872,16 +915,16 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                         const AddCategoryScreen(),
                     transitionsBuilder:
                         (context, animation, secondaryAnimation, child) {
-                          return SlideTransition(
-                            position: animation.drive(
-                              Tween(
-                                begin: const Offset(0.0, 1.0),
-                                end: Offset.zero,
-                              ).chain(CurveTween(curve: Curves.easeInOut)),
-                            ),
-                            child: child,
-                          );
-                        },
+                      return SlideTransition(
+                        position: animation.drive(
+                          Tween(
+                            begin: const Offset(0.0, 1.0),
+                            end: Offset.zero,
+                          ).chain(CurveTween(curve: Curves.easeInOut)),
+                        ),
+                        child: child,
+                      );
+                    },
                   ),
                 );
                 if (result == true) _fetchCategories();
