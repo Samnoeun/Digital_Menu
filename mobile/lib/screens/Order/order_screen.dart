@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/api_services.dart';
 import '../../models/order_model.dart';
 
@@ -17,11 +18,67 @@ class _OrderScreenState extends State<OrderScreen> {
   String? _error;
   String _filterStatus = 'all';
   Map<int, bool> _expandedOrders = {};
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'orders': 'Orders',
+      'all_orders': 'All Orders',
+      'pending': 'Pending',
+      'preparing': 'Preparing',
+      'ready': 'Ready',
+      'completed': 'Completed',
+      'no_orders': 'No orders found',
+      'error': 'Error',
+      'retry': 'Retry',
+      'table': 'Table',
+      'total': 'Total',
+      'items': 'Items',
+      'mark_as': 'Mark as',
+      'failed_to_load': 'Failed to load orders',
+      'confirm_completion': 'Confirm Completion',
+      'complete_order_message': 'Mark this order as completed?',
+      'yes': 'Yes',
+      'cancel': 'Cancel',
+      'note': 'Note',
+    },
+    'Khmer': {
+      'orders': 'ការកម្មង់',
+      'all_orders': 'ការកម្មង់ទាំងអស់',
+      'pending': 'កំពុងរង់ចាំ',
+      'preparing': 'កំពុងត្រៀម',
+      'ready': 'ត្រៀមរួច',
+      'completed': 'បានបញ្ចប់',
+      'no_orders': 'មិនមានការកម្មង់',
+      'error': 'កំហុស',
+      'retry': 'ព្យាយាមម្តងទៀត',
+      'table': 'តុ',
+      'total': 'សរុប',
+      'items': 'ធាតុ',
+      'mark_as': 'សម្គាល់ជា',
+      'failed_to_load': 'បរាជ័យក្នុងការផ្ទុកការកម្មង់',
+      'confirm_completion': 'បញ្ជាក់ការបញ្ចប់',
+      'complete_order_message': 'សម្គាល់ការកម្មង់នេះថាបានបញ្ចប់?',
+      'yes': 'បាទ/ចាស',
+      'cancel': '取消',
+      'note': 'ចំណាំ',
+    },
+  };
 
   @override
   void initState() {
     super.initState();
+    _loadSavedLanguage(); // Load saved language
     _loadOrders();
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
   }
 
   Future<void> _loadOrders() async {
@@ -71,7 +128,7 @@ class _OrderScreenState extends State<OrderScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Failed to load orders: ${e.toString()}';
+        _error = '${localization[selectedLanguage]!['failed_to_load']}: ${e.toString()}';
         _isLoading = false;
       });
     }
@@ -83,6 +140,31 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Future<void> _updateOrderStatus(Order order, String newStatus) async {
     try {
+      // Show confirmation dialog for completing orders
+      if (newStatus == 'completed') {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(localization[selectedLanguage]!['confirm_completion']!),
+              content: Text(localization[selectedLanguage]!['complete_order_message']!),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(localization[selectedLanguage]!['cancel']!),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(localization[selectedLanguage]!['yes']!),
+                ),
+              ],
+            );
+          },
+        );
+        
+        if (confirmed != true) return;
+      }
+      
       await ApiService.updateOrderStatus(order.id, newStatus);
 
       if (!mounted) return;
@@ -115,6 +197,7 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50,
@@ -124,11 +207,12 @@ class _OrderScreenState extends State<OrderScreen> {
         title: Padding(
           padding: const EdgeInsets.only(left: 24),
           child: Text(
-            'Orders',
+            lang['orders']!,
             style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 22,
               color: Colors.white,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
             ),
           ),
         ),
@@ -154,11 +238,11 @@ class _OrderScreenState extends State<OrderScreen> {
               ]
             : [],
       ),
-      body: _buildBody(theme),
+      body: _buildBody(theme, lang),
     );
   }
 
-  Widget _buildBody(ThemeData theme) {
+  Widget _buildBody(ThemeData theme, Map<String, String> lang) {
     if (_isLoading) {
       return Center(
         child: CircularProgressIndicator(
@@ -172,11 +256,17 @@ class _OrderScreenState extends State<OrderScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Error: $_error', style: theme.textTheme.bodyMedium),
+            Text('${lang['error']!}: $_error', 
+                 style: theme.textTheme.bodyMedium!.copyWith(
+                   fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                 )),
             const SizedBox(height: 8),
             TextButton(
               onPressed: _loadOrders,
-              child: Text('Retry', style: theme.textTheme.bodyMedium),
+              child: Text(lang['retry']!, 
+                         style: theme.textTheme.bodyMedium!.copyWith(
+                           fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                         )),
             ),
           ],
         ),
@@ -186,10 +276,14 @@ class _OrderScreenState extends State<OrderScreen> {
     final filteredOrders = _filteredOrders;
     return Column(
       children: [
-        _buildFilterDropdown(theme),
+        _buildFilterDropdown(theme, lang),
         Expanded(
           child: filteredOrders.isEmpty
-              ? Center(child: Text('No orders found', style: theme.textTheme.bodyMedium))
+              ? Center(
+                  child: Text(lang['no_orders']!, 
+                             style: theme.textTheme.bodyMedium!.copyWith(
+                               fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                             )))
               : RefreshIndicator(
                   onRefresh: _loadOrders,
                   child: ListView.builder(
@@ -197,7 +291,7 @@ class _OrderScreenState extends State<OrderScreen> {
                     itemCount: filteredOrders.length,
                     itemBuilder: (context, index) {
                       final order = filteredOrders[index];
-                      return _buildOrderCard(order, theme);
+                      return _buildOrderCard(order, theme, lang);
                     },
                   ),
                 ),
@@ -206,7 +300,7 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  Widget _buildOrderCard(Order order, ThemeData theme) {
+  Widget _buildOrderCard(Order order, ThemeData theme, Map<String, String> lang) {
     final statusColor = _getStatusColor(order.status, theme);
     final expanded = _expandedOrders[order.id] ?? false;
     final time = DateFormat('MMM d · h:mm a').format(order.createdAt.toLocal());
@@ -214,8 +308,8 @@ class _OrderScreenState extends State<OrderScreen> {
 
     String statusLabel(String s) {
       final t = s.trim();
-      if (t.isEmpty) return 'Unknown';
-      return t[0].toUpperCase() + t.substring(1).toLowerCase();
+      if (t.isEmpty) return lang['pending']!;
+      return lang[t.toLowerCase()] ?? t[0].toUpperCase() + t.substring(1).toLowerCase();
     }
 
     IconData statusIcon(String s) {
@@ -245,13 +339,14 @@ class _OrderScreenState extends State<OrderScreen> {
           style: theme.textTheme.labelSmall?.copyWith(
             color: fg ?? theme.colorScheme.primary,
             fontWeight: FontWeight.w700,
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
       );
     }
 
     return Semantics(
-      label: 'Order for table ${order.tableNumber}, ${order.items.length} items, status ${order.status}',
+      label: '${lang['table']} ${order.tableNumber}, ${order.items.length} ${lang['items']}, ${order.status}',
       child: Card(
         margin: const EdgeInsets.only(bottom: 10),
         elevation: 2,
@@ -286,9 +381,10 @@ class _OrderScreenState extends State<OrderScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Table ${order.tableNumber}',
+                            '${lang['table']} ${order.tableNumber}',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w800,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -304,6 +400,7 @@ class _OrderScreenState extends State<OrderScreen> {
                                 time,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.hintColor,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                             ],
@@ -338,6 +435,7 @@ class _OrderScreenState extends State<OrderScreen> {
                                   ? Colors.orange
                                   : statusColor,
                               fontWeight: FontWeight.w700,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                         ],
@@ -353,15 +451,21 @@ class _OrderScreenState extends State<OrderScreen> {
                     Row(
                       children: [
                         Text(
-                          'Total',
-                          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                          lang['total']!,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                          ),
                         ),
                         const SizedBox(width: 6),
                         countBadge(order.items.length),
                         const Spacer(),
                         Text(
                           '\$$totalStr',
-                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                          ),
                         ),
                       ],
                     ),
@@ -377,7 +481,12 @@ class _OrderScreenState extends State<OrderScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         child: Row(
                           children: [
-                            Text('Items', style: theme.textTheme.bodyMedium),
+                            Text(
+                              lang['items']!,
+                              style: theme.textTheme.bodyMedium!.copyWith(
+                                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                              ),
+                            ),
                             const SizedBox(width: 4),
                             countBadge(order.items.length),
                             const Spacer(),
@@ -400,7 +509,7 @@ class _OrderScreenState extends State<OrderScreen> {
                         padding: const EdgeInsets.only(top: 12),
                         child: Column(
                           children: [
-                            ..._buildOrderItemsList(order.items, theme),
+                            ..._buildOrderItemsList(order.items, theme, lang),
                             const SizedBox(height: 8),
                           ],
                         ),
@@ -408,7 +517,7 @@ class _OrderScreenState extends State<OrderScreen> {
                       crossFadeState: expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
                       duration: const Duration(milliseconds: 200),
                     ),
-                    _buildStatusButton(order, theme),
+                    _buildStatusButton(order, theme, lang),
                   ],
                 ),
               ),
@@ -419,26 +528,33 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  List<Widget> _buildOrderItemsList(List<OrderItem> items, ThemeData theme) {
+  List<Widget> _buildOrderItemsList(List<OrderItem> items, ThemeData theme, Map<String, String> lang) {
     return items
         .map(
           (item) => Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
               children: [
-                Text('${item.quantity}x', style: theme.textTheme.bodySmall),
+                Text('${item.quantity}x', 
+                     style: theme.textTheme.bodySmall!.copyWith(
+                       fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                     )),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.name, style: theme.textTheme.bodySmall),
+                      Text(item.name, 
+                           style: theme.textTheme.bodySmall!.copyWith(
+                             fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                           )),
                       if (item.specialNote.isNotEmpty)
                         Text(
-                          'Note: ${item.specialNote}',
+                          '${lang['note']!}: ${item.specialNote}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.orange[700],
                             fontStyle: FontStyle.italic,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                         ),
                     ],
@@ -446,7 +562,9 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
                 Text(
                   '\$${(item.price * item.quantity).toStringAsFixed(2)}',
-                  style: theme.textTheme.bodySmall,
+                  style: theme.textTheme.bodySmall!.copyWith(
+                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                  ),
                 ),
               ],
             ),
@@ -455,7 +573,7 @@ class _OrderScreenState extends State<OrderScreen> {
         .toList();
   }
 
-  Widget _buildStatusButton(Order order, ThemeData theme) {
+  Widget _buildStatusButton(Order order, ThemeData theme, Map<String, String> lang) {
     final nextStatus = _getNextStatus(order.status);
     if (nextStatus == null) return const SizedBox();
 
@@ -469,17 +587,18 @@ class _OrderScreenState extends State<OrderScreen> {
         ),
         onPressed: () => _updateOrderStatus(order, nextStatus),
         child: Text(
-          'Mark as ${nextStatus.toUpperCase()}',
+          '${lang['mark_as']!} ${nextStatus.toUpperCase()}',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFilterDropdown(ThemeData theme) {
+  Widget _buildFilterDropdown(ThemeData theme, Map<String, String> lang) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -506,12 +625,13 @@ class _OrderScreenState extends State<OrderScreen> {
           style: TextStyle(
             color: theme.brightness == Brightness.dark ? Colors.white : Colors.deepPurple.shade700,
             fontWeight: FontWeight.w500,
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
-          items: const [
-            DropdownMenuItem(value: 'all', child: Text('All Orders')),
-            DropdownMenuItem(value: 'pending', child: Text('Pending')),
-            DropdownMenuItem(value: 'preparing', child: Text('Preparing')),
-            DropdownMenuItem(value: 'ready', child: Text('Ready')),
+          items: [
+            DropdownMenuItem(value: 'all', child: Text(lang['all_orders']!)),
+            DropdownMenuItem(value: 'pending', child: Text(lang['pending']!)),
+            DropdownMenuItem(value: 'preparing', child: Text(lang['preparing']!)),
+            DropdownMenuItem(value: 'ready', child: Text(lang['ready']!)),
           ],
           onChanged: (value) {
             setState(() {

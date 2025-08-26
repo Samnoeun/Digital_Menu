@@ -23,6 +23,18 @@ class MoreScreen extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.description),
+            title: const Text('ReportOrder'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsScreen(onThemeToggle: onThemeToggle),
+                ),
+              );
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
             onTap: () {

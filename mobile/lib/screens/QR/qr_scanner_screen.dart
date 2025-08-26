@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'qr_menu_view_screen.dart';
 import '../../models/menu_item.dart';
 
+
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
 

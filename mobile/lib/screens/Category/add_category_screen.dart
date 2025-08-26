@@ -129,6 +129,7 @@ void _showSuccessSnackbar(String message) {
 //   );
 // }
 
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -237,6 +238,7 @@ void _showSuccessSnackbar(String message) {
                             key: _formKey,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
+
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
@@ -310,6 +312,7 @@ void _showSuccessSnackbar(String message) {
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
+
                                       borderSide: BorderSide(
                                         color: _isDuplicateName
                                             ? errorColor
@@ -379,6 +382,7 @@ void _showSuccessSnackbar(String message) {
                                       return 'Please enter a category name';
                                     }
                                     if (_isDuplicateName) {
+
                                       return '"$value" already exists. Please use a different name.';
                                     }
                                     return null;
@@ -448,6 +452,7 @@ void _showSuccessSnackbar(String message) {
                                                 widget.category == null
                                                     ? 'Add Category'
                                                     : 'Update Category',
+
                                                 style: const TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w600,

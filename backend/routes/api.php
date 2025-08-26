@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+// use App\Http\Controllers\Api\ReportController
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ItemController;
@@ -25,6 +26,7 @@ Route::get('/restaurants/{id}/menu-preview', [RestaurantController::class, 'menu
 Route::get('/restaurants/{restaurant}/preview', [RestaurantController::class, 'preview']); // Public menu preview
 Route::get('/order-items', [OrderItemController::class, 'index']); // View all order items
 Route::post('/order-items', [OrderItemController::class, 'store']); // Create order item
+
 
 // 🔐 Protected Routes (Require authentication via Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
@@ -56,9 +58,11 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // User routes
     Route::apiResource('users', UserController::class);
-    // Order history routes
+    // Route::get('/reports/sales-summary', [ReportController::class, 'salesSummary']);
+    //     // Order history routes
     // routes/api.php
-Route::get('/order-history', [OrderHistoryController::class, 'index']);
+    Route::get('/order-history', [OrderHistoryController::class, 'index']);
 
     
 });
+Route::get('/reports/sales-summary', [ReportController::class, 'salesSummary']);

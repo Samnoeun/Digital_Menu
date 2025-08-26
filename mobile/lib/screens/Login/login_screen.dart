@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/api_services.dart';
 import 'register_screen.dart';
 import '../taskbar_screen.dart';
@@ -19,6 +20,69 @@ class _LoginScreenState extends State<LoginScreen> {
   String? passwordError;
   String? generalError;
   bool _obscurePassword = true;
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'app_title': 'QR Menu App',
+      'welcome_back': 'Welcome Back',
+      'sign_in_to_account': 'Sign in to your account',
+      'email': 'Email',
+      'email_required': 'Email is required',
+      'valid_email': 'Please enter a valid email address',
+      'password': 'Password',
+      'password_required': 'Password is required',
+      'password_length': 'Password must be at least 6 characters',
+      'forgot_password': 'Forgot Password?',
+      'sign_in': 'Sign In',
+      'or_continue_with': 'Or continue with',
+      'google': 'Google',
+      'apple': 'Apple',
+      'no_account': 'Don\'t have an account?',
+      'create_account': 'Create account',
+      'email_not_found': 'Email not found. Please check or register',
+      'incorrect_password': 'Incorrect password. Please try again',
+      'account_locked': 'Account locked. Try again later or reset password',
+      'login_failed': 'Login failed. Please try again',
+    },
+    'Khmer': {
+      'app_title': 'កម្មវិធីម៉ឺនុយ QR',
+      'welcome_back': 'សូមស្វាគមន៍មកកាន់វិញ',
+      'sign_in_to_account': 'ចូលក្នុងគណនីរបស់អ្នក',
+      'email': 'អ៊ីមែល',
+      'email_required': 'អ៊ីមែលត្រូវបានទាមទារ',
+      'valid_email': 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលដែលត្រឹមត្រូវ',
+      'password': 'ពាក្យសម្ងាត់',
+      'password_required': 'ពាក្យសម្ងាត់ត្រូវបានទាមទារ',
+      'password_length': 'ពាក្យសម្ងាត់ត្រូវតែមានយ៉ាងហោចណាស់ ៦ តួអក្សរ',
+      'forgot_password': 'ភ្លេចពាក្យសម្ងាត់?',
+      'sign_in': 'ចូល',
+      'or_continue_with': 'ឬបន្តជាមួយ',
+      'google': 'Google',
+      'apple': 'Apple',
+      'no_account': 'មិនមានគណនី?',
+      'create_account': 'បង្កើតគណនី',
+      'email_not_found': 'រកមិនឃើញអ៊ីមែល។ សូមពិនិត្យ ឬចុះឈ្មោះ',
+      'incorrect_password': 'ពាក្យសម្ងាត់មិនត្រឹមត្រូវ។ សូមព្យាយាមម្តងទៀត',
+      'account_locked': 'គណនីត្រូវបានចាក់សោ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬកំណត់ពាក្យសម្ងាត់ឡើងវិញ',
+      'login_failed': 'ការចូលបរាជ័យ។ សូមព្យាយាមម្តងទៀត',
+    },
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage(); // Load saved language on initialization
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
+  }
 
   bool isValidEmail(String email) {
     return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
@@ -36,27 +100,28 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     bool isValid = true;
+    final lang = localization[selectedLanguage]!;
 
     if (emailController.text.trim().isEmpty) {
       setState(() {
-        emailError = 'Email is required';
+        emailError = lang['email_required'];
       });
       isValid = false;
     } else if (!isValidEmail(emailController.text.trim())) {
       setState(() {
-        emailError = 'Please enter a valid email address';
+        emailError = lang['valid_email'];
       });
       isValid = false;
     }
 
     if (passwordController.text.isEmpty) {
       setState(() {
-        passwordError = 'Password is required';
+        passwordError = lang['password_required'];
       });
       isValid = false;
     } else if (!isValidPassword(passwordController.text)) {
       setState(() {
-        passwordError = 'Password must be at least 6 characters';
+        passwordError = lang['password_length'];
       });
       isValid = false;
     }
@@ -92,27 +157,28 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
+      final lang = localization[selectedLanguage]!;
       String errorMessage = e.toString();
       
       if (errorMessage.contains("No account found with this email address")) {
         setState(() {
-          emailError = "Email not found. Please check or register";
+          emailError = lang['email_not_found'];
           passwordError = null;
         });
       } else if (errorMessage.contains("Invalid password") || 
                  errorMessage.contains("Incorrect password")) {
         setState(() {
-          passwordError = "Incorrect password. Please try again";
+          passwordError = lang['incorrect_password'];
           emailError = null;
         });
       } else if (errorMessage.contains("account is locked") || 
                  errorMessage.contains("too many attempts")) {
         setState(() {
-          passwordError = "Account locked. Try again later or reset password";
+          passwordError = lang['account_locked'];
         });
       } else {
         setState(() {
-          generalError = "Login failed. Please try again";
+          generalError = lang['login_failed'];
         });
       }
     } finally {
@@ -122,8 +188,22 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  TextStyle getTextStyle({bool isSubtitle = false, bool isGray = false}) {
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: isSubtitle ? 14 : 16,
+      color: isGray
+          ? Theme.of(context).textTheme.bodyMedium!.color
+          : isSubtitle
+              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+              : Theme.of(context).textTheme.bodyLarge!.color,
+      fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final lang = localization[selectedLanguage]!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
@@ -192,12 +272,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                       child: Text(
-                        'QR Menu App',
+                        lang['app_title']!,
                         style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                               color: isDark ? Colors.white : Colors.deepPurple,
                               letterSpacing: 1.2,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                         textAlign: TextAlign.center,
                       ),
@@ -219,18 +300,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: [
                           Text(
-                            'Welcome Back',
+                            lang['welcome_back']!,
                             style: Theme.of(context).textTheme.bodyLarge!.copyWith(
                                   fontSize: 30,
                                   fontWeight: FontWeight.bold,
                                   color: isDark ? Colors.white : Colors.deepPurple,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            'Sign in to your account',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            
+                            lang['sign_in_to_account']!,
+                            style: getTextStyle(),
                           ),
                           const SizedBox(height: 24),
                           if (generalError != null)
@@ -248,13 +329,14 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(
                                   color: Colors.red.shade700,
                                   fontSize: 14,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
                             ),
-                          _buildEmailField(isDark),
+                          _buildEmailField(isDark, lang),
                           const SizedBox(height: 16),
-                          _buildPasswordField(isDark),
+                          _buildPasswordField(isDark, lang),
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
@@ -262,10 +344,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // Add forgot password functionality
                               },
                               child: Text(
-                                'Forgot Password?',
+                                lang['forgot_password']!,
                                 style: TextStyle(
                                   color: isDark ? Colors.white70 : Colors.deepPurple.shade600,
                                   fontSize: 14,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                             ),
@@ -289,12 +372,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? const CircularProgressIndicator(
                                       color: Colors.white,
                                     )
-                                  : const Text(
-                                      'Sign In',
+                                  : Text(
+                                      lang['sign_in']!,
                                       style: TextStyle(
                                         fontSize: 24, // Larger font
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
+                                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                       ),
                                     ),
                             ),
@@ -310,8 +394,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
-                                  'Or continue with',
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  lang['or_continue_with']!,
+                                  style: getTextStyle(),
                                 ),
                               ),
                               Expanded(
@@ -327,21 +411,23 @@ class _LoginScreenState extends State<LoginScreen> {
                             children: [
                               _buildSocialButton(
                                 icon: Icons.g_mobiledata,
-                                label: 'Google',
+                                label: lang['google']!,
                                 color: Colors.red,
                                 onTap: () {
                                   // Add Google sign-in logic
                                 },
                                 isDark: isDark,
+                                lang: lang,
                               ),
                               _buildSocialButton(
                                 icon: Icons.apple,
-                                label: 'Apple',
+                                label: lang['apple']!,
                                 color: isDark ? Colors.white70 : Colors.black,
                                 onTap: () {
                                   // Add Apple sign-in logic
                                 },
                                 isDark: isDark,
+                                lang: lang,
                               ),
                             ],
                           ),
@@ -353,8 +439,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          'Don\'t have an account?',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          lang['no_account']!,
+                          style: getTextStyle(),
                           textAlign: TextAlign.center,
                         ),
                         TextButton(
@@ -369,11 +455,12 @@ class _LoginScreenState extends State<LoginScreen> {
                             );
                           },
                           child: Text(
-                            'Create account',
+                            lang['create_account']!,
                             style: TextStyle(
                               color: isDark ? Colors.white70 : Colors.deepPurple,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -390,92 +477,94 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
- Widget _buildPasswordField(bool isDark) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(
-            color: passwordError != null
-                ? Colors.red.shade400
-                : isDark
-                    ? Colors.grey.shade700
-                    : Colors.grey.shade200,
-            width: passwordError != null ? 1.5 : 1,
+  Widget _buildPasswordField(bool isDark, Map<String, String> lang) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: passwordError != null
+                  ? Colors.red.shade400
+                  : isDark
+                      ? Colors.grey.shade700
+                      : Colors.grey.shade200,
+              width: passwordError != null ? 1.5 : 1,
+            ),
           ),
-        ),
-        child: TextField(
-          controller: passwordController,
-          obscureText: _obscurePassword,
-          onChanged: (value) {
-            if (passwordError != null) {
-              setState(() {
-                passwordError = null;
-              });
-            }
-          },
-          decoration: InputDecoration(
-            labelText: 'Password',
-            labelStyle: TextStyle(
-              color: passwordError != null
-                  ? Colors.red.shade400
-                  : isDark
-                      ? Colors.white70
-                      : Colors.deepPurple.shade400,
-            ),
-            prefixIcon: Icon(
-              Icons.lock_outline,
-              color: passwordError != null
-                  ? Colors.red.shade400
-                  : isDark
-                      ? Colors.white70
-                      : Colors.deepPurple.shade400,
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: isDark ? Colors.white70 : Colors.grey.shade600,
-              ),
-              onPressed: () {
+          child: TextField(
+            controller: passwordController,
+            obscureText: _obscurePassword,
+            onChanged: (value) {
+              if (passwordError != null) {
                 setState(() {
-                  _obscurePassword = !_obscurePassword;
+                  passwordError = null;
                 });
-              },
+              }
+            },
+            decoration: InputDecoration(
+              labelText: lang['password'],
+              labelStyle: TextStyle(
+                color: passwordError != null
+                    ? Colors.red.shade400
+                    : isDark
+                        ? Colors.white70
+                        : Colors.deepPurple.shade400,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+              prefixIcon: Icon(
+                Icons.lock_outline,
+                color: passwordError != null
+                    ? Colors.red.shade400
+                    : isDark
+                        ? Colors.white70
+                        : Colors.deepPurple.shade400,
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: isDark ? Colors.white70 : Colors.grey.shade600,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
+              errorStyle: TextStyle(
+                color: Colors.red.shade400,
+                fontSize: 12,
+              ),
             ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-            errorStyle: TextStyle(
-              color: Colors.red.shade400,
-              fontSize: 12,
+            style: getTextStyle(),
+          ),
+        ),
+        if (passwordError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 16),
+            child: Text(
+              passwordError!,
+              style: TextStyle(
+                color: Colors.red.shade400,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
             ),
           ),
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
-      ),
-      if (passwordError != null)
-        Padding(
-          padding: const EdgeInsets.only(top: 8, left: 16),
-          child: Text(
-            passwordError!,
-            style: TextStyle(
-              color: Colors.red.shade400,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
-  Widget _buildEmailField(bool isDark) {
+  Widget _buildEmailField(bool isDark, Map<String, String> lang) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -504,13 +593,14 @@ class _LoginScreenState extends State<LoginScreen> {
               }
             },
             decoration: InputDecoration(
-              labelText: 'Email',
+              labelText: lang['email'],
               labelStyle: TextStyle(
                 color: emailError != null
                     ? Colors.red.shade400
                     : isDark
                         ? Colors.white70
                         : Colors.deepPurple.shade400,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
               prefixIcon: Icon(
                 Icons.email_outlined,
@@ -530,7 +620,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 fontSize: 12,
               ),
             ),
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: getTextStyle(),
           ),
         ),
         if (emailError != null)
@@ -542,6 +632,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.red.shade400,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -555,6 +646,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required Color color,
     required VoidCallback onTap,
     required bool isDark,
+    required Map<String, String> lang,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -586,7 +678,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+              style: getTextStyle().copyWith(
                     fontWeight: FontWeight.w600,
                   ),
             ),
