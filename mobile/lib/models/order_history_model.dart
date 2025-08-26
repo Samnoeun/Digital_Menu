@@ -19,13 +19,13 @@ class OrderItemHistory {
   final int quantity;
   final String specialNote;
   final String itemName;
-  // final String itemCategory;
+  final double price; // Added
 
   OrderItemHistory({
     required this.itemId,
     required this.quantity,
     required this.specialNote,
     required this.itemName,
-    // required this.itemCategory,
+    required this.price, // Added
   });
 }
