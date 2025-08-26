@@ -1,8 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'add_category_screen.dart';
 import 'category_detail_screen.dart';
 import '../../models/category_model.dart';
 import '../../services/api_services.dart';
+
+// Centralized Language Service
+class LanguageService {
+  static final Map<String, Map<String, String>> _localization = {
+    'English': {
+      'categories': 'Categories',
+      'selected': 'Selected',
+      'search_categories': 'Search categories...',
+      'loading_categories': 'Loading categories...',
+      'no_categories': 'No categories found',
+      'no_matching_categories': 'No matching categories',
+      'add_category_prompt': 'Tap the + button to add a new category',
+      'try_different_search': 'Try a different search term',
+      'confirm_delete': 'Confirm Delete',
+      'delete_category_prompt': 'Delete category "{name}"? This will also delete all items in it.',
+      'delete_categories_prompt': 'Delete {count} selected {category_word}? This will also delete all items in them.',
+      'cancel': 'Cancel',
+      'delete': 'Delete',
+      'edit': 'Edit',
+      'select': 'Select',
+      'delete_selected': 'Delete Selected',
+      'items': 'items',
+      'category_deleted': 'Category deleted successfully',
+      'categories_deleted': 'Selected categories deleted successfully',
+      'delete_failed': 'Failed to delete category: {error}',
+      'delete_selected_failed': 'Failed to delete categories: {error}',
+    },
+    'Khmer': {
+      'categories': 'ប្រភេទ',
+      'selected': 'បានជ្រើសរើស',
+      'search_categories': 'ស្វែងរកប្រភេទ...',
+      'loading_categories': 'កំពុងដំណើរការប្រភេទ...',
+      'no_categories': 'មិនមានប្រភេទ',
+      'no_matching_categories': 'មិនមានប្រភេទដែលត្រូវគ្នា',
+      'add_category_prompt': 'ចុចប៊ូតុង + ដើម្បីបន្ថែមប្រភេទថ្មី',
+      'try_different_search': 'សូមព្យាយាមពាក្យស្វែងរកផ្សេងទៀត',
+      'confirm_delete': 'បញ្ជាក់ការលុប',
+      'delete_category_prompt': 'លុបប្រភេទ "{name}"? នេះក៏នឹងលុបធាតុទាំងអស់នៅក្នុងវាផងដែរ។',
+      'delete_categories_prompt': 'លុប {count} {category_word} ដែលបានជ្រើសរើស? នេះក៏នឹងលុបធាតុទាំងអស់នៅក្នុងពួកវាផងដែរ។',
+      'cancel': 'បោះបង់',
+      'delete': 'លុប',
+      'edit': 'កែសម្រួល',
+      'select': 'ជ្រើសរើស',
+      'delete_selected': 'លុបជម្រើស',
+      'items': 'ទំនិញ',
+      'category_deleted': 'បានលុបប្រភេទដោយជោគជ័យ',
+      'categories_deleted': 'បានលុបប្រភេទដែលបានជ្រើសរើសដោយជោគជ័យ',
+      'delete_failed': 'មិនអាចលុបប្រភេទបាន៖ {error}',
+      'delete_selected_failed': 'មិនអាចលុបប្រភេទដែលបានជ្រើសរើសបាន៖ {error}',
+    },
+  };
+
+  static Future<String> getCurrentLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('selectedLanguage') ?? 'English';
+  }
+
+  static String getText(String key, String language, {Map<String, String>? params}) {
+    String text = _localization[language]?[key] ?? key;
+    
+    if (params != null) {
+      params.forEach((key, value) {
+        text = text.replaceAll('{$key}', value);
+      });
+    }
+    
+    return text;
+  }
+}
 
 class CategoryListScreen extends StatefulWidget {
   const CategoryListScreen({super.key});
@@ -22,6 +92,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
   String _searchQuery = '';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  String selectedLanguage = 'English';
 
   @override
   void initState() {
@@ -34,7 +105,19 @@ class _CategoryListScreenState extends State<CategoryListScreen>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
     _searchController.addListener(_onSearchChanged);
+    _loadLanguage();
     _fetchCategories();
+  }
+
+  Future<void> _loadLanguage() async {
+    final language = await LanguageService.getCurrentLanguage();
+    setState(() {
+      selectedLanguage = language;
+    });
+  }
+
+  String _getTranslatedText(String key, {Map<String, String>? params}) {
+    return LanguageService.getText(key, selectedLanguage, params: params);
   }
 
   @override
@@ -130,6 +213,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
+    final categoryWord = _selectedCategoryIds.length == 1 
+      ? _getTranslatedText('category') 
+      : _getTranslatedText('categories');
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -139,7 +226,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              'Confirm Delete',
+              _getTranslatedText('confirm_delete'),
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.black87,
               ),
@@ -147,7 +234,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           ],
         ),
         content: Text(
-          'Delete ${_selectedCategoryIds.length} selected ${_selectedCategoryIds.length == 1 ? 'category' : 'categories'}? This will also delete all items in them.',
+          _getTranslatedText('delete_categories_prompt', params: {
+            'count': _selectedCategoryIds.length.toString(),
+            'category_word': categoryWord
+          }),
           style: TextStyle(
             color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
           ),
@@ -157,7 +247,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              _getTranslatedText('cancel'),
               style: TextStyle(
                 color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
               ),
@@ -171,7 +261,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              _getTranslatedText('delete'), 
+              style: const TextStyle(color: Colors.white)
+            ),
           ),
         ],
       ),
@@ -187,10 +280,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
         _selectedCategoryIds.clear();
         _isSelectionMode = false;
         _fetchCategories();
-        _showSuccessSnackbar('Selected categories deleted successfully');
+        _showSuccessSnackbar(_getTranslatedText('categories_deleted'));
       } catch (e) {
         setState(() => _isLoading = false);
-        _showErrorSnackbar('Failed to delete categories: ${e.toString()}');
+        _showErrorSnackbar(_getTranslatedText('delete_selected_failed', params: {'error': e.toString()}));
       }
     }
   }
@@ -239,7 +332,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              'Confirm Delete',
+              _getTranslatedText('confirm_delete'),
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.black87,
               ),
@@ -247,7 +340,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           ],
         ),
         content: Text(
-          'Delete category "$name"? This will also delete all items in it.',
+          _getTranslatedText('delete_category_prompt', params: {'name': name}),
           style: TextStyle(
             color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
           ),
@@ -257,7 +350,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              _getTranslatedText('cancel'),
               style: TextStyle(
                 color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
               ),
@@ -271,7 +364,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              _getTranslatedText('delete'), 
+              style: const TextStyle(color: Colors.white)
+            ),
           ),
         ],
       ),
@@ -282,10 +378,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
         setState(() => _isLoading = true);
         await ApiService.deleteCategory(id);
         _fetchCategories();
-        _showSuccessSnackbar('Category deleted successfully');
+        _showSuccessSnackbar(_getTranslatedText('category_deleted'));
       } catch (e) {
         setState(() => _isLoading = false);
-        _showErrorSnackbar('Failed to delete category: ${e.toString()}');
+        _showErrorSnackbar(_getTranslatedText('delete_failed', params: {'error': e.toString()}));
       }
     }
   }
@@ -352,8 +448,8 @@ class _CategoryListScreenState extends State<CategoryListScreen>
               padding: const EdgeInsets.only(left: 10),
               child: Text(
                 _isSelectionMode
-                    ? '${_selectedCategoryIds.length} Selected'
-                    : 'Categories',
+                    ? '${_selectedCategoryIds.length} ${_getTranslatedText('selected')}'
+                    : _getTranslatedText('categories'),
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 24,
@@ -380,14 +476,14 @@ class _CategoryListScreenState extends State<CategoryListScreen>
               IconButton(
                 icon: const Icon(Icons.delete, color: Colors.white),
                 onPressed: _deleteSelectedCategories,
-                tooltip: 'Delete Selected',
+                tooltip: _getTranslatedText('delete_selected'),
               ),
           ] else ...[
             TextButton(
               onPressed: _toggleSelectionMode,
-              child: const Text(
-                'Select',
-                style: TextStyle(
+              child: Text(
+                _getTranslatedText('select'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -430,7 +526,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: 'Search categories...',
+                    hintText: _getTranslatedText('search_categories'),
                     hintStyle: TextStyle(
                       color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
                       fontSize: 14,
@@ -438,12 +534,10 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                     prefixIcon: Icon(
                       Icons.search_rounded,
                       color: Theme.of(context).brightness == Brightness.dark
-                          ? Colors
-                                .white // White in dark mode
-                          : Colors.deepPurple.shade600, // Purple in light mode
+                          ? Colors.white
+                          : Colors.deepPurple.shade600,
                       size: 20,
                     ),
-
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(
@@ -488,7 +582,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Loading categories...',
+                          _getTranslatedText('loading_categories'),
                           style: TextStyle(
                             color: isDarkMode
                                 ? Colors.white
@@ -526,8 +620,8 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                           const SizedBox(height: 24),
                           Text(
                             _searchQuery.isEmpty
-                                ? 'No categories found'
-                                : 'No matching categories',
+                                ? _getTranslatedText('no_categories')
+                                : _getTranslatedText('no_matching_categories'),
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
@@ -539,8 +633,8 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                           const SizedBox(height: 8),
                           Text(
                             _searchQuery.isEmpty
-                                ? 'Tap the + button to add a new category'
-                                : 'Try a different search term',
+                                ? _getTranslatedText('add_category_prompt')
+                                : _getTranslatedText('try_different_search'),
                             style: TextStyle(
                               fontSize: 16,
                               color: isDarkMode
@@ -686,7 +780,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                     ),
                                   ),
                                   subtitle: Text(
-                                    '${category.items.length} items',
+                                    '${category.items.length} ${_getTranslatedText('items')}',
                                     style: TextStyle(
                                       color: isDarkMode
                                           ? Colors.grey[400]
@@ -724,7 +818,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
-                                                    'Edit',
+                                                    _getTranslatedText('edit'),
                                                     style: TextStyle(
                                                       color: isDarkMode
                                                           ? Colors.white
@@ -745,7 +839,7 @@ class _CategoryListScreenState extends State<CategoryListScreen>
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
-                                                    'Delete',
+                                                    _getTranslatedText('delete'),
                                                     style: TextStyle(
                                                       color:
                                                           Colors.red.shade600,
