@@ -33,9 +33,9 @@ class LanguageService {
       'unauthorized': 'Unauthorized access',
     },
     'Khmer': {
-      'items': 'ធាតុ',
+      'items': 'ទំនិញ',
       'selected': 'បានជ្រើសរើស',
-      'search_items': 'ស្វែងរកធាតុ...',
+      'search_items': 'ស្វែងរកទំនិញ...',
       'all': 'ទាំងអស់',
       'loading_items': 'កំពុងផ្ទុកទំនិញ...',
       'no_items_found': 'មិនមានទំនិញណាមួយត្រូវបានរកឃើញ',
