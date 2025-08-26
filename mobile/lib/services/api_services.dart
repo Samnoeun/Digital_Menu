@@ -14,7 +14,7 @@ import '../screens/ReportOrderHistory/report_order_screen.dart';
 
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.168:8080/api';
+  static const String baseUrl = 'http://192.168.108.198:8080/api';
 
   static String? _token;
 
@@ -619,20 +619,22 @@ static Future<void> updateRestaurant({
     }
   }
 
-  // Image Upload
-  // Reusable helper to construct full image URLs
-  static String getImageUrl(String? path) {
-    if (path == null || path.isEmpty) return '';
-
-    // Case 1: Return with '/storage/profiles/' prefix
-    if (!path.startsWith('http') && !path.contains('/')) {
-      return '${baseUrl.replaceFirst('/api', '')}/storage/profiles/$path';
-    }
-
-    // Case 2: Return with direct path concatenation
-    return baseUrl.replaceFirst('/api', '') + path;
+static String getImageUrl(String? path) {
+  if (path == null || path.isEmpty) return '';
+  
+  // If it's already a full URL, return it
+  if (path.startsWith('http')) return path;
+  
+  // Extract the filename from the path
+  final parts = path.split('/');
+  if (parts.length >= 2) {
+    final type = parts[0]; // 'items' or 'profiles'
+    final filename = parts[1];
+    return '$baseUrl/images/$type/$filename';
   }
-
+  
+  return '';
+}
   // New method for menu preview
   static Future<Map<String, dynamic>> getMenuPreview(int restaurantId) async {
     try {
