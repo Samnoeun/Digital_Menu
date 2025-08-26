@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       'total_items': 'មុខទំនិញសរុប',
       'total_categories': 'ប្រភេទសរុប',
       'orders': 'ការកម្ម៉ង់ ({filter})',
-      'top_item': 'មុខទំនិញកំពូល',
+      'top_item': 'មុខទំនិញលក់ដាច់ជាងគេ',
       'top_items_title': 'មុខទំនិញកម្ម៉ង់ច្រើនបំផុត ៥',
       'no_orders_message': 'រកមិនឃើញការកម្ម៉ង់សម្រាប់រយៈពេលដែលបានជ្រើសរើសទេ',
       'orders_suffix': 'ការកម្ម៉ង់',
