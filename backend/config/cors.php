@@ -1,10 +1,9 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'storage/*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'storage/*', 'images/*'],
     'allowed_methods' => ['*'],
-    // 'allowed_origins' => ['http://localhost:59839'],
-    'allowed_origins' => ['*'],
+    'allowed_origins' => ['*'], // For development only
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],

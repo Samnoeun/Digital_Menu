@@ -14,7 +14,7 @@ import '../screens/ReportOrderHistory/report_order_screen.dart';
 
 
 class ApiService {
-  static const String baseUrl = 'https://qrmenu.zapto.org/api';
+  static const String baseUrl = 'http://192.168.108.198:8080/api';
 
   static String? _token;
 
@@ -619,20 +619,30 @@ static Future<void> updateRestaurant({
     }
   }
 
-  // Image Upload
-  // Reusable helper to construct full image URLs
-  static String getImageUrl(String? path) {
-    if (path == null || path.isEmpty) return '';
-
-    // Case 1: Return with '/storage/profiles/' prefix
-    if (!path.startsWith('http') && !path.contains('/')) {
-      return '${baseUrl.replaceFirst('/api', '')}/storage/profiles/$path';
-    }
-
-    // Case 2: Return with direct path concatenation
-    return baseUrl.replaceFirst('/api', '') + path;
+static String getImageUrl(String? path) {
+  if (path == null || path.isEmpty) return '';
+  
+  // If it's already a full URL, return it
+  if (path.startsWith('http')) return path;
+  
+  // Handle different types of images
+  if (path.contains('profiles/')) {
+    // Profile image from restaurant
+    final filename = path.split('/').last;
+    return '$baseUrl/images/profiles/$filename';
+  } else if (path.contains('items/')) {
+    // Item image
+    final filename = path.split('/').last;
+    return '$baseUrl/images/items/$filename';
+  } else if (path.contains('public/profiles/')) {
+    // Alternative profile path
+    final filename = path.split('/').last;
+    return '$baseUrl/images/profiles/$filename';
   }
-
+  
+  // Default case - assume it's a profile image
+  return '$baseUrl/images/profiles/$path';
+}
   // New method for menu preview
   static Future<Map<String, dynamic>> getMenuPreview(int restaurantId) async {
     try {
@@ -692,7 +702,7 @@ static Future<void> updateRestaurant({
     }
   }
 /// Fetch all order history from API
-static Future<List<OrderHistory>> getOrderHistory() async {
+static Future<List<dynamic>> getOrderHistory() async {
   try {
     final token = await getAuthToken();
     if (token == null) throw Exception('Please login first');
@@ -716,18 +726,18 @@ static Future<List<OrderHistory>> getOrderHistory() async {
 
       final data = jsonResponse['data'] as List<dynamic>;
       
-      // Debug: Print the first order to see the structure
+      // Debug prints
       if (data.isNotEmpty) {
         print('First order data: ${data.first}');
-        if (data.first.containsKey('order_items') && data.first['order_items'] is List) {
-          final firstOrderItems = data.first['order_items'] as List;
-          if (firstOrderItems.isNotEmpty) {
+        if (data.first is Map && (data.first as Map).containsKey('order_items')) {
+          final firstOrderItems = (data.first as Map)['order_items'];
+          if (firstOrderItems is List && firstOrderItems.isNotEmpty) {
             print('First order item: ${firstOrderItems.first}');
           }
         }
       }
       
-      return data.map((e) => OrderHistory.fromJson(e)).toList();
+      return data; // Still return raw data
     } else if (response.statusCode == 401) {
       await clearAuthToken();
       throw Exception('Session expired. Please login again');
