@@ -499,233 +499,235 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                       position: _slideAnimation,
                       child: Column(
                         children: [
-                          Container(
-                            margin: const EdgeInsets.all(20),
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: cardColor,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: primaryColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Icon(
-                                        Icons.filter_list,
-                                        color: primaryColor,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Text(
-                                      'Filter Orders',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: textColor,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 16),
-                                LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    return Column(
-                                      children: [
-                                        SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
-                                          child: Row(
-                                            children: [
-                                              _buildFilterChip(
-                                                'All',
-                                                Icons.list_alt,
-                                                isDarkMode,
-                                                primaryColor,
-                                                textColor,
-                                              ),
-                                              SizedBox(width: 8),
-                                              _buildFilterChip(
-                                                'Today',
-                                                Icons.today,
-                                                isDarkMode,
-                                                primaryColor,
-                                                textColor,
-                                              ),
-                                              SizedBox(width: 8),
-                                              _buildFilterChip(
-                                                'This Week',
-                                                Icons.date_range,
-                                                isDarkMode,
-                                                primaryColor,
-                                                textColor,
-                                              ),
-                                              SizedBox(width: 8),
-                                              _buildFilterChip(
-                                                'This Month',
-                                                Icons.calendar_month,
-                                                isDarkMode,
-                                                primaryColor,
-                                                textColor,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildFilterChip(
-                                                'Custom Date',
-                                                Icons.event,
-                                                isDarkMode,
-                                                primaryColor,
-                                                textColor,
-                                                onTap: () => _selectCustomDate(context),
-                                                isFullWidth: true,
-                                              ),
-                                            ),
-                                            SizedBox(width: 8),
-                                            Expanded(
-                                              child: _buildFilterChip(
-                                                'Custom Range',
-                                                Icons.date_range_outlined,
-                                                isDarkMode,
-                                                primaryColor,
-                                                textColor,
-                                                onTap: () => _pickCustomRange(context),
-                                                isFullWidth: true,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        if (_currentFilter == 'Custom Date' && customDate != null) ...[
-                                          SizedBox(height: 8),
-                                          Container(
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: primaryColor.withOpacity(0.2),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.calendar_today,
-                                                  size: 16,
-                                                  color: primaryColor,
-                                                ),
-                                                SizedBox(width: 8),
-                                                Text(
-                                                  'Selected: ${DateFormat('MMM dd, yyyy').format(customDate!)}',
-                                                  style: TextStyle(
-                                                    color: primaryColor,
-                                                    fontWeight: FontWeight.w600,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                                Spacer(),
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      customDate = null;
-                                                      _currentFilter = 'All';
-                                                      filteredOrders = _filterOrdersByDate(orders);
-                                                    });
-                                                  },
-                                                  child: Container(
-                                                    padding: const EdgeInsets.all(4),
-                                                    decoration: BoxDecoration(
-                                                      color: primaryColor.withOpacity(0.1),
-                                                      borderRadius: BorderRadius.circular(6),
-                                                    ),
-                                                    child: Icon(
-                                                      Icons.close,
-                                                      size: 14,
-                                                      color: primaryColor,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                        if (_currentFilter == 'Custom Range' && customRange != null) ...[
-                                          SizedBox(height: 8),
-                                          Container(
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              color: primaryColor.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: primaryColor.withOpacity(0.2),
-                                              ),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.date_range,
-                                                  size: 16,
-                                                  color: primaryColor,
-                                                ),
-                                                SizedBox(width: 8),
-                                                Expanded(
-                                                  child: Text(
-                                                    'Range: ${DateFormat('MMM dd').format(customRange!.start)} - ${DateFormat('MMM dd, yyyy').format(customRange!.end)}',
-                                                    style: TextStyle(
-                                                      color: primaryColor,
-                                                      fontWeight: FontWeight.w600,
-                                                      fontSize: 13,
-                                                    ),
-                                                  ),
-                                                ),
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      customRange = null;
-                                                      _currentFilter = 'All';
-                                                      filteredOrders = _filterOrdersByDate(orders);
-                                                    });
-                                                  },
-                                                  child: Container(
-                                                    padding: const EdgeInsets.all(4),
-                                                    decoration: BoxDecoration(
-                                                      color: primaryColor.withOpacity(0.1),
-                                                      borderRadius: BorderRadius.circular(6),
-                                                    ),
-                                                    child: Icon(
-                                                      Icons.close,
-                                                      size: 14,
-                                                      color: primaryColor,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
+  Container(
+  margin: const EdgeInsets.all(20),
+  padding: const EdgeInsets.all(20),
+  decoration: BoxDecoration(
+    color: isDarkMode ? cardColor : Colors.white, // ✅ white in light mode, cardColor in dark mode
+    borderRadius: BorderRadius.circular(20),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.05),
+        blurRadius: 20,
+        offset: const Offset(0, 4),
+      ),
+    ],
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.filter_list,
+              color: primaryColor,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            'Filter Orders',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildFilterChip(
+                      'All',
+                      Icons.list_alt,
+                      isDarkMode,
+                      primaryColor,
+                      textColor,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      'Today',
+                      Icons.today,
+                      isDarkMode,
+                      primaryColor,
+                      textColor,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      'This Week',
+                      Icons.date_range,
+                      isDarkMode,
+                      primaryColor,
+                      textColor,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      'This Month',
+                      Icons.calendar_month,
+                      isDarkMode,
+                      primaryColor,
+                      textColor,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildFilterChip(
+                      'Custom Date',
+                      Icons.event,
+                      isDarkMode,
+                      primaryColor,
+                      textColor,
+                      onTap: () => _selectCustomDate(context),
+                      isFullWidth: true,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildFilterChip(
+                      'Custom Range',
+                      Icons.date_range_outlined,
+                      isDarkMode,
+                      primaryColor,
+                      textColor,
+                      onTap: () => _pickCustomRange(context),
+                      isFullWidth: true,
+                    ),
+                  ),
+                ],
+              ),
+              if (_currentFilter == 'Custom Date' && customDate != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: primaryColor.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today,
+                        size: 16,
+                        color: primaryColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Selected: ${DateFormat('MMM dd, yyyy').format(customDate!)}',
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            customDate = null;
+                            _currentFilter = 'All';
+                            filteredOrders = _filterOrdersByDate(orders);
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
                           ),
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (_currentFilter == 'Custom Range' && customRange != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: primaryColor.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.date_range,
+                        size: 16,
+                        color: primaryColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Range: ${DateFormat('MMM dd').format(customRange!.start)} - ${DateFormat('MMM dd, yyyy').format(customRange!.end)}',
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            customRange = null;
+                            _currentFilter = 'All';
+                            filteredOrders = _filterOrdersByDate(orders);
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            size: 14,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          );
+        },
+      ),
+    ],
+  ),
+),
+
+
                           SizedBox(height: 20),
                           filteredOrders.isNotEmpty
                               ? Padding(
