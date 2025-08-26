@@ -120,7 +120,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _language = 'English'; // Fallback to English
         });
         if (savedLanguage != null) {
-          debugPrint('Invalid language found in SharedPreferences: $savedLanguage');
+          debugPrint(
+            'Invalid language found in SharedPreferences: $savedLanguage',
+          );
         }
       }
     } catch (e) {
@@ -141,11 +143,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
   }
 
   @override
@@ -166,17 +168,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       if (mounted) {
         final errorMessage = e.toString().contains('SocketException')
             ? (localization[_language]?.containsKey('network_error') == true
-                ? localization[_language]!['network_error']!
-                : 'Network Error: Unable to connect to the server')
+                  ? localization[_language]!['network_error']!
+                  : 'Network Error: Unable to connect to the server')
             : (localization[_language]?.containsKey('snackbar_error') == true
-                ? localization[_language]!['snackbar_error']!.replaceAll('{error}', e.toString())
-                : 'Error: $e');
+                  ? localization[_language]!['snackbar_error']!.replaceAll(
+                      '{error}',
+                      e.toString(),
+                    )
+                  : 'Error: $e');
         debugPrint('Error in _loadRestaurantInfo (language: $_language): $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               errorMessage,
-              style: TextStyle(fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null),
+              style: TextStyle(
+                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
             ),
             backgroundColor: Colors.deepPurple.shade700,
           ),
@@ -186,6 +193,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _loadData() async {
+    if (!mounted) return;
     setState(() {
       isLoading = true;
       topItem = localization[_language]?.containsKey('loading') == true
@@ -199,13 +207,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ApiService.getItems(),
         ApiService.getCategories(),
         ApiService.getOrders(),
+        ApiService.getOrderHistory(),
       ]);
       final items = results[0] as List<item.Item>;
       final categories = results[1] as List<category.Category>;
-      final orders = results[2] as List<dynamic>;
+      final activeOrders = results[2] as List<dynamic>;
+      final historicalOrders = results[3] as List<dynamic>;
+      
+      final allOrders = [...activeOrders, ...historicalOrders];
 
       final categoryMap = {for (var cat in categories) cat.id: cat};
-      final filteredOrders = _filterOrdersByDate(orders);
+      final filteredOrders = _filterOrdersByDate(allOrders);
 
       final itemMap = {
         for (var item in items)
@@ -233,41 +245,43 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
       final sortedItems = itemCounts.entries.toList()
         ..sort((a, b) => b.value.compareTo(a.value));
+      if (mounted) {
+        setState(() {
+          totalItems = items.length;
+          totalCategories = categories.length;
+          totalOrders = filteredOrders.length;
+          topItem = sortedItems.isNotEmpty
+              ? sortedItems.first.key
+              : (localization[_language]?.containsKey('no_data') == true
+                    ? localization[_language]!['no_data']!
+                    : 'No data');
+          topItems = sortedItems.take(5).map((e) {
+            final item = itemData[e.key]!;
+            return {
+              'name': item.name,
+              'count': e.value,
+              'image': item.imagePath,
+              'item': item,
+              'category':
+                  item.category?.name ??
+                  (localization[_language]?.containsKey('no_category') == true
+                      ? localization[_language]!['no_category']!
+                      : 'No category'),
+            };
+          }).toList();
+          isLoading = false;
+        });
 
-      setState(() {
-        totalItems = items.length;
-        totalCategories = categories.length;
-        totalOrders = filteredOrders.length;
-        topItem = sortedItems.isNotEmpty
-            ? sortedItems.first.key
-            : (localization[_language]?.containsKey('no_data') == true
-                ? localization[_language]!['no_data']!
-                : 'No data');
-        topItems = sortedItems.take(5).map((e) {
-          final item = itemData[e.key]!;
-          return {
-            'name': item.name,
-            'count': e.value,
-            'image': item.imagePath,
-            'item': item,
-            'category': item.category?.name ??
-                (localization[_language]?.containsKey('no_category') == true
-                    ? localization[_language]!['no_category']!
-                    : 'No category'),
-          };
-        }).toList();
-        isLoading = false;
-      });
-
-      _animationController.forward();
+        _animationController.forward();
+      }
     } catch (e) {
       final errorMessage = e.toString().contains('SocketException')
           ? (localization[_language]?.containsKey('network_error') == true
-              ? localization[_language]!['network_error']!
-              : 'Network Error: Unable to connect to the server')
+                ? localization[_language]!['network_error']!
+                : 'Network Error: Unable to connect to the server')
           : (localization[_language]?.containsKey('error_prefix') == true
-              ? '${localization[_language]!['error_prefix']!} $e'
-              : 'Error: $e');
+                ? '${localization[_language]!['error_prefix']!} $e'
+                : 'Error: $e');
       debugPrint('Error in _loadData (language: $_language): $e');
       setState(() {
         topItem = errorMessage;
@@ -325,12 +339,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).colorScheme.copyWith(
-                  primary: Colors.deepPurple.shade700,
-                  onPrimary: Colors.white,
-                  surface: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.white,
-                ),
+              primary: Colors.deepPurple.shade700,
+              onPrimary: Colors.white,
+              surface: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.white,
+            ),
             textTheme: TextTheme(
               bodyMedium: TextStyle(
                 fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
@@ -360,11 +374,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     // Show a loading indicator until language is loaded
     if (!_isLanguageLoaded) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -383,7 +393,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Colors.deepPurple.shade700, Colors.deepPurple.shade500],
+                  colors: [
+                    Colors.deepPurple.shade700,
+                    Colors.deepPurple.shade500,
+                  ],
                 ),
               ),
               child: SafeArea(
@@ -410,8 +423,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 ),
                                 child: CircleAvatar(
                                   radius: 28,
-                                  backgroundColor:
-                                      isDarkMode ? const Color.fromARGB(255, 246, 246, 246) : Colors.white,
+                                  backgroundColor: isDarkMode
+                                      ? const Color.fromARGB(255, 246, 246, 246)
+                                      : Colors.white,
                                   backgroundImage: restaurant!.profile != null
                                       ? NetworkImage(
                                           ApiService.getImageUrl(
@@ -436,29 +450,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    localization[_language]?.containsKey('welcome_message') == true
-                                        ? localization[_language]!['welcome_message']!.replaceAll(
-                                              '{restaurantName}',
-                                              restaurant?.restaurantName ?? 'Admin',
-                                            )
+                                    localization[_language]?.containsKey(
+                                              'welcome_message',
+                                            ) ==
+                                            true
+                                        ? localization[_language]!['welcome_message']!
+                                              .replaceAll(
+                                                '{restaurantName}',
+                                                restaurant?.restaurantName ??
+                                                    'Admin',
+                                              )
                                         : 'Welcome, Admin',
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
-                                      fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                                      fontFamily: _language == 'Khmer'
+                                          ? 'NotoSansKhmer'
+                                          : null,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
-                                    localization[_language]?.containsKey('dashboard_subtitle') == true
+                                    localization[_language]?.containsKey(
+                                              'dashboard_subtitle',
+                                            ) ==
+                                            true
                                         ? localization[_language]!['dashboard_subtitle']!
                                         : 'Dashboard Overview',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.white70,
-                                      fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                                      fontFamily: _language == 'Khmer'
+                                          ? 'NotoSansKhmer'
+                                          : null,
                                     ),
                                   ),
                                 ],
@@ -638,17 +664,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Row(
                   children: [
                     Text(
-                      localization[_language]?.containsKey('welcome_message') == true
-                          ? localization[_language]!['welcome_message']!.replaceAll(
-                                '{restaurantName}',
-                                restaurant?.restaurantName ?? 'Admin',
-                              )
+                      localization[_language]?.containsKey('welcome_message') ==
+                              true
+                          ? localization[_language]!['welcome_message']!
+                                .replaceAll(
+                                  '{restaurantName}',
+                                  restaurant?.restaurantName ?? 'Admin',
+                                )
                           : 'Welcome, Admin',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
-                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                        fontFamily: _language == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -669,7 +699,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  localization[_language]?.containsKey('performance_overview') == true
+                  localization[_language]?.containsKey(
+                            'performance_overview',
+                          ) ==
+                          true
                       ? localization[_language]!['performance_overview']!
                       : "Here's your restaurant's performance overview",
                   style: TextStyle(
@@ -689,10 +722,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Widget _buildDateFilter(ThemeData theme) {
     final isDarkMode = theme.brightness == Brightness.dark;
     final translatedFilterOptions = [
-      localization[_language]?.containsKey('today') == true ? localization[_language]!['today']! : 'Today',
-      localization[_language]?.containsKey('this_week') == true ? localization[_language]!['this_week']! : 'This Week',
-      localization[_language]?.containsKey('this_month') == true ? localization[_language]!['this_month']! : 'This Month',
-      localization[_language]?.containsKey('custom_date') == true ? localization[_language]!['custom_date']! : 'Custom Date',
+      localization[_language]?.containsKey('today') == true
+          ? localization[_language]!['today']!
+          : 'Today',
+      localization[_language]?.containsKey('this_week') == true
+          ? localization[_language]!['this_week']!
+          : 'This Week',
+      localization[_language]?.containsKey('this_month') == true
+          ? localization[_language]!['this_month']!
+          : 'This Month',
+      localization[_language]?.containsKey('custom_date') == true
+          ? localization[_language]!['custom_date']!
+          : 'Custom Date',
     ];
 
     return Container(
@@ -718,7 +759,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   value: filterOptions[entry.key],
                   child: Text(
                     translatedFilterOptions[entry.key],
-                    style: TextStyle(fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null),
+                    style: TextStyle(
+                      fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                    ),
                   ),
                 );
               }).toList(),
@@ -734,7 +777,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 }
               },
               decoration: InputDecoration(
-                labelText: localization[_language]?.containsKey('filter_by_label') == true
+                labelText:
+                    localization[_language]?.containsKey('filter_by_label') ==
+                        true
                     ? localization[_language]!['filter_by_label']!
                     : 'Filter by',
                 labelStyle: TextStyle(
@@ -749,7 +794,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
               ),
               dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
-              iconEnabledColor: isDarkMode ? Colors.white : Colors.deepPurple.shade700,
+              iconEnabledColor: isDarkMode
+                  ? Colors.white
+                  : Colors.deepPurple.shade700,
               style: TextStyle(
                 color: isDarkMode ? Colors.white : Colors.deepPurple.shade700,
                 fontWeight: FontWeight.w500,
@@ -800,7 +847,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         'color': const Color.fromARGB(255, 151, 106, 255),
       },
       {
-        'title': localization[_language]?.containsKey('total_categories') == true
+        'title':
+            localization[_language]?.containsKey('total_categories') == true
             ? localization[_language]!['total_categories']!
             : 'Total Categories',
         'value': totalCategories.toString(),
@@ -810,11 +858,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       {
         'title': localization[_language]?.containsKey('orders') == true
             ? localization[_language]!['orders']!.replaceAll(
-                  '{filter}',
-                  localization[_language]?.containsKey(selectedFilter.toLowerCase()) == true
-                      ? localization[_language]![selectedFilter.toLowerCase()]!.toLowerCase()
-                      : selectedFilter.toLowerCase(),
-                )
+                '{filter}',
+                localization[_language]?.containsKey(
+                          selectedFilter.toLowerCase(),
+                        ) ==
+                        true
+                    ? localization[_language]![selectedFilter.toLowerCase()]!
+                          .toLowerCase()
+                    : selectedFilter.toLowerCase(),
+              )
             : 'Orders ($selectedFilter)',
         'value': totalOrders.toString(),
         'icon': Icons.receipt_long,
@@ -827,8 +879,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         'value': topItem.isNotEmpty
             ? topItem
             : (localization[_language]?.containsKey('no_data') == true
-                ? localization[_language]!['no_data']!
-                : 'No data'),
+                  ? localization[_language]!['no_data']!
+                  : 'No data'),
         'icon': Icons.star,
         'color': const Color.fromARGB(255, 151, 106, 255),
       },
@@ -889,8 +941,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                localization[_language]?.containsKey(selectedFilter.toLowerCase()) == true
-                    ? localization[_language]![selectedFilter.toLowerCase()]!.toLowerCase()
+                localization[_language]?.containsKey(
+                          selectedFilter.toLowerCase(),
+                        ) ==
+                        true
+                    ? localization[_language]![selectedFilter.toLowerCase()]!
+                          .toLowerCase()
                     : selectedFilter.toLowerCase(),
                 style: TextStyle(
                   fontSize: 12,
@@ -927,7 +983,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  localization[_language]?.containsKey('no_orders_message') == true
+                  localization[_language]?.containsKey('no_orders_message') ==
+                          true
                       ? localization[_language]!['no_orders_message']!
                       : 'No orders found for selected period',
                   style: TextStyle(
@@ -1019,7 +1076,9 @@ class ModernSummaryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(0.1),
+                color: (iconColor ?? Colors.deepPurple.shade700).withOpacity(
+                  0.1,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -1095,12 +1154,8 @@ class ModernTopItemTile extends StatelessWidget {
 
     // Localization map for ModernTopItemTile
     final Map<String, Map<String, String>> localization = {
-      'English': {
-        'orders_suffix': 'orders',
-      },
-      'Khmer': {
-        'orders_suffix': 'ការកម្ម៉ង់',
-      },
+      'English': {'orders_suffix': 'orders'},
+      'Khmer': {'orders_suffix': 'ការកម្ម៉ង់'},
     };
 
     return Container(
@@ -1151,13 +1206,17 @@ class ModernTopItemTile extends StatelessWidget {
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
                                     Icon(
-                                  Icons.fastfood,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                ),
+                                      Icons.fastfood,
+                                      color: isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                    ),
                               )
                             : Icon(
                                 Icons.fastfood,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                color: isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                               ),
                       ),
                     ),
@@ -1185,7 +1244,9 @@ class ModernTopItemTile extends StatelessWidget {
                               color: Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              fontFamily: language == 'Khmer' ? 'NotoSansKhmer' : null,
+                              fontFamily: language == 'Khmer'
+                                  ? 'NotoSansKhmer'
+                                  : null,
                             ),
                           ),
                         ),
@@ -1203,8 +1264,12 @@ class ModernTopItemTile extends StatelessWidget {
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: isDarkMode ? Colors.white : const Color(0xFF2D2D2D),
-                          fontFamily: language == 'Khmer' ? 'NotoSansKhmer' : null,
+                          color: isDarkMode
+                              ? Colors.white
+                              : const Color(0xFF2D2D2D),
+                          fontFamily: language == 'Khmer'
+                              ? 'NotoSansKhmer'
+                              : null,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1216,7 +1281,12 @@ class ModernTopItemTile extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 126, 74, 248).withOpacity(0.1),
+                          color: const Color.fromARGB(
+                            255,
+                            126,
+                            74,
+                            248,
+                          ).withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -1225,7 +1295,9 @@ class ModernTopItemTile extends StatelessWidget {
                             fontSize: 12,
                             color: const Color.fromARGB(255, 126, 71, 255),
                             fontWeight: FontWeight.w500,
-                            fontFamily: language == 'Khmer' ? 'NotoSansKhmer' : null,
+                            fontFamily: language == 'Khmer'
+                                ? 'NotoSansKhmer'
+                                : null,
                           ),
                         ),
                       ),
@@ -1241,17 +1313,25 @@ class ModernTopItemTile extends StatelessWidget {
                         color: const Color.fromARGB(255, 119, 65, 246),
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
-                        fontFamily: language == 'Khmer' ? 'NotoSansKhmer' : null,
+                        fontFamily: language == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                     Text(
-                      localization[language ?? 'English']?.containsKey('orders_suffix') == true
-                          ? localization[language ?? 'English']!['orders_suffix']!
+                      localization[language ?? 'English']?.containsKey(
+                                'orders_suffix',
+                              ) ==
+                              true
+                          ? localization[language ??
+                                'English']!['orders_suffix']!
                           : 'orders',
                       style: TextStyle(
                         color: const Color.fromARGB(255, 129, 75, 255),
                         fontSize: 12,
-                        fontFamily: language == 'Khmer' ? 'NotoSansKhmer' : null,
+                        fontFamily: language == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                   ],
