@@ -625,15 +625,23 @@ static String getImageUrl(String? path) {
   // If it's already a full URL, return it
   if (path.startsWith('http')) return path;
   
-  // Extract the filename from the path
-  final parts = path.split('/');
-  if (parts.length >= 2) {
-    final type = parts[0]; // 'items' or 'profiles'
-    final filename = parts[1];
-    return '$baseUrl/images/$type/$filename';
+  // Handle different types of images
+  if (path.contains('profiles/')) {
+    // Profile image from restaurant
+    final filename = path.split('/').last;
+    return '$baseUrl/images/profiles/$filename';
+  } else if (path.contains('items/')) {
+    // Item image
+    final filename = path.split('/').last;
+    return '$baseUrl/images/items/$filename';
+  } else if (path.contains('public/profiles/')) {
+    // Alternative profile path
+    final filename = path.split('/').last;
+    return '$baseUrl/images/profiles/$filename';
   }
   
-  return '';
+  // Default case - assume it's a profile image
+  return '$baseUrl/images/profiles/$path';
 }
   // New method for menu preview
   static Future<Map<String, dynamic>> getMenuPreview(int restaurantId) async {
