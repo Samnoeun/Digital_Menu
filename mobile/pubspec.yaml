@@ -11,7 +11,7 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   image_picker: ^1.0.4
-  google_fonts: ^6.2.1 # Optional, for using Google Fonts dynamically
+  google_fonts: ^6.2.1
   permission_handler: ^11.3.1
   qr_flutter: ^4.1.0
   http: ^1.4.0

@@ -18,12 +18,6 @@
             background: #6b46c1;
             border-radius: 4px;
         }
-        .dark ::-webkit-scrollbar-track {
-            background: #2d3748;
-        }
-        .dark ::-webkit-scrollbar-thumb {
-            background: #a78bfa;
-        }
         .modal {
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
@@ -48,44 +42,37 @@
         }
     </style>
 </head>
-<body class="bg-purple-50 dark:bg-gray-900 text-gray-900 dark:text-white font-sans">
+<body class="bg-purple-50 text-gray-900 font-sans">
     <div class="min-h-screen flex flex-col">
-        <header class="bg-gradient-to-r from-purple-700 to-purple-500 text-white sticky top-0 z-20 shadow-lg">
-            <div class="container mx-auto px-4 py-4 flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <a href="{{ url('/') }}" class="text-white hover:text-purple-200">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </a>
-                    <h1 class="text-xl font-semibold">{{ $restaurant->restaurant_name }} Menu</h1>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <button id="theme-toggle" class="text-white hover:text-purple-200">
-                        <svg id="theme-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                        </svg>
-                    </button>
-                    <div class="relative">
-                        <button id="cart-toggle" class="text-white hover:text-purple-200">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
-                        </button>
-                    </div>
-                </div>
+     <header class="bg-gradient-to-r from-purple-700 to-purple-500 text-white sticky top-0 z-20 shadow-lg">
+    <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <!-- Restaurant Profile Image -->
+            <img src="{{ $restaurant->profile ? url('storage/' . $restaurant->profile) : 'https://via.placeholder.com/50' }}" alt="{{ $restaurant->restaurant_name }} logo" class="w-12 h-12 object-cover rounded-full">
+            <!-- Restaurant Name -->
+            <h1 class="text-xl font-semibold">{{ $restaurant->restaurant_name }} Menu</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="relative">
+                <button id="cart-toggle" class="text-white hover:text-purple-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                </button>
             </div>
-        </header>
+        </div>
+    </div>
+</header>
 
         <main class="container mx-auto px-4 py-6 flex-grow">
             <div class="mb-6">
                 <div class="relative">
-                    <input type="text" id="search-input" placeholder="Search items..." class="w-full p-3 pl-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900 dark:text-white">
-                    <svg class="absolute left-3 top-3.5 w-5 h-5 text-purple-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <input type="text" id="search-input" placeholder="Search items..." class="w-full p-3 pl-10 rounded-lg bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900">
+                    <svg class="absolute left-3 top-3.5 w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
-                    <button id="clear-search" class="absolute right-3 top-3.5 text-gray-500 dark:text-gray-400 hidden">
+                    <button id="clear-search" class="absolute right-3 top-3.5 text-gray-500 hidden">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -95,9 +82,9 @@
 
             <div class="mb-6 overflow-x-auto whitespace-nowrap">
                 <div class="flex space-x-3">
-                    <button class="category-chip px-4 py-2 rounded-full bg-purple-100 dark:bg-gray-700 text-purple-700 dark:text-gray-300 font-semibold hover:bg-purple-600 hover:text-white transition" data-category-id="">All</button>
+                    <button class="category-chip px-4 py-2 rounded-full bg-purple-100 text-purple-700 font-semibold hover:bg-purple-600 hover:text-white transition" data-category-id="">All</button>
                     @foreach ($categories as $category)
-                        <button class="category-chip px-4 py-2 rounded-full bg-purple-100 dark:bg-gray-700 text-purple-700 dark:text-gray-300 font-semibold hover:bg-purple-600 hover:text-white transition" data-category-id="{{ $category->id }}">{{ $category->name }}</button>
+                        <button class="category-chip px-4 py-2 rounded-full bg-purple-100 text-purple-700 font-semibold hover:bg-purple-600 hover:text-white transition" data-category-id="{{ $category->id }}">{{ $category->name }}</button>
                     @endforeach
                 </div>
             </div>
@@ -106,16 +93,16 @@
                 @foreach ($categories as $category)
                     @if ($category->items->isNotEmpty())
                         <div class="category-section mb-8" data-category-id="{{ $category->id }}">
-                            <h2 class="text-2xl font-bold text-purple-700 dark:text-white mb-4">{{ $category->name }}</h2>
+                            <h2 class="text-2xl font-bold text-purple-700 mb-4">{{ $category->name }}</h2>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                 @foreach ($category->items as $item)
-                                    <div class="item-card bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition p-4 cursor-pointer" data-item-id="{{ $item->id }}" data-item-name="{{ $item->name }}" data-item-price="{{ $item->price }}" data-item-description="{{ $item->description ?? '' }}" data-item-image="{{ $item->image ? url($item->image) : '' }}">
+                                    <div class="item-card bg-white rounded-lg shadow-md hover:shadow-lg transition p-4 cursor-pointer" data-item-id="{{ $item->id }}" data-item-name="{{ $item->name }}" data-item-price="{{ $item->price }}" data-item-description="{{ $item->description ?? '' }}" data-item-image="{{ $item->image ? url($item->image) : '' }}">
                                         <img src="{{ $item->image ? url($item->image) : 'https://via.placeholder.com/150' }}" alt="{{ $item->name }}" class="w-full h-40 object-cover rounded-lg mb-4">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $item->name }}</h3>
-                                        <p class="text-gray-600 dark:text-gray-400">${{ number_format($item->price, 2) }}</p>
+                                        <h3 class="text-lg font-semibold text-gray-900">{{ $item->name }}</h3>
+                                        <p class="text-gray-600">${{ number_format($item->price, 2) }}</p>
                                         <div class="quantity-selector hidden mt-2 flex items-center space-x-2">
                                             <button class="decrement bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center">-</button>
-                                            <span class="quantity text-gray-900 dark:text-white">0</span>
+                                            <span class="quantity text-gray-900">0</span>
                                             <button class="increment bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center">+</button>
                                         </div>
                                     </div>
@@ -124,7 +111,6 @@
                         </div>
                     @endif
                 @endforeach
-
             </div>
         </main>
 
@@ -139,19 +125,19 @@
         </div>
 
         <div id="cart-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
-            <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
+            <div class="bg-white rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Your Cart</h2>
-                        <button id="close-cart" class="text-gray-600 dark:text-gray-400">
+                        <h2 class="text-2xl font-bold text-gray-900">Your Cart</h2>
+                        <button id="close-cart" class="text-gray-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
                     <div id="cart-items" class="space-y-4"></div>
-                    <div class="mt-4 pt-4 border-t border-gray-300 dark:border-gray-700">
-                        <div class="flex justify-between text-lg font-semibold text-gray-900 dark:text-white">
+                    <div class="mt-4 pt-4 border-t border-gray-300">
+                        <div class="flex justify-between text-lg font-semibold text-gray-900">
                             <span>Total:</span>
                             <span id="cart-modal-total">$0.00</span>
                         </div>
@@ -162,35 +148,35 @@
         </div>
 
         <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
-            <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
+            <div class="bg-white rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white" id="product-name"></h2>
-                        <button id="close-product" class="text-gray-600 dark:text-gray-400">
+                        <h2 class="text-2xl font-bold text-gray-900" id="product-name"></h2>
+                        <button id="close-product" class="text-gray-600">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
                     <img id="product-image" src="" alt="" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <p id="product-description" class="text-gray-600 dark:text-gray-400 mb-4"></p>
-                    <p id="product-price" class="text-lg font-semibold text-purple-600 dark:text-purple-400 mb-4"></p>
+                    <p id="product-description" class="text-gray-600 mb-4"></p>
+                    <p id="product-price" class="text-lg font-semibold text-purple-600 mb-4"></p>
                     <div class="flex items-center space-x-2 mb-4">
                         <button id="product-decrement" class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center">-</button>
-                        <span id="product-quantity" class="text-gray-900 dark:text-white">0</span>
+                        <span id="product-quantity" class="text-gray-900">0</span>
                         <button id="product-increment" class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center">+</button>
                     </div>
-                    <textarea id="product-note" placeholder="Special note (e.g., No chili...)" class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900 dark:text-white"></textarea>
+                    <textarea id="product-note" placeholder="Special note (e.g., No chili...)" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900"></textarea>
                     <button id="add-to-cart" class="w-full mt-4 bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition">Add to Cart</button>
                 </div>
             </div>
         </div>
 
         <div id="table-number-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
-            <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 p-6">
+            <div class="bg-white rounded-t-lg sm:rounded-lg w-full sm:w-96 p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Enter Table Number</h2>
-                    <button id="close-table-modal" class="text-gray-600 dark:text-gray-400">
+                    <h2 class="text-2xl font-bold text-gray-900">Enter Table Number</h2>
+                    <button id="close-table-modal" class="text-gray-600">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -198,8 +184,8 @@
                 </div>
                 <form id="table-number-form">
                     <div class="mb-4">
-                        <label for="table-number" class="block text-gray-900 dark:text-white mb-2">Table Number</label>
-                        <input type="number" id="table-number" class="w-full p-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900 dark:text-white" required>
+                        <label for="table-number" class="block text-gray-900 mb-2">Table Number</label>
+                        <input type="number" id="table-number" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900" required>
                         <p id="table-error" class="text-red-500 text-sm mt-2 hidden"></p>
                     </div>
                     <button type="submit" id="submit-table" class="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition flex items-center justify-center">
@@ -213,7 +199,7 @@
         </div>
 
         <div id="success-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
-            <div class="bg-white dark:bg-gray-800 rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto shadow-xl success-modal">
+            <div class="bg-white rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto shadow-xl success-modal">
                 <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 rounded-t-lg">
                     <div class="flex justify-between items-center">
                         <h2 class="text-2xl font-bold text-white">Order Confirmed!</h2>
@@ -230,14 +216,14 @@
                     </div>
                 </div>
                 <div class="p-6">
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">Your order has been placed successfully!</p>
-                    <p class="text-gray-600 dark:text-gray-400 mb-4">Table Number: <span id="success-table-number" class="font-semibold"></span></p>
+                    <p class="text-gray-600 mb-4">Your order has been placed successfully!</p>
+                    <p class="text-gray-600 mb-4">Table Number: <span id="success-table-number" class="font-semibold"></span></p>
                     <div id="success-order-items" class="space-y-4 mb-4"></div>
-                    <div class="flex justify-between text-lg font-semibold text-gray-900 dark:text-white border-t border-gray-300 dark:border-gray-700 pt-4">
+                    <div class="flex justify-between text-lg font-semibold text-gray-900 border-t border-gray-300 pt-4">
                         <span>Total:</span>
-                        <span id="success-total" class="text-purple-600 dark:text-purple-400"></span>
+                        <span id="success-total" class="text-purple-600"></span>
                     </div>
-                    <p class="text-gray-600 dark:text-gray-400 mt-4 text-center">Thanks for support {{ $restaurant->restaurant_name }}!</p>
+                    <p class="text-gray-600 mt-4 text-center">Thanks for support {{ $restaurant->restaurant_name }}!</p>
                     <button id="back-to-menu" class="w-full mt-6 bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition transform hover:scale-105">Back to Menu</button>
                 </div>
             </div>
@@ -247,20 +233,6 @@
     <script>
         let cart = [];
         let selectedCategoryId = null;
-
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        themeToggle.addEventListener('click', () => {
-            document.body.classList.toggle('dark');
-            localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
-            themeIcon.innerHTML = document.body.classList.contains('dark') ?
-                `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>` :
-                `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>`;
-        });
-        if (localStorage.getItem('theme') === 'dark') {
-            document.body.classList.add('dark');
-            themeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>`;
-        }
 
         function updateCart() {
             const cartCount = document.getElementById('cart-count');
@@ -289,19 +261,19 @@
             Object.entries(itemQuantities).forEach(([itemId, quantity]) => {
                 const item = cart.find(i => i.id == itemId);
                 const div = document.createElement('div');
-                div.className = 'flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded-lg';
+                div.className = 'flex items-center justify-between p-2 bg-gray-100 rounded-lg';
                 div.innerHTML = `
                     <div class="flex items-center space-x-2">
                         <img src="${item.image || 'https://via.placeholder.com/50'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg">
                         <div>
-                            <p class="font-semibold text-gray-900 dark:text-white">${item.name}</p>
-                            <p class="text-gray-600 dark:text-gray-400">$${item.price.toFixed(2)} x ${quantity}</p>
-                            ${item.note ? `<p class="text-sm text-gray-500 dark:text-gray-400">Note: ${item.note}</p>` : ''}
+                            <p class="font-semibold text-gray-900">${item.name}</p>
+                            <p class="text-gray-600">$${item.price.toFixed(2)} x ${quantity}</p>
+                            ${item.note ? `<p class="text-sm text-gray-500">Note: ${item.note}</p>` : ''}
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
                         <button class="decrement bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center" data-item-id="${item.id}">-</button>
-                        <span class="text-gray-900 dark:text-white">${quantity}</span>
+                        <span class="text-gray-900">${quantity}</span>
                         <button class="increment bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center" data-item-id="${item.id}">+</button>
                     </div>
                 `;
@@ -505,13 +477,13 @@
                 }, {})).forEach(([itemId, data]) => {
                     const item = cart.find(i => i.id == itemId);
                     const div = document.createElement('div');
-                    div.className = 'flex items-center space-x-3 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg';
+                    div.className = 'flex items-center space-x-3 p-2 bg-gray-100 rounded-lg';
                     div.innerHTML = `
                         <img src="${item.image || 'https://via.placeholder.com/50'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-lg">
                         <div class="flex-1">
-                            <p class="font-semibold text-gray-900 dark:text-white">${item.name} x${data.quantity}</p>
-                            <p class="text-gray-600 dark:text-gray-400">$${item.price.toFixed(2)}</p>
-                            ${data.note ? `<p class="text-sm text-gray-500 dark:text-gray-400">Note: ${data.note}</p>` : ''}
+                            <p class="font-semibold text-gray-900">${item.name} x${data.quantity}</p>
+                            <p class="text-gray-600">$${item.price.toFixed(2)}</p>
+                            ${data.note ? `<p class="text-sm text-gray-500">Note: ${data.note}</p>` : ''}
                         </div>
                     `;
                     successItems.appendChild(div);
