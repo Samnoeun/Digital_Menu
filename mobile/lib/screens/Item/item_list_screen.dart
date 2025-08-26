@@ -782,23 +782,21 @@ class _ItemListScreenState extends State<ItemListScreen>
                                                 ),
                                               ),
                                               child: Center(
-                                                child: item.imagePath != null
-                                                    ? Image.network(
-                                                        ApiService.getImageUrl(
-                                                          item.imagePath!,
-                                                        ),
-                                                        fit: BoxFit.cover,
-                                                        errorBuilder: (_, __, ___) => Icon(
-                                                              Icons.broken_image_rounded,
-                                                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-                                                              size: 32,
-                                                            ),
-                                                      )
-                                                    : Icon(
-                                                        Icons.image_not_supported_rounded,
-                                                        color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-                                                        size: 32,
-                                                      ),
+                                                child: item.imageUrl != null
+    ? Image.network(
+        item.imageUrl!, // Use the direct URL from API
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => Icon(
+          Icons.broken_image_rounded,
+          color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+          size: 32,
+        ),
+      )
+    : Icon(
+        Icons.image_not_supported_rounded,
+        color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+        size: 32,
+      ),
                                               ),
                                             ),
                                           ),

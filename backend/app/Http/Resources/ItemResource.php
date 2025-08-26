@@ -12,15 +12,20 @@ class ItemResource extends JsonResource
      *
      * @return array<string, mixed>
      */
-    public function toArray(Request $request): array
-    {
-        return [
-            'id' => $this->id,
-            'category_id' => $this->category_id,
-            'name' => $this->name,
-            'image_path' => $this->image_path ? asset('storage/' . $this->image_path) : null,
-            'description' => $this->description,
-            'price' => $this->price,
-        ];
-    }
+public function toArray($request)
+{
+    return [
+        'id' => $this->id,
+        'name' => $this->name,
+        'description' => $this->description,
+        'price' => $this->price,
+        'category_id' => $this->category_id,
+        'image_path' => $this->image_path, // Keep original
+        'image_url' => $this->image_path ? 
+            url("api/images/{$this->image_path}") : null, // New API endpoint
+        'category' => new CategoryResource($this->whenLoaded('category')),
+        'created_at' => $this->created_at,
+        'updated_at' => $this->updated_at,
+    ];
+}
 }
