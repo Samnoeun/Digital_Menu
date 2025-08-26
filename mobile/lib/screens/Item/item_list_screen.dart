@@ -5,30 +5,9 @@ import '../../models/category_model.dart';
 import '../../models/item_model.dart' as item;
 import '../../services/api_services.dart';
 
-class ItemListScreen extends StatefulWidget {
-  final Function(bool)? onThemeToggle;
-  const ItemListScreen({Key? key, this.onThemeToggle}) : super(key: key);
-
-  @override
-  State<ItemListScreen> createState() => _ItemListScreenState();
-}
-
-class _ItemListScreenState extends State<ItemListScreen>
-    with TickerProviderStateMixin {
-  List<Category> _categories = [];
-  List<item.Item> _allItems = [];
-  List<item.Item> _filteredItems = [];
-  bool _isLoading = true;
-  bool _isSelectionMode = false;
-  Set<int> _selectedItemIds = {};
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  int? _selectedCategoryId;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  String selectedLanguage = 'English';
-  
-  final Map<String, Map<String, String>> localization = {
+// Centralized Language Service
+class LanguageService {
+  static final Map<String, Map<String, String>> _localization = {
     'English': {
       'items': 'Items',
       'selected': 'Selected',
@@ -58,26 +37,67 @@ class _ItemListScreenState extends State<ItemListScreen>
       'selected': 'បានជ្រើសរើស',
       'search_items': 'ស្វែងរកធាតុ...',
       'all': 'ទាំងអស់',
-      'loading_items': 'កំពុងផ្ទុកធាតុ...',
-      'no_items_found': 'មិនមានធាតុណាមួយត្រូវបានរកឃើញ',
-      'no_matching_items': 'មិនមានធាតុដែលត្រូវគ្នា',
-      'add_new_item': 'ចុចប៊ូតុង + ដើម្បីបន្ថែមធាតុថ្មី',
+      'loading_items': 'កំពុងផ្ទុកទំនិញ...',
+      'no_items_found': 'មិនមានទំនិញណាមួយត្រូវបានរកឃើញ',
+      'no_matching_items': 'មិនមានទំនិញដែលត្រូវគ្នា',
+      'add_new_item': 'ចុចប៊ូតុង + ដើម្បីបន្ថែមទំនិញថ្មី',
       'try_different_search': 'សាកល្បងពាក្យស្វែងរកផ្សេងទៀត',
       'confirm_delete': 'បញ្ជាក់ការលុប',
-      'delete_item': 'លុបធាតុ',
-      'delete_selected': 'លុបធាតុដែលបានជ្រើសរើស?',
-      'delete_single': 'លុបធាតុនេះ?',
+      'delete_item': 'លុបទំនិញ',
+      'delete_selected': 'លុបទំនិញដែលបានជ្រើសរើស?',
+      'delete_single': 'លុបទំនិញនេះ?',
       'cancel': 'បោះបង់',
       'delete': 'លុប',
       'edit': 'កែសម្រួល',
       'select': 'ជ្រើសរើស',
-      'items_deleted': 'ធាតុដែលបានជ្រើសរើសត្រូវបានលុបដោយជោគជ័យ',
-      'item_deleted': 'ធាតុត្រូវបានលុបដោយជោគជ័យ',
-      'delete_failed': 'បរាជ័យក្នុងការលុបធាតុ',
+      'items_deleted': 'ទំនិញដែលបានជ្រើសរើសត្រូវបានលុបដោយជោគជ័យ',
+      'item_deleted': 'ទំនិញត្រូវបានលុបដោយជោគជ័យ',
+      'delete_failed': 'បរាជ័យក្នុងការលុបទំនិញ',
       'error': 'កំហុស',
       'unauthorized': 'ការចូលប្រើប្រាស់មិនត្រឹមត្រូវ',
     },
   };
+
+  static Future<String> getCurrentLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('selectedLanguage') ?? 'English';
+  }
+
+  static String getText(String key, String language, {Map<String, String>? params}) {
+    String text = _localization[language]?[key] ?? key;
+    
+    if (params != null) {
+      params.forEach((key, value) {
+        text = text.replaceAll('{$key}', value);
+      });
+    }
+    
+    return text;
+  }
+}
+
+class ItemListScreen extends StatefulWidget {
+  final Function(bool)? onThemeToggle;
+  const ItemListScreen({Key? key, this.onThemeToggle}) : super(key: key);
+
+  @override
+  State<ItemListScreen> createState() => _ItemListScreenState();
+}
+
+class _ItemListScreenState extends State<ItemListScreen>
+    with TickerProviderStateMixin {
+  List<Category> _categories = [];
+  List<item.Item> _allItems = [];
+  List<item.Item> _filteredItems = [];
+  bool _isLoading = true;
+  bool _isSelectionMode = false;
+  Set<int> _selectedItemIds = {};
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  int? _selectedCategoryId;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  String selectedLanguage = 'English';
 
   @override
   void initState() {
@@ -110,8 +130,11 @@ class _ItemListScreenState extends State<ItemListScreen>
     });
   }
 
+  String _getTranslatedText(String key, {Map<String, String>? params}) {
+    return LanguageService.getText(key, selectedLanguage, params: params);
+  }
+
   TextStyle getTextStyle({bool isBold = false, bool isSecondary = false, double? fontSize, Color? color}) {
-    final lang = localization[selectedLanguage]!;
     return TextStyle(
       fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
       fontSize: fontSize ?? (isSecondary ? 16 : 18),
@@ -143,7 +166,6 @@ class _ItemListScreenState extends State<ItemListScreen>
 
   Future<void> _deleteSelectedItems() async {
     if (_selectedItemIds.isEmpty) return;
-    final lang = localization[selectedLanguage]!;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -157,7 +179,7 @@ class _ItemListScreenState extends State<ItemListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              lang['confirm_delete']!,
+              _getTranslatedText('confirm_delete'),
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[200]
@@ -168,7 +190,7 @@ class _ItemListScreenState extends State<ItemListScreen>
           ],
         ),
         content: Text(
-          '${_selectedItemIds.length} ${lang['delete_selected']!}',
+          '${_selectedItemIds.length} ${_getTranslatedText('delete_selected')}',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
@@ -180,7 +202,7 @@ class _ItemListScreenState extends State<ItemListScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              lang['cancel']!,
+              _getTranslatedText('cancel'),
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
@@ -198,7 +220,7 @@ class _ItemListScreenState extends State<ItemListScreen>
               ),
             ),
             child: Text(
-              lang['delete']!,
+              _getTranslatedText('delete'),
               style: TextStyle(
                 color: Colors.white,
                 fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
@@ -216,10 +238,10 @@ class _ItemListScreenState extends State<ItemListScreen>
         }
         _selectedItemIds.clear();
         _isSelectionMode = false;
-        _showSuccessSnackbar(lang['items_deleted']!);
+        _showSuccessSnackbar(_getTranslatedText('items_deleted'));
         _loadData();
       } catch (e) {
-        _showErrorSnackbar('${lang['delete_failed']!}: ${e.toString()}');
+        _showErrorSnackbar('${_getTranslatedText('delete_failed')}: ${e.toString()}');
       }
     }
   }
@@ -242,12 +264,11 @@ class _ItemListScreenState extends State<ItemListScreen>
       });
       _animationController.forward();
     } catch (e) {
-      final lang = localization[selectedLanguage]!;
       if (e.toString().contains('Unauthenticated')) {
         await ApiService.clearAuthToken();
         Navigator.pushReplacementNamed(context, '/login');
       } else {
-        _showErrorSnackbar('${lang['error']!}: ${e.toString()}');
+        _showErrorSnackbar('${_getTranslatedText('error')}: ${e.toString()}');
       }
     } finally {
       setState(() => _isLoading = false);
@@ -284,8 +305,6 @@ class _ItemListScreenState extends State<ItemListScreen>
   }
 
   Future<void> _deleteItem(int id, String itemName) async {
-    final lang = localization[selectedLanguage]!;
-
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -298,7 +317,7 @@ class _ItemListScreenState extends State<ItemListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              lang['delete_item']!,
+              _getTranslatedText('delete_item'),
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[200]
@@ -309,7 +328,7 @@ class _ItemListScreenState extends State<ItemListScreen>
           ],
         ),
         content: Text(
-          '${lang['delete_single']!} "$itemName"?',
+          '${_getTranslatedText('delete_single')} "$itemName"?',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
@@ -321,7 +340,7 @@ class _ItemListScreenState extends State<ItemListScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              lang['cancel']!,
+              _getTranslatedText('cancel'),
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
@@ -339,7 +358,7 @@ class _ItemListScreenState extends State<ItemListScreen>
               ),
             ),
             child: Text(
-              lang['delete']!,
+              _getTranslatedText('delete'),
               style: TextStyle(
                 color: Colors.white,
                 fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
@@ -354,10 +373,10 @@ class _ItemListScreenState extends State<ItemListScreen>
 
     try {
       await ApiService.deleteItem(id);
-      _showSuccessSnackbar('$itemName ${lang['item_deleted']!}');
+      _showSuccessSnackbar('$itemName ${_getTranslatedText('item_deleted')}');
       _loadData();
     } catch (e) {
-      _showErrorSnackbar('${lang['error']!} ${lang['delete_item']!}: $e');
+      _showErrorSnackbar('${_getTranslatedText('error')} ${_getTranslatedText('delete_item')}: $e');
     }
   }
 
@@ -419,7 +438,6 @@ class _ItemListScreenState extends State<ItemListScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final lang = localization[selectedLanguage]!;
 
     return Scaffold(
       backgroundColor: isDarkMode
@@ -441,8 +459,8 @@ class _ItemListScreenState extends State<ItemListScreen>
               padding: const EdgeInsets.only(left: 10),
               child: Text(
                 _isSelectionMode
-                    ? '${_selectedItemIds.length} ${lang['selected']!}'
-                    : lang['items']!,
+                    ? '${_selectedItemIds.length} ${_getTranslatedText('selected')}'
+                    : _getTranslatedText('items'),
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 24,
@@ -470,13 +488,13 @@ class _ItemListScreenState extends State<ItemListScreen>
               IconButton(
                 icon: const Icon(Icons.delete, color: Colors.white),
                 onPressed: _deleteSelectedItems,
-                tooltip: lang['delete']!,
+                tooltip: _getTranslatedText('delete'),
               ),
           ] else ...[
             TextButton(
               onPressed: _toggleSelectionMode,
               child: Text(
-                lang['select']!,
+                _getTranslatedText('select'),
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -531,7 +549,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: lang['search_items']!,
+                    hintText: _getTranslatedText('search_items'),
                     hintStyle: TextStyle(
                       color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
                       fontSize: 14,
@@ -585,7 +603,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                 children: [
                   FilterChip(
                     label: Text(
-                      lang['all']!,
+                      _getTranslatedText('all'),
                       style: TextStyle(
                         color: _selectedCategoryId == null
                             ? Colors.white
@@ -651,7 +669,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          lang['loading_items']!,
+                          _getTranslatedText('loading_items'),
                           style: TextStyle(
                             color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
                             fontSize: 16,
@@ -684,8 +702,8 @@ class _ItemListScreenState extends State<ItemListScreen>
                               const SizedBox(height: 24),
                               Text(
                                 _searchQuery.isEmpty
-                                    ? lang['no_items_found']!
-                                    : lang['no_matching_items']!,
+                                    ? _getTranslatedText('no_items_found')
+                                    : _getTranslatedText('no_matching_items'),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w600,
@@ -696,8 +714,8 @@ class _ItemListScreenState extends State<ItemListScreen>
                               const SizedBox(height: 8),
                               Text(
                                 _searchQuery.isEmpty
-                                    ? lang['add_new_item']!
-                                    : lang['try_different_search']!,
+                                    ? _getTranslatedText('add_new_item')
+                                    : _getTranslatedText('try_different_search'),
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
@@ -925,7 +943,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                                     ),
                                                     const SizedBox(width: 8),
                                                     Text(
-                                                      lang['edit']!,
+                                                      _getTranslatedText('edit'),
                                                       style: TextStyle(
                                                         color: isDarkMode ? Colors.blue[300] : Colors.black87,
                                                         fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
@@ -945,7 +963,7 @@ class _ItemListScreenState extends State<ItemListScreen>
                                                     ),
                                                     const SizedBox(width: 8),
                                                     Text(
-                                                      lang['delete']!,
+                                                      _getTranslatedText('delete'),
                                                       style: TextStyle(
                                                         color: Colors.red.shade600,
                                                         fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
