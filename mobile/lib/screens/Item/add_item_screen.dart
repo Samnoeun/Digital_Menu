@@ -10,6 +10,7 @@ import '../../services/api_services.dart';
 import 'dart:typed_data'; // For Uint8List
 import 'package:flutter/foundation.dart'; // For kIsWeb
 import '../../services/image_picker_service.dart'; // For ImagePickerService
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddItemScreen extends StatefulWidget {
   final item_model.Item? item;
@@ -37,6 +38,68 @@ class _AddItemScreenState extends State<AddItemScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   bool _isDuplicateName = false;
+  String selectedLanguage = 'English'; // Default value
+
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'add_item': 'Add Item',
+      'edit_item': 'Edit Item',
+      'item_name': 'Item Name',
+      'description_optional': 'Description (Optional)',
+      'price': 'Price',
+      'category': 'Category',
+      'add_image': 'Add Image',
+      'loading': 'Loading...',
+      'please_enter_item_name': 'Please enter item name',
+      'already_exists': 'already exists. Please use a different name.',
+      'please_enter_price': 'Please enter price',
+      'please_enter_valid_price': 'Please enter valid price',
+      'please_select_category': 'Please select category',
+      'please_fill_all_fields': 'Please fill all required fields',
+      'item_created': 'Item created successfully',
+      'item_updated': 'Item updated successfully',
+      'item_deleted': 'Item deleted successfully',
+      'failed_load_categories': 'Failed to load categories: ',
+      'failed_pick_image': 'Failed to pick image: ',
+      'error': 'Error: ',
+      'failed_delete_item': 'Failed to delete item: ',
+      'confirm_delete': 'Confirm Delete',
+      'delete_question': 'Delete ',
+      'cancel': 'Cancel',
+      'delete': 'Delete',
+      'update_item': 'Update Item',
+      'create_item': 'Create Item',
+    },
+    'Khmer': {
+      'add_item': 'បន្ថែមទំនិញ',
+      'edit_item': 'កែសម្រួលទំនិញ',
+      'item_name': 'ឈ្មោះទំនិញ',
+      'description_optional': 'ការពិពណ៌នា (ជម្រើស)',
+      'price': 'តម្លៃ',
+      'category': 'ប្រភេទ',
+      'add_image': 'បន្ថែមរូបភាព',
+      'loading': 'កំពុងផ្ទុក...',
+      'please_enter_item_name': 'សូមបញ្ចូលឈ្មោះទំនិញ',
+      'already_exists': 'មានរួចហើយ សូមប្រើឈ្មោះផ្សេង',
+      'please_enter_price': 'សូមបញ្ចូលតម្លៃ',
+      'please_enter_valid_price': 'សូមបញ្ចូលតម្លៃត្រឹមត្រូវ',
+      'please_select_category': 'សូមជ្រើសរើសប្រភេទ',
+      'please_fill_all_fields': 'សូមបំពេញព័ត៌មានដែលត្រូវការទាំងអស់',
+      'item_created': 'បានបង្កើតទំនិញដោយជោគជ័យ',
+      'item_updated': 'បានធ្វើបច្ចុប្បន្នភាពទំនិញដោយជោគជ័យ',
+      'item_deleted': 'បានលុបទំនិញដោយជោគជ័យ',
+      'failed_load_categories': 'មិនអាចផ្ទុកប្រភេទ: ',
+      'failed_pick_image': 'មិនអាចជ្រើសរើសរូបភាព: ',
+      'error': 'កំហុស: ',
+      'failed_delete_item': 'មិនអាចលុបទំនិញ: ',
+      'confirm_delete': 'បញ្ជាក់ការលុប',
+      'delete_question': 'លុប ',
+      'cancel': 'បោះបង់',
+      'delete': 'លុប',
+      'update_item': 'ធ្វើបច្ចុប្បន្នភាពទំនិញ',
+      'create_item': 'បង្កើតទំនិញ',
+    },
+  };
 
   @override
   void initState() {
@@ -48,7 +111,17 @@ class _AddItemScreenState extends State<AddItemScreen>
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
+    _loadSavedLanguage();
     _initializeForm();
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
   }
 
   @override
@@ -108,7 +181,7 @@ class _AddItemScreenState extends State<AddItemScreen>
         }
       });
     } catch (e) {
-      _showErrorSnackbar('Failed to load categories: $e');
+      _showErrorSnackbar('${localization[selectedLanguage]!['failed_load_categories']!}$e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -140,13 +213,13 @@ class _AddItemScreenState extends State<AddItemScreen>
         }
       }
     } catch (e) {
-      _showErrorSnackbar('Failed to pick image: $e');
+      _showErrorSnackbar('${localization[selectedLanguage]!['failed_pick_image']!}$e');
     }
   }
 
   Future<void> _saveItem() async {
     if (!_formKey.currentState!.validate() || _selectedCategory == null) {
-      _showErrorSnackbar('Please fill all required fields');
+      _showErrorSnackbar(localization[selectedLanguage]!['please_fill_all_fields']!);
       return;
     }
 
@@ -167,7 +240,7 @@ class _AddItemScreenState extends State<AddItemScreen>
           webImageBytes: _webImageBytes,
           webImageName: _webImageName,
         );
-        _showSuccessSnackbar('Item created successfully');
+        _showSuccessSnackbar(localization[selectedLanguage]!['item_created']!);
       } else {
         await ApiService.updateItem(
           widget.item!.id,
@@ -179,17 +252,19 @@ class _AddItemScreenState extends State<AddItemScreen>
           webImageBytes: _webImageBytes,
           webImageName: _webImageName,
         );
-        _showSuccessSnackbar('Item updated successfully');
+        _showSuccessSnackbar(localization[selectedLanguage]!['item_updated']!);
       }
       Navigator.pop(context, true);
     } catch (e) {
-      _showErrorSnackbar('Error: ${e.toString()}');
+      _showErrorSnackbar('${localization[selectedLanguage]!['error']!}${e.toString()}');
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
   Future<void> _deleteItem() async {
+    final lang = localization[selectedLanguage]!;
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -202,32 +277,35 @@ class _AddItemScreenState extends State<AddItemScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              'Confirm Delete',
+              lang['confirm_delete']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.white
                     : Colors.black87,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
         ),
         content: Text(
-          'Delete ${widget.item!.name}?',
+          '${lang['delete_question']!}${widget.item!.name}?',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
                 : Colors.grey[600],
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              'Cancel',
+              lang['cancel']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
                     : Colors.grey[600],
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ),
@@ -239,7 +317,13 @@ class _AddItemScreenState extends State<AddItemScreen>
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            child: Text(
+              lang['delete']!,
+              style: TextStyle(
+                color: Colors.white,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+              ),
+            ),
           ),
         ],
       ),
@@ -250,10 +334,10 @@ class _AddItemScreenState extends State<AddItemScreen>
     setState(() => _isLoading = true);
     try {
       await ApiService.deleteItem(widget.item!.id);
-      _showSuccessSnackbar('Item deleted successfully');
+      _showSuccessSnackbar(localization[selectedLanguage]!['item_deleted']!);
       Navigator.pop(context, true);
     } catch (e) {
-      _showErrorSnackbar('Failed to delete item: $e');
+      _showErrorSnackbar('${localization[selectedLanguage]!['failed_delete_item']!}$e');
     } finally {
       setState(() => _isLoading = false);
     }
@@ -266,7 +350,14 @@ class _AddItemScreenState extends State<AddItemScreen>
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 8),
-            Expanded(child: Text(message)),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+            ),
           ],
         ),
         backgroundColor: Colors.red,
@@ -287,9 +378,10 @@ class _AddItemScreenState extends State<AddItemScreen>
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                ), // Explicit white text
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
               ),
             ),
           ],
@@ -302,11 +394,25 @@ class _AddItemScreenState extends State<AddItemScreen>
     );
   }
 
+  TextStyle getTextStyle({bool isSubtitle = false, bool isGray = false}) {
+    return TextStyle(
+      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      fontSize: isSubtitle ? 14 : 16,
+      color: isGray
+          ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+          : isSubtitle
+              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+              : Theme.of(context).textTheme.bodyLarge!.color,
+      fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.item != null;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
 
     return Scaffold(
       backgroundColor: isDarkMode
@@ -324,11 +430,12 @@ class _AddItemScreenState extends State<AddItemScreen>
             ),
             const SizedBox(width: 8),
             Text(
-              isEdit ? 'Edit Item' : 'Add Item',
-              style: const TextStyle(
+              isEdit ? lang['edit_item']! : lang['add_item']!,
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 22,
                 color: Colors.white,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
           ],
@@ -349,7 +456,7 @@ class _AddItemScreenState extends State<AddItemScreen>
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.white),
               onPressed: _deleteItem,
-              tooltip: 'Delete Item',
+              tooltip: lang['delete']!,
             ),
           if (widget.onThemeToggle != null)
             IconButton(
@@ -375,14 +482,14 @@ class _AddItemScreenState extends State<AddItemScreen>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Loading...',
-
+                    lang['loading']!,
                     style: TextStyle(
                       color: isDarkMode
                           ? Colors.grey[400]
                           : Colors.deepPurple.shade600,
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
+                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                     ),
                   ),
                 ],
@@ -492,13 +599,14 @@ class _AddItemScreenState extends State<AddItemScreen>
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Add Image',
+                                        lang['add_image']!,
                                         style: TextStyle(
                                           color: isDarkMode
                                               ? Colors.grey[400]
                                               : Colors.deepPurple.shade600,
                                           fontWeight: FontWeight.w600,
                                           fontSize: 16,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                         ),
                                       ),
                                     ],
@@ -513,11 +621,12 @@ class _AddItemScreenState extends State<AddItemScreen>
                         child: TextFormField(
                           controller: _nameController,
                           decoration: InputDecoration(
-                            labelText: 'Item Name',
+                            labelText: lang['item_name']!,
                             labelStyle: TextStyle(
                               color: isDarkMode
                                   ? Colors.grey[400]
                                   : Colors.deepPurple.shade600,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -543,43 +652,43 @@ class _AddItemScreenState extends State<AddItemScreen>
                                   : Colors.deepPurple.shade600,
                             ),
                             errorText: _isDuplicateName
-                                ? '"${_nameController.text}" already exists'
+                                ? '"${_nameController.text}" ${lang['already_exists']!}'
                                 : null,
                             errorStyle: TextStyle(
                               color: isDarkMode
                                   ? Colors.red[400]
-                                  : Colors.red, // Red color for errors
+                                  : Colors.red,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(
                                 color: isDarkMode
                                     ? Colors.red[400]!
-                                    : Colors.red, // Red border for errors
+                                    : Colors.red,
                                 width: 1.5,
                               ),
                             ),
                             focusedErrorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-
                               borderSide: BorderSide(
                                 color: isDarkMode
                                     ? Colors.red[400]!
-                                    : Colors
-                                          .red, // Red border when focused with error
+                                    : Colors.red,
                                 width: 2,
                               ),
                             ),
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter item name';
+                              return lang['please_enter_item_name']!;
                             }
                             if (_isDuplicateName) {
-                              return '"$value" already exists. Please use a different name.';
+                              return '"$value" ${lang['already_exists']!}';
                             }
                             return null;
                           },
@@ -602,11 +711,12 @@ class _AddItemScreenState extends State<AddItemScreen>
                         child: TextFormField(
                           controller: _descController,
                           decoration: InputDecoration(
-                            labelText: 'Description (Optional)',
+                            labelText: lang['description_optional']!,
                             labelStyle: TextStyle(
                               color: isDarkMode
                                   ? Colors.grey[400]
                                   : Colors.deepPurple.shade600,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -634,6 +744,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                           maxLines: 3,
                         ),
@@ -646,11 +757,12 @@ class _AddItemScreenState extends State<AddItemScreen>
                         child: TextFormField(
                           controller: _priceController,
                           decoration: InputDecoration(
-                            labelText: 'Price',
+                            labelText: lang['price']!,
                             labelStyle: TextStyle(
                               color: isDarkMode
                                   ? Colors.grey[400]
                                   : Colors.deepPurple.shade600,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -677,6 +789,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                             ),
                             errorStyle: TextStyle(
                               color: isDarkMode ? Colors.red[400] : Colors.red,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             errorBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -699,16 +812,17 @@ class _AddItemScreenState extends State<AddItemScreen>
                           ),
                           style: TextStyle(
                             color: isDarkMode ? Colors.white : Colors.black87,
+                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                           ),
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter price';
+                              return lang['please_enter_price']!;
                             }
                             if (double.tryParse(value) == null) {
-                              return 'Please enter valid price';
+                              return lang['please_enter_valid_price']!;
                             }
                             return null;
                           },
@@ -730,6 +844,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                                   color: isDarkMode
                                       ? Colors.white
                                       : Colors.black87,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                             );
@@ -740,11 +855,12 @@ class _AddItemScreenState extends State<AddItemScreen>
                             });
                           },
                           decoration: InputDecoration(
-                            labelText: 'Category',
+                            labelText: lang['category']!,
                             labelStyle: TextStyle(
                               color: isDarkMode
                                   ? Colors.grey[400]
                                   : Colors.deepPurple.shade600,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
@@ -775,7 +891,7 @@ class _AddItemScreenState extends State<AddItemScreen>
                               : Colors.white,
                           validator: (value) {
                             if (value == null) {
-                              return 'Please select category';
+                              return lang['please_select_category']!;
                             }
                             return null;
                           },
@@ -803,11 +919,12 @@ class _AddItemScreenState extends State<AddItemScreen>
                                   color: Colors.white,
                                 )
                               : Text(
-                                  isEdit ? 'Update Item' : 'Create Item',
-                                  style: const TextStyle(
+                                  isEdit ? lang['update_item']! : lang['create_item']!,
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.white,
+                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                   ),
                                 ),
                         ),
