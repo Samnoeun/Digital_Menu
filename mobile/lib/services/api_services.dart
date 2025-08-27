@@ -14,7 +14,7 @@ import '../screens/ReportOrderHistory/report_order_screen.dart';
 
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.108.179:8080/api';
+  static const String baseUrl = 'http://192.168.108.187:8080/api';
 
   static String? _token;
 
@@ -626,18 +626,12 @@ static String getImageUrl(String? path) {
   if (path.startsWith('http')) return path;
   
   // Extract just the filename from any path structure
-  String filename;
+  final filename = path.split('/').last;
   
-  if (path.contains('/')) {
-    filename = path.split('/').last;
-  } else {
-    filename = path;
-  }
-  
-  // Handle different types of images based on the original path
+  // Determine the type based on the original path
   if (path.contains('profiles/') || path.contains('public/profiles/')) {
     return '$baseUrl/images/profiles/$filename';
-  } else if (path.contains('items/')) {
+  } else if (path.contains('items/') || path.contains('public/items/')) {
     return '$baseUrl/images/items/$filename';
   }
   
