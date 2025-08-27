@@ -18,52 +18,50 @@ class RestaurantController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'restaurant_name' => 'required|string|max:255',
-            'address' => 'required|string',
-            'profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+{
+    $request->validate([
+        'restaurant_name' => 'required|string|max:255',
+        'address' => 'required|string',
+        'profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
 
-        $data = $request->only(['restaurant_name', 'address']);
-        $data['user_id'] = auth()->id(); // ✅ link restaurant to the logged-in user
+    $data = $request->only(['restaurant_name', 'address']);
+    $data['user_id'] = auth()->id();
 
-        if ($request->hasFile('profile')) {
-            $file = $request->file('profile');
-            $filename = time() . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public/profiles', $filename);
-            $data['profile'] = $filename;
-        }
-
-        $restaurant = Restaurant::create($data);
-
-        return response()->json(['message' => 'Restaurant created', 'data' => $restaurant], 201);
+    if ($request->hasFile('profile')) {
+        $file = $request->file('profile');
+        $filename = time() . '.' . $file->getClientOriginalExtension();
+        $file->storeAs('profiles', $filename, 'public'); // Store in public disk
+        $data['profile'] = 'profiles/' . $filename; // Consistent path format
     }
+
+    $restaurant = Restaurant::create($data);
+
+    return response()->json(['message' => 'Restaurant created', 'data' => $restaurant], 201);
+}
 
     public function getByUser($userId)
-    {
-        $restaurant = Restaurant::where('user_id', $userId)->first();
+{
+    $restaurant = Restaurant::where('user_id', $userId)->first();
 
-        if (!$restaurant) {
-            return response()->json([
-                'message' => 'Restaurant not found',
-                'restaurant' => null
-            ], 404);
-        }
-
-        // Return full public URL for the image
+    if (!$restaurant) {
         return response()->json([
-            'restaurant' => [
-                'id' => $restaurant->id,
-                'restaurant_name' => $restaurant->restaurant_name,
-                'profile' => $restaurant->profile
-                    ? url('storage/profiles/' . $restaurant->profile)
-                    : null,
-                'address' => $restaurant->address,
-                'user_id' => $restaurant->user_id,
-            ]
-        ]);
+            'message' => 'Restaurant not found',
+            'restaurant' => null
+        ], 404);
     }
+
+    // Return consistent URL format
+    return response()->json([
+        'restaurant' => [
+            'id' => $restaurant->id,
+            'restaurant_name' => $restaurant->restaurant_name,
+            'profile' => $restaurant->profile,
+            'address' => $restaurant->address,
+            'user_id' => $restaurant->user_id,
+        ]
+    ]);
+}
 
     public function getByUserId($id)
     {
@@ -83,34 +81,34 @@ class RestaurantController extends Controller
     }
 
     public function update(Request $request, Restaurant $restaurant)
-    {
-        $validated = $request->validate([
-            'restaurant_name' => 'required|string|max:255',
-            'address' => 'required|string',
-        ]);
+{
+    $validated = $request->validate([
+        'restaurant_name' => 'required|string|max:255',
+        'address' => 'required|string',
+        'profile' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
 
-        // Handle image upload
-        if ($request->hasFile('profile')) {
-            // Delete old image if exists
-            if ($restaurant->profile) {
-                Storage::delete('public/profiles/'.$restaurant->profile);
-            }
-            
-            // Store new image (consistent with store() method)
-            $file = $request->file('profile');
-            $filename = time().'.'.$file->getClientOriginalExtension();
-            $file->storeAs('public/profiles', $filename);
-            $validated['profile'] = $filename;
+    // Handle image upload
+    if ($request->hasFile('profile')) {
+        // Delete old image if exists
+        if ($restaurant->profile) {
+            Storage::disk('public')->delete($restaurant->profile);
         }
-
-        $restaurant->update($validated);
-
-        return response()->json([
-            'message' => 'Restaurant updated successfully',
-            'data' => $restaurant
-        ]);
+        
+        // Store new image with consistent path
+        $file = $request->file('profile');
+        $filename = time().'.'.$file->getClientOriginalExtension();
+        $file->storeAs('profiles', $filename, 'public');
+        $validated['profile'] = 'profiles/' . $filename;
     }
 
+    $restaurant->update($validated);
+
+    return response()->json([
+        'message' => 'Restaurant updated successfully',
+        'data' => $restaurant
+    ]);
+}
     public function destroy($id)
     {
         $restaurant = Restaurant::findOrFail($id);
@@ -120,37 +118,49 @@ class RestaurantController extends Controller
     }
 
     public function menuPreview($id)
-    {
-        $restaurant = Restaurant::with(['categories.items'])
-            ->findOrFail($id);
+{
+    $restaurant = Restaurant::with(['categories.items'])
+        ->findOrFail($id);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'restaurant' => [
-                    'id' => $restaurant->id,
-                    'restaurant_name' => $restaurant->restaurant_name,
-                    'profile' => $restaurant->profile
-                        ? url('storage/profiles/' . $restaurant->profile)
-                        : null,
-                    'address' => $restaurant->address,
-                    'categories' => $restaurant->categories->map(function ($category) {
-                        return [
-                            'id' => $category->id,
-                            'name' => $category->name,
-                            'items' => $category->items->map(function ($item) {
-                                return [
-                                    'id' => $item->id,
-                                    'name' => $item->name,
-                                    'description' => $item->description,
-                                    'price' => $item->price,
-                                    'image' => $item->image ? url($item->image) : null,
-                                ];
-                            })
-                        ];
-                    })
-                ]
+    return response()->json([
+        'status' => 'success',
+        'data' => [
+            'restaurant' => [
+                'id' => $restaurant->id,
+                'restaurant_name' => $restaurant->restaurant_name,
+                'profile' => $restaurant->profile, // Just return the path, let frontend handle URL
+                'address' => $restaurant->address,
+                'categories' => $restaurant->categories->map(function ($category) {
+                    return [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'items' => $category->items->map(function ($item) {
+                            return [
+                                'id' => $item->id,
+                                'name' => $item->name,
+                                'description' => $item->description,
+                                'price' => $item->price,
+                                'image' => $item->image_path, // Just return path
+                            ];
+                        })
+                    ];
+                })
             ]
-        ], 200);
+        ]
+    ], 200);
+}
+
+
+// Web view for menu preview (Blade)
+    public function webMenuPreview($id)
+    {
+        $restaurant = Restaurant::with(['categories.items'])->findOrFail($id);
+
+        return view('menu-preview', [
+            'restaurant' => $restaurant,
+            'categories' => $restaurant->categories,
+            'items' => $restaurant->categories->flatMap(fn($cat) => $cat->items)
+        ]);
     }
+
 }

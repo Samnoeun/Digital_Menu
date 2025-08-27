@@ -114,7 +114,6 @@ class _AddItemScreenState extends State<AddItemScreen>
     }
   }
 
-
   Future<void> _pickImage() async {
     try {
       if (kIsWeb) {
@@ -245,7 +244,6 @@ class _AddItemScreenState extends State<AddItemScreen>
         ],
       ),
     );
-
 
     if (confirmed != true) return;
 
@@ -452,19 +450,37 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(18),
                                     child: Image.network(
-                                      ApiService.getImageUrl(_imagePath!),
+                                      ApiService.getImageUrl(widget.item!.imagePath),
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Icon(
-                                        Icons.broken_image_rounded,
-                                        size: 50,
-                                        color: isDarkMode
-                                            ? Colors.grey[400]
-                                            : Colors.deepPurple.shade400,
-                                      ),
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                            if (loadingProgress == null)
+                                              return child;
+                                            return Center(
+                                              child: CircularProgressIndicator(
+                                                value:
+                                                    loadingProgress
+                                                            .expectedTotalBytes !=
+                                                        null
+                                                    ? loadingProgress
+                                                              .cumulativeBytesLoaded /
+                                                          loadingProgress
+                                                              .expectedTotalBytes!
+                                                    : null,
+                                              ),
+                                            );
+                                          },
+                                      errorBuilder:
+                                          (context, error, stackTrace) => Icon(
+                                            Icons.broken_image_rounded,
+                                            color: isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.deepPurple.shade600,
+                                            size: 32,
+                                          ),
                                     ),
                                   )
                                 : Column(
-
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(
@@ -522,7 +538,9 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 : Colors.white,
                             prefixIcon: Icon(
                               Icons.restaurant_menu,
-                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : Colors.deepPurple.shade600,
                             ),
                             errorText: _isDuplicateName
                                 ? '"${_nameController.text}" already exists'
@@ -609,7 +627,9 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 : Colors.white,
                             prefixIcon: Icon(
                               Icons.description_rounded,
-                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : Colors.deepPurple.shade600,
                             ),
                           ),
                           style: TextStyle(
@@ -619,7 +639,6 @@ class _AddItemScreenState extends State<AddItemScreen>
                         ),
                       ),
                       const SizedBox(height: 20),
-
 
                       // Price Field
                       AnimatedContainer(
@@ -652,7 +671,9 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 : Colors.white,
                             prefixIcon: Icon(
                               Icons.attach_money_rounded,
-                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : Colors.deepPurple.shade600,
                             ),
                             errorStyle: TextStyle(
                               color: isDarkMode ? Colors.red[400] : Colors.red,
@@ -694,7 +715,6 @@ class _AddItemScreenState extends State<AddItemScreen>
                         ),
                       ),
                       const SizedBox(height: 20),
-
 
                       // Category Dropdown
                       AnimatedContainer(
@@ -745,7 +765,9 @@ class _AddItemScreenState extends State<AddItemScreen>
                                 : Colors.white,
                             prefixIcon: Icon(
                               Icons.category_rounded,
-                              color: isDarkMode ? Colors.white : Colors.deepPurple.shade600,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : Colors.deepPurple.shade600,
                             ),
                           ),
                           dropdownColor: isDarkMode
@@ -760,7 +782,6 @@ class _AddItemScreenState extends State<AddItemScreen>
                         ),
                       ),
                       const SizedBox(height: 30),
-
 
                       // Submit Button
                       AnimatedContainer(

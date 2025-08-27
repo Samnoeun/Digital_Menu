@@ -1,4 +1,14 @@
 <IfModule mod_rewrite.c>
+    <IfModule mod_headers.c>
+        # Handle CORS for storage files
+        RewriteEngine On
+        RewriteCond %{REQUEST_URI} ^/storage/ [NC]
+        RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+        Header always set Access-Control-Allow-Origin "*"
+        Header always set Access-Control-Allow-Methods "GET, OPTIONS"
+        Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    </IfModule>
+    
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>

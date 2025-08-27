@@ -14,7 +14,7 @@ import '../screens/ReportOrderHistory/report_order_screen.dart';
 
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.200.112:8000/api';
+  static const String baseUrl = 'http://192.168.108.85:8080/api';
 
   static String? _token;
 
@@ -619,20 +619,25 @@ static Future<void> updateRestaurant({
     }
   }
 
-  // Image Upload
-  // Reusable helper to construct full image URLs
-  static String getImageUrl(String? path) {
-    if (path == null || path.isEmpty) return '';
-
-    // Case 1: Return with '/storage/profiles/' prefix
-    if (!path.startsWith('http') && !path.contains('/')) {
-      return '${baseUrl.replaceFirst('/api', '')}/storage/profiles/$path';
-    }
-
-    // Case 2: Return with direct path concatenation
-    return baseUrl.replaceFirst('/api', '') + path;
+static String getImageUrl(String? path) {
+  if (path == null || path.isEmpty) return '';
+  
+  // If it's already a full URL, return it
+  if (path.startsWith('http')) return path;
+  
+  // Extract just the filename from any path structure
+  final filename = path.split('/').last;
+  
+  // Determine the type based on the original path
+  if (path.contains('profiles/') || path.contains('public/profiles/')) {
+    return '$baseUrl/images/profiles/$filename';
+  } else if (path.contains('items/') || path.contains('public/items/')) {
+    return '$baseUrl/images/items/$filename';
   }
-
+  
+  // Default case - assume it's a profile image
+  return '$baseUrl/images/profiles/$filename';
+}
   // New method for menu preview
   static Future<Map<String, dynamic>> getMenuPreview(int restaurantId) async {
     try {
