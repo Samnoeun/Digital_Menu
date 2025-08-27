@@ -847,66 +847,63 @@ class _ItemListScreenState extends State<ItemListScreen>
                                         ),
                                       )
                                     : ClipRRect(
-                                        borderRadius: BorderRadius.circular(12),
-                                        child: Container(
-                                          width: 64,
-                                          height: 64,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: isDarkMode
-                                                  ? [
-                                                      Colors.grey[700]!,
-                                                      Colors.grey[850]!
-                                                          .withOpacity(0.9),
-                                                    ]
-                                                  : [
-                                                      Colors
-                                                          .deepPurple
-                                                          .shade200,
-                                                      Colors
-                                                          .deepPurple
-                                                          .shade100,
-                                                    ],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                            border: Border.all(
-                                              color: isDarkMode
-                                                  ? Colors.grey[800]!
-                                                  : Colors.deepPurple.shade200,
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Center(
-                                            child: item.imageUrl != null
-                                                ? Image.network(
-                                                    item.imageUrl!, // Use the direct URL from API
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder:
-                                                        (_, __, ___) => Icon(
-                                                          Icons
-                                                              .broken_image_rounded,
-                                                          color: isDarkMode
-                                                              ? Colors.grey[400]
-                                                              : Colors
-                                                                    .deepPurple
-                                                                    .shade600,
-                                                          size: 32,
-                                                        ),
-                                                  )
-                                                : Icon(
-                                                    Icons
-                                                        .image_not_supported_rounded,
-                                                    color: isDarkMode
-                                                        ? Colors.grey[400]
-                                                        : Colors
-                                                              .deepPurple
-                                                              .shade600,
-                                                    size: 32,
-                                                  ),
-                                          ),
-                                        ),
-                                      ),
+  borderRadius: BorderRadius.circular(12),
+  child: Container(
+    width: 64,
+    height: 64,
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: isDarkMode
+            ? [
+                Colors.grey[700]!,
+                Colors.grey[850]!.withOpacity(0.9),
+              ]
+            : [
+                Colors.deepPurple.shade200,
+                Colors.deepPurple.shade100,
+              ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      border: Border.all(
+        color: isDarkMode
+            ? Colors.grey[800]!
+            : Colors.deepPurple.shade200,
+        width: 1,
+      ),
+    ),
+    child: item.imageUrl != null
+        ? Image.network(
+            ApiService.getImageUrl(item.imageUrl), // Use the corrected URL
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+                ),
+              );
+            },
+            errorBuilder: (_, __, ___) => Icon(
+              Icons.broken_image_rounded,
+              color: isDarkMode
+                  ? Colors.grey[400]
+                  : Colors.deepPurple.shade600,
+              size: 32,
+            ),
+          )
+        : Icon(
+            Icons.image_not_supported_rounded,
+            color: isDarkMode
+                ? Colors.grey[400]
+                : Colors.deepPurple.shade600,
+            size: 32,
+          ),
+  ),
+),
                                 title: Padding(
                                   padding: const EdgeInsets.only(bottom: 4),
                                   child: Text(

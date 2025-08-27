@@ -450,7 +450,7 @@ Future<void> _saveChanges() async {
     );
   }
 
-  ImageProvider? _getProfileImage() {
+ImageProvider? _getProfileImage() {
   if (_profileImage != null) return FileImage(_profileImage!);
   if (_imageBytes != null) return MemoryImage(_imageBytes!);
   if (_restaurant?.profile != null && _restaurant!.profile!.isNotEmpty) {
