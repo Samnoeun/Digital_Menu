@@ -149,4 +149,18 @@ class RestaurantController extends Controller
         ]
     ], 200);
 }
+
+
+// Web view for menu preview (Blade)
+    public function webMenuPreview($id)
+    {
+        $restaurant = Restaurant::with(['categories.items'])->findOrFail($id);
+
+        return view('menu-preview', [
+            'restaurant' => $restaurant,
+            'categories' => $restaurant->categories,
+            'items' => $restaurant->categories->flatMap(fn($cat) => $cat->items)
+        ]);
+    }
+
 }
