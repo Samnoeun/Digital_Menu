@@ -8,6 +8,7 @@ class Item {
   final String? description;
   final double price;
   final Category? category;
+  final String? imageUrl;
 
   Item({
     required this.id,
@@ -17,6 +18,7 @@ class Item {
     this.description,
     required this.price,
     this.category,
+    this.imageUrl,
   });
 
   factory Item.fromJson(Map<String, dynamic> json) {
@@ -27,10 +29,12 @@ class Item {
       imagePath: json['image_path'],
       description: json['description'],
       price: double.parse(json['price'].toString()),
+      imageUrl: json['image_url'],
       category: json['category'] != null 
           ? Category.fromJson(json['category'])
           : null,
     );
+    
   }
 
   Item copyWith({

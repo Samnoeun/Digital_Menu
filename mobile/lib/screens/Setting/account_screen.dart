@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../services/api_services.dart';
 import '../../models/restaurant_model.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import '../../services/image_picker_service.dart';
 
 class AccountScreen extends StatefulWidget {
   final String selectedLanguage;
@@ -23,7 +26,8 @@ class _AccountScreenState extends State<AccountScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
-  File? _profileImage;
+  Uint8List? _imageBytes; // For web
+  dynamic _profileImage;  
   Restaurant? _restaurant;
   bool _isLoading = true;
   bool _isSaving = false;
@@ -91,18 +95,23 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    try {
-      final pickedImage = await picker.pickImage(source: ImageSource.gallery);
-      if (pickedImage != null) {
-        setState(() {
-          _profileImage = File(pickedImage.path);
-        });
-      }
-    } catch (e) {
-      _showStatusMessage(_translate('failed_to_pick_image'));
+  try {
+    final result = await ImagePickerService.pickImage();
+    if (result != null) {
+      setState(() {
+        if (kIsWeb) {
+          _imageBytes = result.webBytes;
+          _profileImage = null;
+        } else {
+          _profileImage = result.mobileFile;
+          _imageBytes = null;
+        }
+      });
     }
+  } catch (e) {
+    _showStatusMessage(_translate('failed_to_pick_image'));
   }
+}
 
   void _showStatusMessage(String message) {
     setState(() {
@@ -120,39 +129,59 @@ class _AccountScreenState extends State<AccountScreen> {
     });
   }
 
-  Future<void> _saveChanges() async {
-    if (!_formKey.currentState!.validate()) return;
+Future<void> _saveChanges() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isSaving = true;
-      _statusMessage = null;
-      _showSuccess = false;
-    });
+  setState(() {
+    _isSaving = true;
+    _statusMessage = null;
+    _showSuccess = false;
+  });
 
-    try {
+  try {
+    if (kIsWeb) {
+      // Web version - use webImageBytes and webImageName
       await ApiService.updateRestaurant(
         id: _restaurant?.id ?? 1,
         restaurantName: _nameController.text.trim(),
         address: _addressController.text.trim(),
-        profileImage: _profileImage,
+        webImageBytes: _imageBytes,
+        webImageName: _imageBytes != null 
+            ? 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg' 
+            : null,
       );
+    } else {
+      // Mobile version - use profileImage
+      await ApiService.updateRestaurant(
+        id: _restaurant?.id ?? 1,
+        restaurantName: _nameController.text.trim(),
+        address: _addressController.text.trim(),
+        profileImage: _profileImage is File ? _profileImage : null,
+      );
+    }
 
-      await _loadRestaurantData();
+    // Clear local image cache and reload data
+    setState(() {
+      _imageBytes = null;
+      _profileImage = null;
+    });
 
-      if (mounted) {
-        _showStatusMessage(_translate('update_success'));
-      }
-    } catch (e) {
-      debugPrint('Update error: $e');
-      if (mounted) {
-        _showStatusMessage('${_translate('update_error')}: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+    await _loadRestaurantData();
+
+    if (mounted) {
+      _showStatusMessage(_translate('update_success'));
+    }
+  } catch (e) {
+    debugPrint('Update error: $e');
+    if (mounted) {
+      _showStatusMessage('${_translate('update_error')}: ${e.toString()}');
+    }
+  } finally {
+    if (mounted) {
+      setState(() => _isSaving = false);
     }
   }
+}
 
   TextStyle _getTextStyle(BuildContext context, {bool isLabel = false, bool isHint = false}) {
     final theme = Theme.of(context);
@@ -421,16 +450,18 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  ImageProvider? _getProfileImage() {
-    if (_profileImage != null) return FileImage(_profileImage!);
-    if (_restaurant?.profile != null && _restaurant!.profile!.isNotEmpty) {
-      return NetworkImage(ApiService.getImageUrl(_restaurant!.profile!));
-    }
-    return null;
+ImageProvider? _getProfileImage() {
+  if (_profileImage != null) return FileImage(_profileImage!);
+  if (_imageBytes != null) return MemoryImage(_imageBytes!);
+  if (_restaurant?.profile != null && _restaurant!.profile!.isNotEmpty) {
+    final imageUrl = ApiService.getImageUrl(_restaurant!.profile!);
+    return NetworkImage(imageUrl);
   }
+  return null;
+}
 
   Widget? _showProfilePlaceholder(bool isDarkMode) {
-    if (_profileImage != null) return null;
+    if (_profileImage != null || _imageBytes != null) return null;
     if (_restaurant?.profile == null || _restaurant!.profile!.isEmpty) {
       return Icon(
         Icons.restaurant,
