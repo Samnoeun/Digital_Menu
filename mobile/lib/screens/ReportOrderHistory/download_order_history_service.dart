@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:csv/csv.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -54,9 +53,10 @@ class DownloadOrderHistoryService {
           print('DOCX format not supported, generating PDF instead');
           resultFile = await _generatePdfReport(orders, filterName, directory, sanitizedFilterName, timestamp);
           break;
-        case 'csv':
         default:
-          resultFile = await _generateCsvReport(orders, filterName, directory, sanitizedFilterName, timestamp);
+          // Default to Excel if format is not recognized
+          print('Format $format not recognized, generating Excel instead');
+          resultFile = await _generateExcelReport(orders, filterName, directory, sanitizedFilterName, timestamp);
           break;
       }
 
@@ -73,47 +73,30 @@ class DownloadOrderHistoryService {
     }
   }
 
-  static Future<File> _generateCsvReport(
-      List<OrderHistory> orders, String filterName, Directory directory,
-      String sanitizedFilterName, String timestamp) async {
-    final csvData = _buildTableData(orders, filterName);
-    final csv = const ListToCsvConverter().convert(csvData);
-
-    final fileName = 'order_report_${sanitizedFilterName}_$timestamp.csv';
-    final filePath = '${directory.path}/$fileName';
-    print('File path: $filePath');
-
-    final file = File(filePath);
-    await file.writeAsString('\uFEFF$csv', encoding: utf8);
-    return file;
-  }
-
   static Future<File> _generateExcelReport(
       List<OrderHistory> orders, String filterName, Directory directory,
       String sanitizedFilterName, String timestamp) async {
     final excel = Excel.createExcel();
     final sheet = excel['Order History'];
 
-    final excelData = _buildTableData(orders, filterName);
+    // Get the same data structure as the PDF
+    final excelData = _buildExcelData(orders, filterName);
+    
+    // Write data to Excel sheet
     for (var i = 0; i < excelData.length; i++) {
       for (var j = 0; j < excelData[i].length; j++) {
         final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i));
-        cell.value = excelData[i][j].toString();
+        cell.value = TextCellValue(excelData[i][j].toString());
       }
     }
 
-    // Set column widths manually for better readability
-    sheet.setColumnWidth(0, 12);  // Order ID
-    sheet.setColumnWidth(1, 15);  // Table Number
-    sheet.setColumnWidth(2, 25);  // Item Name
-    sheet.setColumnWidth(3, 12);  // Quantity
-    sheet.setColumnWidth(4, 20);  // Special Note
-    sheet.setColumnWidth(5, 15);  // Category
-    sheet.setColumnWidth(6, 15);  // Item Count
-    sheet.setColumnWidth(7, 15);  // Price
-    sheet.setColumnWidth(8, 15);  // Status
-    sheet.setColumnWidth(9, 12);  // Date
-    sheet.setColumnWidth(10, 12); // Time
+    // Set column widths for the new column order
+    sheet.setColumnWidth(0, 8);  
+    sheet.setColumnWidth(1, 30);  
+    sheet.setColumnWidth(2, 12);  
+    sheet.setColumnWidth(3, 15);  
+    sheet.setColumnWidth(4, 20);  
+    sheet.setColumnWidth(5, 15);  
 
     final fileName = 'order_report_${sanitizedFilterName}_$timestamp.xlsx';
     final filePath = '${directory.path}/$fileName';
@@ -122,13 +105,69 @@ class DownloadOrderHistoryService {
     return file;
   }
 
+  static List<List<dynamic>> _buildExcelData(List<OrderHistory> orders, String filterName) {
+    final excelData = <List<dynamic>>[];
+
+    // Report header (same as PDF)
+    excelData.add(['ORDER HISTORY REPORT']);
+    excelData.add(['Generated on: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}']);
+    excelData.add(['Filter Applied: $filterName']);
+    excelData.add(['Total Orders: ${orders.length}']);
+    excelData.add([]);
+
+    // Column headers (same as PDF)
+    excelData.add([
+      'ID', 'Item Name', 'Quantity', 'Price', 'Category', 'Date'
+    ]);
+
+    // Generate simple sequential IDs (same as PDF)
+    int idCounter = 1;
+    
+    // Order details (same as PDF)
+    for (var order in orders) {
+      for (var orderItem in order.orderItems) {
+        excelData.add([
+          idCounter++, 
+          orderItem.itemName, 
+          orderItem.quantity,
+          orderItem.price, 
+          _getItemCategoryFromItemName(orderItem.itemName), 
+          DateFormat('yyyy-MM-dd').format(order.createdAt), 
+        ]);
+      }
+    }
+
+    // Summary section (same as PDF)
+    excelData.add([]);
+    excelData.add(['REPORT SUMMARY']);
+    excelData.add(['Total Orders: ${orders.length}']);
+    
+    final totalItems = orders.fold(
+        0, (sum, order) => sum + order.orderItems.fold(0, (itemSum, item) => itemSum + item.quantity));
+    excelData.add(['Total Items: $totalItems']);
+
+    final totalRevenue = orders.fold(
+        0.0, (sum, order) => sum + order.orderItems.fold(0.0, (itemSum, item) => itemSum + (item.price * item.quantity)));
+    excelData.add(['Total Revenue: \$${totalRevenue.toStringAsFixed(2)}']);
+
+    final statusCounts = <String, int>{};
+    for (var order in orders) {
+      statusCounts[order.status] = (statusCounts[order.status] ?? 0) + 1;
+    }
+    statusCounts.forEach((status, count) {
+      excelData.add(['$status Orders: $count']);
+    });
+
+    return excelData;
+  }
+
   static Future<File> _generatePdfReport(
       List<OrderHistory> orders, String filterName, Directory directory,
       String sanitizedFilterName, String timestamp) async {
     final pdf = pw.Document();
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4.landscape, // Use landscape for better table layout
+        pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         build: (pw.Context context) {
           return _buildPdfContent(orders, filterName);
@@ -161,26 +200,22 @@ class DownloadOrderHistoryService {
     content.add(pw.Text('Total Orders: ${orders.length}'));
     content.add(pw.SizedBox(height: 20));
 
+    // Updated headers with only the requested columns
     final headers = [
-      'Order ID', 'Table Number', 'Item Name', 'Quantity', 'Special Note',
-      'Category', 'Item Count', 'Price', 'Status', 'Date', 'Time'
+      'ID', 'Item Name', 'Quantity', 'Price', 'Category', 'Date'
     ];
     
+    // Generate simple sequential IDs
+    int idCounter = 1;
     final tableData = orders.expand((order) {
-      final orderItemCount = order.orderItems.fold(0, (sum, item) => sum + item.quantity);
       return order.orderItems.map((orderItem) {
         return [
-          order.id.toString(),
-          order.tableNumber.toString(),
+          (idCounter++).toString(),
           orderItem.itemName,
           orderItem.quantity.toString(),
-          orderItem.specialNote.isNotEmpty ? orderItem.specialNote : 'N/A',
-          _getItemCategoryFromItemName(orderItem.itemName),
-          orderItemCount.toString(),
           '\$${orderItem.price.toStringAsFixed(2)}',
-          order.status.toUpperCase(),
+          _getItemCategoryFromItemName(orderItem.itemName),
           DateFormat('yyyy-MM-dd').format(order.createdAt),
-          DateFormat('HH:mm:ss').format(order.createdAt),
         ];
       });
     }).toList();
@@ -190,8 +225,8 @@ class DownloadOrderHistoryService {
         headers: headers,
         data: tableData,
         cellAlignment: pw.Alignment.centerLeft,
-        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
-        cellStyle: const pw.TextStyle(fontSize: 7),
+        headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10),
+        cellStyle: const pw.TextStyle(fontSize: 9),
       ),
     );
 
@@ -224,68 +259,6 @@ class DownloadOrderHistoryService {
     });
 
     return content;
-  }
-
-  static List<List<dynamic>> _buildTableData(List<OrderHistory> orders, String filterName) {
-    final csvData = <List<dynamic>>[];
-
-    // Report header
-    csvData.add(['ORDER HISTORY REPORT']);
-    csvData.add(['Generated on: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}']);
-    csvData.add(['Filter Applied: $filterName']);
-    csvData.add(['Total Orders: ${orders.length}']);
-    csvData.add([]);
-
-    // Column headers
-    csvData.add([
-      'Order ID', 'Table Number', 'Item Name', 'Quantity', 'Special Note',
-      'Category', 'Item Count', 'Price', 'Status', 'Date', 'Time'
-    ]);
-
-    // Order details
-    for (var order in orders) {
-      final orderItemCount = order.orderItems.fold(0, (sum, item) => sum + item.quantity);
-      
-      for (var orderItem in order.orderItems) {
-        csvData.add([
-          order.id,
-          order.tableNumber,
-          orderItem.itemName,
-          orderItem.quantity,
-          orderItem.specialNote.isNotEmpty ? orderItem.specialNote : 'N/A',
-          _getItemCategoryFromItemName(orderItem.itemName),
-          orderItemCount,
-          '\$${orderItem.price.toStringAsFixed(2)}',
-          order.status.toUpperCase(),
-          DateFormat('yyyy-MM-dd').format(order.createdAt),
-          DateFormat('HH:mm:ss').format(order.createdAt),
-        ]);
-      }
-      csvData.add(List.filled(11, '-')); // Separator line
-    }
-
-    // Summary section
-    csvData.add([]);
-    csvData.add(['REPORT SUMMARY']);
-    csvData.add(['Total Orders: ${orders.length}']);
-    
-    final totalItems = orders.fold(
-        0, (sum, order) => sum + order.orderItems.fold(0, (itemSum, item) => itemSum + item.quantity));
-    csvData.add(['Total Items: $totalItems']);
-
-    final totalRevenue = orders.fold(
-        0.0, (sum, order) => sum + order.orderItems.fold(0.0, (itemSum, item) => itemSum + (item.price * item.quantity)));
-    csvData.add(['Total Revenue: \$${totalRevenue.toStringAsFixed(2)}']);
-
-    final statusCounts = <String, int>{};
-    for (var order in orders) {
-      statusCounts[order.status] = (statusCounts[order.status] ?? 0) + 1;
-    }
-    statusCounts.forEach((status, count) {
-      csvData.add(['$status Orders: $count']);
-    });
-
-    return csvData;
   }
 
   static String _sanitizeFileName(String name) {

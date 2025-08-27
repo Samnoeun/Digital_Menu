@@ -838,7 +838,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
               _buildFormatOption(context, 'Excel', Icons.table_chart, 'xlsx'),
               _buildFormatOption(context, 'PDF', Icons.picture_as_pdf, 'pdf'),
               _buildFormatOption(context, 'Word', Icons.description, 'docx'),
-              _buildFormatOption(context, 'CSV', Icons.table_rows, 'csv'),
+              // _buildFormatOption(context, 'CSV', Icons.table_rows, 'csv'),
               const SizedBox(height: 8),
             ],
           ),
