@@ -5,9 +5,30 @@ import '../../models/category_model.dart';
 import '../../models/item_model.dart' as item;
 import '../../services/api_services.dart';
 
-// Centralized Language Service
-class LanguageService {
-  static final Map<String, Map<String, String>> _localization = {
+class ItemListScreen extends StatefulWidget {
+  final Function(bool)? onThemeToggle;
+  const ItemListScreen({Key? key, this.onThemeToggle}) : super(key: key);
+
+  @override
+  State<ItemListScreen> createState() => _ItemListScreenState();
+}
+
+class _ItemListScreenState extends State<ItemListScreen>
+    with TickerProviderStateMixin {
+  List<Category> _categories = [];
+  List<item.Item> _allItems = [];
+  List<item.Item> _filteredItems = [];
+  bool _isLoading = true;
+  bool _isSelectionMode = false;
+  Set<int> _selectedItemIds = {};
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  int? _selectedCategoryId;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  String selectedLanguage = 'English';
+
+  final Map<String, Map<String, String>> localization = {
     'English': {
       'items': 'Items',
       'selected': 'Selected',
@@ -33,71 +54,30 @@ class LanguageService {
       'unauthorized': 'Unauthorized access',
     },
     'Khmer': {
-      'items': 'ទំនិញ',
+      'items': 'ធាតុ',
       'selected': 'បានជ្រើសរើស',
-      'search_items': 'ស្វែងរកទំនិញ...',
+      'search_items': 'ស្វែងរកធាតុ...',
       'all': 'ទាំងអស់',
-      'loading_items': 'កំពុងផ្ទុកទំនិញ...',
-      'no_items_found': 'មិនមានទំនិញណាមួយត្រូវបានរកឃើញ',
-      'no_matching_items': 'មិនមានទំនិញដែលត្រូវគ្នា',
-      'add_new_item': 'ចុចប៊ូតុង + ដើម្បីបន្ថែមទំនិញថ្មី',
+      'loading_items': 'កំពុងផ្ទុកធាតុ...',
+      'no_items_found': 'មិនមានធាតុណាមួយត្រូវបានរកឃើញ',
+      'no_matching_items': 'មិនមានធាតុដែលត្រូវគ្នា',
+      'add_new_item': 'ចុចប៊ូតុង + ដើម្បីបន្ថែមធាតុថ្មី',
       'try_different_search': 'សាកល្បងពាក្យស្វែងរកផ្សេងទៀត',
       'confirm_delete': 'បញ្ជាក់ការលុប',
-      'delete_item': 'លុបទំនិញ',
-      'delete_selected': 'លុបទំនិញដែលបានជ្រើសរើស?',
-      'delete_single': 'លុបទំនិញនេះ?',
+      'delete_item': 'លុបធាតុ',
+      'delete_selected': 'លុបធាតុដែលបានជ្រើសរើស?',
+      'delete_single': 'លុបធាតុនេះ?',
       'cancel': 'បោះបង់',
       'delete': 'លុប',
       'edit': 'កែសម្រួល',
       'select': 'ជ្រើសរើស',
-      'items_deleted': 'ទំនិញដែលបានជ្រើសរើសត្រូវបានលុបដោយជោគជ័យ',
-      'item_deleted': 'ទំនិញត្រូវបានលុបដោយជោគជ័យ',
-      'delete_failed': 'បរាជ័យក្នុងការលុបទំនិញ',
+      'items_deleted': 'ធាតុដែលបានជ្រើសរើសត្រូវបានលុបដោយជោគជ័យ',
+      'item_deleted': 'ធាតុត្រូវបានលុបដោយជោគជ័យ',
+      'delete_failed': 'បរាជ័យក្នុងការលុបធាតុ',
       'error': 'កំហុស',
       'unauthorized': 'ការចូលប្រើប្រាស់មិនត្រឹមត្រូវ',
     },
   };
-
-  static Future<String> getCurrentLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('selectedLanguage') ?? 'English';
-  }
-
-  static String getText(String key, String language, {Map<String, String>? params}) {
-    String text = _localization[language]?[key] ?? key;
-    
-    if (params != null) {
-      params.forEach((key, value) {
-        text = text.replaceAll('{$key}', value);
-      });
-    }
-    
-    return text;
-  }
-}
-
-class ItemListScreen extends StatefulWidget {
-  final Function(bool)? onThemeToggle;
-  const ItemListScreen({Key? key, this.onThemeToggle}) : super(key: key);
-
-  @override
-  State<ItemListScreen> createState() => _ItemListScreenState();
-}
-
-class _ItemListScreenState extends State<ItemListScreen>
-    with TickerProviderStateMixin {
-  List<Category> _categories = [];
-  List<item.Item> _allItems = [];
-  List<item.Item> _filteredItems = [];
-  bool _isLoading = true;
-  bool _isSelectionMode = false;
-  Set<int> _selectedItemIds = {};
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  int? _selectedCategoryId;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  String selectedLanguage = 'English';
 
   @override
   void initState() {
@@ -130,17 +110,22 @@ class _ItemListScreenState extends State<ItemListScreen>
     });
   }
 
-  String _getTranslatedText(String key, {Map<String, String>? params}) {
-    return LanguageService.getText(key, selectedLanguage, params: params);
-  }
 
-  TextStyle getTextStyle({bool isBold = false, bool isSecondary = false, double? fontSize, Color? color}) {
+  TextStyle getTextStyle({
+    bool isBold = false,
+    bool isSecondary = false,
+    double? fontSize,
+    Color? color,
+  }) {
+    final lang = localization[selectedLanguage]!;
     return TextStyle(
       fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
       fontSize: fontSize ?? (isSecondary ? 16 : 18),
-      color: color ?? (isSecondary 
-          ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
-          : Theme.of(context).textTheme.bodyLarge!.color),
+      color:
+          color ??
+          (isSecondary
+              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+              : Theme.of(context).textTheme.bodyLarge!.color),
       fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
     );
   }
@@ -166,6 +151,7 @@ class _ItemListScreenState extends State<ItemListScreen>
 
   Future<void> _deleteSelectedItems() async {
     if (_selectedItemIds.isEmpty) return;
+    final lang = localization[selectedLanguage]!;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -179,18 +165,20 @@ class _ItemListScreenState extends State<ItemListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              _getTranslatedText('confirm_delete'),
+              lang['confirm_delete']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[200]
                     : Colors.black87,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                fontFamily: selectedLanguage == 'Khmer'
+                    ? 'NotoSansKhmer'
+                    : null,
               ),
             ),
           ],
         ),
         content: Text(
-          '${_selectedItemIds.length} ${_getTranslatedText('delete_selected')}',
+          '${_selectedItemIds.length} ${lang['delete_selected']!}',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
@@ -202,12 +190,14 @@ class _ItemListScreenState extends State<ItemListScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              _getTranslatedText('cancel'),
+              lang['cancel']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
                     : Colors.grey[600],
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                fontFamily: selectedLanguage == 'Khmer'
+                    ? 'NotoSansKhmer'
+                    : null,
               ),
             ),
           ),
@@ -220,10 +210,12 @@ class _ItemListScreenState extends State<ItemListScreen>
               ),
             ),
             child: Text(
-              _getTranslatedText('delete'),
+              lang['delete']!,
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                fontFamily: selectedLanguage == 'Khmer'
+                    ? 'NotoSansKhmer'
+                    : null,
               ),
             ),
           ),
@@ -238,13 +230,14 @@ class _ItemListScreenState extends State<ItemListScreen>
         }
         _selectedItemIds.clear();
         _isSelectionMode = false;
-        _showSuccessSnackbar(_getTranslatedText('items_deleted'));
+        _showSuccessSnackbar(lang['items_deleted']!);
         _loadData();
       } catch (e) {
-        _showErrorSnackbar('${_getTranslatedText('delete_failed')}: ${e.toString()}');
+        _showErrorSnackbar('${lang['delete_failed']!}: ${e.toString()}');
       }
     }
   }
+
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
@@ -264,11 +257,12 @@ class _ItemListScreenState extends State<ItemListScreen>
       });
       _animationController.forward();
     } catch (e) {
+      final lang = localization[selectedLanguage]!;
       if (e.toString().contains('Unauthenticated')) {
         await ApiService.clearAuthToken();
         Navigator.pushReplacementNamed(context, '/login');
       } else {
-        _showErrorSnackbar('${_getTranslatedText('error')}: ${e.toString()}');
+        _showErrorSnackbar('${lang['error']!}: ${e.toString()}');
       }
     } finally {
       setState(() => _isLoading = false);
@@ -305,6 +299,8 @@ class _ItemListScreenState extends State<ItemListScreen>
   }
 
   Future<void> _deleteItem(int id, String itemName) async {
+    final lang = localization[selectedLanguage]!;
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -317,18 +313,20 @@ class _ItemListScreenState extends State<ItemListScreen>
             Icon(Icons.warning_amber_rounded, color: Colors.orange.shade600),
             const SizedBox(width: 8),
             Text(
-              _getTranslatedText('delete_item'),
+              lang['delete_item']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[200]
                     : Colors.black87,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                fontFamily: selectedLanguage == 'Khmer'
+                    ? 'NotoSansKhmer'
+                    : null,
               ),
             ),
           ],
         ),
         content: Text(
-          '${_getTranslatedText('delete_single')} "$itemName"?',
+          '${lang['delete_single']!} "$itemName"?',
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark
                 ? Colors.grey[400]
@@ -340,12 +338,14 @@ class _ItemListScreenState extends State<ItemListScreen>
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
-              _getTranslatedText('cancel'),
+              lang['cancel']!,
               style: TextStyle(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[400]
                     : Colors.grey[600],
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                fontFamily: selectedLanguage == 'Khmer'
+                    ? 'NotoSansKhmer'
+                    : null,
               ),
             ),
           ),
@@ -358,10 +358,13 @@ class _ItemListScreenState extends State<ItemListScreen>
               ),
             ),
             child: Text(
-              _getTranslatedText('delete'),
+              lang['delete']!,
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                fontFamily: selectedLanguage == 'Khmer'
+
+                    ? 'NotoSansKhmer'
+                    : null,
               ),
             ),
           ),
@@ -373,10 +376,10 @@ class _ItemListScreenState extends State<ItemListScreen>
 
     try {
       await ApiService.deleteItem(id);
-      _showSuccessSnackbar('$itemName ${_getTranslatedText('item_deleted')}');
+      _showSuccessSnackbar('$itemName ${lang['item_deleted']!}');
       _loadData();
     } catch (e) {
-      _showErrorSnackbar('${_getTranslatedText('error')} ${_getTranslatedText('delete_item')}: $e');
+      _showErrorSnackbar('${lang['error']!} ${lang['delete_item']!}: $e');
     }
   }
 
@@ -391,7 +394,9 @@ class _ItemListScreenState extends State<ItemListScreen>
               child: Text(
                 message,
                 style: TextStyle(
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                  fontFamily: selectedLanguage == 'Khmer'
+                      ? 'NotoSansKhmer'
+                      : null,
                 ),
               ),
             ),
@@ -418,7 +423,9 @@ class _ItemListScreenState extends State<ItemListScreen>
               child: Text(
                 message,
                 style: TextStyle(
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                  fontFamily: selectedLanguage == 'Khmer'
+                      ? 'NotoSansKhmer'
+                      : null,
                 ),
               ),
             ),
@@ -438,6 +445,8 @@ class _ItemListScreenState extends State<ItemListScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!;
+
 
     return Scaffold(
       backgroundColor: isDarkMode
@@ -459,13 +468,15 @@ class _ItemListScreenState extends State<ItemListScreen>
               padding: const EdgeInsets.only(left: 10),
               child: Text(
                 _isSelectionMode
-                    ? '${_selectedItemIds.length} ${_getTranslatedText('selected')}'
-                    : _getTranslatedText('items'),
+                    ? '${_selectedItemIds.length} ${lang['selected']!}'
+                    : lang['items']!,
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 24,
                   color: Colors.white,
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                  fontFamily: selectedLanguage == 'Khmer'
+                      ? 'NotoSansKhmer'
+                      : null,
                 ),
               ),
             ),
@@ -488,18 +499,20 @@ class _ItemListScreenState extends State<ItemListScreen>
               IconButton(
                 icon: const Icon(Icons.delete, color: Colors.white),
                 onPressed: _deleteSelectedItems,
-                tooltip: _getTranslatedText('delete'),
+                tooltip: lang['delete']!,
               ),
           ] else ...[
             TextButton(
               onPressed: _toggleSelectionMode,
               child: Text(
-                _getTranslatedText('select'),
+                lang['select']!,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                  fontFamily: selectedLanguage == 'Khmer'
+                      ? 'NotoSansKhmer'
+                      : null,
                 ),
               ),
             ),
@@ -549,22 +562,29 @@ class _ItemListScreenState extends State<ItemListScreen>
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    hintText: _getTranslatedText('search_items'),
+                    hintText: lang['search_items']!,
                     hintStyle: TextStyle(
+
                       color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
                       fontSize: 14,
-                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                      fontFamily: selectedLanguage == 'Khmer'
+                          ? 'NotoSansKhmer'
+                          : null,
                     ),
                     prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: isDarkMode ? Colors.grey[300] : Colors.deepPurple.shade600,
+                      color: isDarkMode
+                          ? Colors.grey[300]
+                          : Colors.deepPurple.shade600,
                       size: 20,
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: Icon(
                               Icons.clear_rounded,
-                              color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                              color: isDarkMode
+                                  ? Colors.grey[500]
+                                  : Colors.grey[600],
                               size: 18,
                             ),
                             onPressed: () => _searchController.clear(),
@@ -585,7 +605,9 @@ class _ItemListScreenState extends State<ItemListScreen>
                   style: TextStyle(
                     fontSize: 14,
                     color: isDarkMode ? Colors.grey[200] : Colors.black87,
-                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                    fontFamily: selectedLanguage == 'Khmer'
+                        ? 'NotoSansKhmer'
+                        : null,
                   ),
                 ),
               ),
@@ -603,24 +625,32 @@ class _ItemListScreenState extends State<ItemListScreen>
                 children: [
                   FilterChip(
                     label: Text(
-                      _getTranslatedText('all'),
+                      lang['all']!,
                       style: TextStyle(
                         color: _selectedCategoryId == null
                             ? Colors.white
                             : isDarkMode
-                                ? Colors.grey[400]
-                                : Colors.deepPurple.shade700,
-                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                            ? Colors.grey[400]
+                            : Colors.deepPurple.shade700,
+                        fontFamily: selectedLanguage == 'Khmer'
+                            ? 'NotoSansKhmer'
+                            : null,
                       ),
                     ),
                     selected: _selectedCategoryId == null,
                     onSelected: (_) => _onCategorySelected(null),
-                    selectedColor: isDarkMode ? Colors.deepPurple[400] : Colors.deepPurple.shade600,
-                    backgroundColor: isDarkMode ? Colors.grey[800] : Colors.deepPurple.shade100,
+                    selectedColor: isDarkMode
+                        ? Colors.deepPurple[400]
+                        : Colors.deepPurple.shade600,
+                    backgroundColor: isDarkMode
+                        ? Colors.grey[800]
+                        : Colors.deepPurple.shade100,
                     checkmarkColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: isDarkMode ? BorderSide(color: Colors.grey[700]!, width: 1) : BorderSide.none,
+                      side: isDarkMode
+                          ? BorderSide(color: Colors.grey[700]!, width: 1)
+                          : BorderSide.none,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -631,22 +661,31 @@ class _ItemListScreenState extends State<ItemListScreen>
                         label: Text(
                           cat.name,
                           style: TextStyle(
+
                             color: _selectedCategoryId == cat.id
                                 ? Colors.white
                                 : isDarkMode
-                                    ? Colors.grey[400]
-                                    : Colors.deepPurple.shade700,
-                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                ? Colors.grey[400]
+                                : Colors.deepPurple.shade700,
+                            fontFamily: selectedLanguage == 'Khmer'
+                                ? 'NotoSansKhmer'
+                                : null,
                           ),
                         ),
                         selected: _selectedCategoryId == cat.id,
                         onSelected: (_) => _onCategorySelected(cat.id),
-                        selectedColor: isDarkMode ? Colors.deepPurple[400] : Colors.deepPurple.shade600,
-                        backgroundColor: isDarkMode ? Colors.grey[800] : Colors.deepPurple.shade100,
+                        selectedColor: isDarkMode
+                            ? Colors.deepPurple[400]
+                            : Colors.deepPurple.shade600,
+                        backgroundColor: isDarkMode
+                            ? Colors.grey[800]
+                            : Colors.deepPurple.shade100,
                         checkmarkColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
-                          side: isDarkMode ? BorderSide(color: Colors.grey[700]!, width: 1) : BorderSide.none,
+                          side: isDarkMode
+                              ? BorderSide(color: Colors.grey[700]!, width: 1)
+                              : BorderSide.none,
                         ),
                       ),
                     ),
@@ -664,326 +703,470 @@ class _ItemListScreenState extends State<ItemListScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(
-                          color: isDarkMode ? Colors.deepPurple[400] : Colors.deepPurple.shade700,
+                          color: isDarkMode
+                              ? Colors.deepPurple[400]
+                              : Colors.deepPurple.shade700,
                           strokeWidth: 3,
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          _getTranslatedText('loading_items'),
+                          lang['loading_items']!,
                           style: TextStyle(
-                            color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                            color: isDarkMode
+                                ? Colors.grey[400]
+                                : Colors.deepPurple.shade600,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
-                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                            fontFamily: selectedLanguage == 'Khmer'
+                                ? 'NotoSansKhmer'
+                                : null,
                           ),
                         ),
                       ],
                     ),
                   )
                 : _filteredItems.isEmpty
-                    ? Center(
-                        child: FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(24),
-                                decoration: BoxDecoration(
-                                  color: isDarkMode ? Colors.grey[850] : Colors.deepPurple.shade100,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.inventory_2_outlined,
-                                  size: 64,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade400,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                _searchQuery.isEmpty
-                                    ? _getTranslatedText('no_items_found')
-                                    : _getTranslatedText('no_matching_items'),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDarkMode ? Colors.grey[200] : Colors.deepPurple.shade700,
-                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _searchQuery.isEmpty
-                                    ? _getTranslatedText('add_new_item')
-                                    : _getTranslatedText('try_different_search'),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
+                ? Center(
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: isDarkMode
+                                  ? Colors.grey[850]
+                                  : Colors.deepPurple.shade100,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.deepPurple.shade400,
+                            ),
                           ),
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadData,
-                        color: isDarkMode ? Colors.deepPurple[400] : Colors.deepPurple.shade700,
-                        child: FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _filteredItems.length,
-                            itemBuilder: (context, index) {
-                              final item = _filteredItems[index];
-                              final isSelected = _selectedItemIds.contains(item.id);
+                          const SizedBox(height: 24),
+                          Text(
+                            _searchQuery.isEmpty
+                                ? lang['no_items_found']!
+                                : lang['no_matching_items']!,
+                            style: TextStyle(
+                              fontSize: 20,
 
-                              return AnimatedContainer(
-                                duration: Duration(
-                                  milliseconds: 300 + (index * 50),
-                                ),
-                                curve: Curves.easeOutBack,
-                                margin: const EdgeInsets.only(bottom: 12),
-                                child: Card(
-                                  elevation: isSelected ? 8 : 4,
-                                  shadowColor: isSelected
-                                      ? Colors.deepPurple.withOpacity(isDarkMode ? 0.3 : 0.4)
-                                      : Colors.deepPurple.withOpacity(isDarkMode ? 0.15 : 0.2),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    side: isSelected
-                                        ? BorderSide(
-                                            color: isDarkMode ? Colors.deepPurple[400]! : Colors.deepPurple.shade600,
-                                            width: 3,
-                                          )
-                                        : BorderSide(
-                                            color: isDarkMode ? Colors.grey[800]! : Colors.transparent,
-                                            width: isDarkMode ? 0.5 : 0,
+                              fontWeight: FontWeight.w600,
+                              color: isDarkMode
+                                  ? Colors.grey[200]
+                                  : Colors.deepPurple.shade700,
+                              fontFamily: selectedLanguage == 'Khmer'
+                                  ? 'NotoSansKhmer'
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _searchQuery.isEmpty
+                                ? lang['add_new_item']!
+                                : lang['try_different_search']!,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                              fontFamily: selectedLanguage == 'Khmer'
+                                  ? 'NotoSansKhmer'
+                                  : null,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    color: isDarkMode
+                        ? Colors.deepPurple[400]
+                        : Colors.deepPurple.shade700,
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _filteredItems.length,
+                        itemBuilder: (context, index) {
+                          final item = _filteredItems[index];
+                          final isSelected = _selectedItemIds.contains(item.id);
+
+                          return AnimatedContainer(
+                            duration: Duration(
+                              milliseconds: 300 + (index * 50),
+                            ),
+                            curve: Curves.easeOutBack,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: Card(
+                              elevation: isSelected ? 8 : 4,
+                              shadowColor: isSelected
+                                  ? Colors.deepPurple.withOpacity(
+                                      isDarkMode ? 0.3 : 0.4,
+                                    )
+                                  : Colors.deepPurple.withOpacity(
+                                      isDarkMode ? 0.15 : 0.2,
+                                    ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: isSelected
+                                    ? BorderSide(
+                                        color: isDarkMode
+                                            ? Colors.deepPurple[400]!
+                                            : Colors.deepPurple.shade600,
+                                        width: 3,
+                                      )
+                                    : BorderSide(
+                                        color: isDarkMode
+                                            ? Colors.grey[800]!
+                                            : Colors.transparent,
+                                        width: isDarkMode ? 0.5 : 0,
+                                      ),
+                              ),
+                              color: isSelected && isDarkMode
+                                  ? Colors.grey[800]
+                                  : isDarkMode
+                                  ? const Color.fromARGB(255, 40, 40, 40)
+                                  : Colors.white,
+                              child: ListTile(
+
+                                contentPadding: const EdgeInsets.all(12),
+                                leading: _isSelectionMode
+                                    ? Checkbox(
+                                        value: isSelected,
+                                        onChanged: (bool? value) {
+                                          _toggleItemSelection(item.id);
+                                        },
+                                        activeColor: isDarkMode
+                                            ? Colors.deepPurple[400]
+                                            : Colors.deepPurple.shade600,
+                                        checkColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            6,
                                           ),
-                                  ),
-                                  color: isSelected && isDarkMode
-                                      ? Colors.grey[800]
-                                      : isDarkMode
-                                          ? const Color.fromARGB(255, 40, 40, 40)
-                                          : Colors.white,
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.all(12),
-                                    leading: _isSelectionMode
-                                        ? Checkbox(
-                                            value: isSelected,
-                                            onChanged: (bool? value) {
-                                              _toggleItemSelection(item.id);
-                                            },
-                                            activeColor: isDarkMode ? Colors.deepPurple[400] : Colors.deepPurple.shade600,
-                                            checkColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(6),
-                                            ),
-                                          )
-                                        : ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: Container(
-                                              width: 64,
-                                              height: 64,
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: isDarkMode
-                                                      ? [Colors.grey[700]!, Colors.grey[850]!.withOpacity(0.9)]
-                                                      : [Colors.deepPurple.shade200, Colors.deepPurple.shade100],
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                                border: Border.all(
-                                                  color: isDarkMode ? Colors.grey[800]! : Colors.deepPurple.shade200,
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Center(
-                                                child: item.imageUrl != null
-    ? Image.network(
-        item.imageUrl!, // Use the direct URL from API
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Icon(
-          Icons.broken_image_rounded,
-          color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-          size: 32,
-        ),
-      )
-    : Icon(
-        Icons.image_not_supported_rounded,
-        color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-        size: 32,
-      ),
-                                              ),
-                                            ),
-                                          ),
-                                    title: Padding(
-                                      padding: const EdgeInsets.only(bottom: 4),
-                                      child: Text(
-                                        item.name,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 18,
-                                          color: isDarkMode ? Colors.grey[100] : Colors.deepPurple.shade900,
-                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    : ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Container(
+                                          width: 64,
+                                          height: 64,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: isDarkMode
+                                                  ? [
+                                                      Colors.grey[700]!,
+                                                      Colors.grey[850]!
+                                                          .withOpacity(0.9),
+                                                    ]
+                                                  : [
+                                                      Colors
+                                                          .deepPurple
+                                                          .shade200,
+                                                      Colors
+                                                          .deepPurple
+                                                          .shade100,
+                                                    ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            border: Border.all(
+                                              color: isDarkMode
+                                                  ? Colors.grey[800]!
+                                                  : Colors.deepPurple.shade200,
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: item.imageUrl != null
+                                              ? Image.network(
+                                                  ApiService.getImageUrl(
+                                                    item.imageUrl!,
+                                                  ), // Use the corrected URL
+                                                  fit: BoxFit.cover,
+                                                  width: 64,
+                                                  height: 64,
+                                                  loadingBuilder: (context, child, loadingProgress) {
+                                                    if (loadingProgress == null)
+                                                      return child;
+                                                    return Center(
+                                                      child: CircularProgressIndicator(
+                                                        value:
+                                                            loadingProgress
+
+                                                                    .expectedTotalBytes !=
+                                                                null
+                                                            ? loadingProgress
+                                                                      .cumulativeBytesLoaded /
+                                                                  loadingProgress
+                                                                      .expectedTotalBytes!
+                                                            : null,
+                                                      ),
+                                                    );
+                                                  },
+                                                  errorBuilder: (_, __, ___) =>
+                                                      Icon(
+                                                        Icons
+                                                            .broken_image_rounded,
+                                                        color: isDarkMode
+                                                            ? Colors.grey[400]
+                                                            : Colors
+                                                                  .deepPurple
+                                                                  .shade600,
+                                                        size: 32,
+                                                      ),
+                                                )
+                                              : Icon(
+                                                  Icons
+                                                      .image_not_supported_rounded,
+                                                  color: isDarkMode
+                                                      ? Colors.grey[400]
+                                                      : Colors
+                                                            .deepPurple
+                                                            .shade600,
+                                                  size: 32,
+                                                ),
+                                        ),
+                                      ),
+                                title: Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    item.name,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 18,
+                                      color: isDarkMode
+                                          ? Colors.grey[100]
+                                          : Colors.deepPurple.shade900,
+                                      fontFamily: selectedLanguage == 'Khmer'
+                                          ? 'NotoSansKhmer'
+                                          : null,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (item.description?.isNotEmpty == true)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 6,
+                                        ),
+                                        child: Text(
+                                          item.description!,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: isDarkMode
+
+                                                ? Colors.grey[400]
+                                                : Colors.grey[700],
+                                            fontFamily:
+                                                selectedLanguage == 'Khmer'
+                                                ? 'NotoSansKhmer'
+                                                : null,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        gradient: isDarkMode
+                                            ? LinearGradient(
+                                                colors: [
+                                                  Colors.grey[700]!,
+                                                  Colors.grey[800]!,
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              )
+                                            : LinearGradient(
+                                                colors: [
+                                                  Colors.deepPurple.shade100,
+                                                  Colors.deepPurple.shade200,
+                                                ],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                              ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: isDarkMode
+                                                ? Colors.black12
+                                                : Colors.deepPurple.shade100,
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        '\$${item.price.toStringAsFixed(2)}',
+                                        style: TextStyle(
+                                          color: isDarkMode
+                                              ? Colors.grey[200]
+                                              : Colors.deepPurple.shade800,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          fontFamily:
+                                              selectedLanguage == 'Khmer'
+                                              ? 'NotoSansKhmer'
+                                              : null,
+                                        ),
                                       ),
                                     ),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        if (item.description?.isNotEmpty == true)
-                                          Padding(
-                                            padding: const EdgeInsets.only(bottom: 6),
-                                            child: Text(
-                                              item.description!,
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
-                                                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                                  ],
+                                ),
+                                trailing: _isSelectionMode
+                                    ? null
+                                    : PopupMenuButton<String>(
+                                        icon: Icon(
+                                          Icons.more_vert_rounded,
+                                          color: isDarkMode
+                                              ? Colors.grey[400]
+
+                                              : Colors.deepPurple.shade600,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
                                           ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            gradient: isDarkMode
-                                                ? LinearGradient(
-                                                    colors: [Colors.grey[700]!, Colors.grey[800]!],
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                  )
-                                                : LinearGradient(
-                                                    colors: [
-                                                      Colors.deepPurple.shade100,
-                                                      Colors.deepPurple.shade200,
-                                                    ],
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                  ),
-                                            borderRadius: BorderRadius.circular(20),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: isDarkMode ? Colors.black12 : Colors.deepPurple.shade100,
-                                                blurRadius: 4,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Text(
-                                            '\$${item.price.toStringAsFixed(2)}',
-                                            style: TextStyle(
-                                              color: isDarkMode ? Colors.grey[200] : Colors.deepPurple.shade800,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 14,
-                                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                                            ),
+                                          side: BorderSide(
+                                            color: isDarkMode
+                                                ? Colors.grey[700]!
+                                                : Colors.deepPurple.shade300,
+                                            width: 1.0,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                    trailing: _isSelectionMode
-                                        ? null
-                                        : PopupMenuButton<String>(
-                                            icon: Icon(
-                                              Icons.more_vert_rounded,
-                                              color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(12),
-                                              side: BorderSide(
-                                                color: isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade300,
-                                                width: 1.0,
-                                              ),
-                                            ),
-                                            color: isDarkMode ? Colors.grey[850] : Colors.grey[200],
-                                            elevation: 4,
-                                            onSelected: (value) async {
-                                              if (value == 'edit') {
-                                                final result = await Navigator.push(
-                                                  context,
-                                                  PageRouteBuilder(
-                                                    pageBuilder: (context, animation, secondaryAnimation) =>
-                                                        AddItemScreen(item: item),
-                                                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                        color: isDarkMode
+                                            ? Colors.grey[850]
+                                            : Colors.grey[200],
+                                        elevation: 4,
+                                        onSelected: (value) async {
+                                          if (value == 'edit') {
+                                            final result = await Navigator.push(
+                                              context,
+                                              PageRouteBuilder(
+                                                pageBuilder:
+                                                    (
+                                                      context,
+                                                      animation,
+                                                      secondaryAnimation,
+                                                    ) => AddItemScreen(
+                                                      item: item,
+                                                    ),
+                                                transitionsBuilder:
+                                                    (
+                                                      context,
+                                                      animation,
+                                                      secondaryAnimation,
+                                                      child,
+                                                    ) {
                                                       return SlideTransition(
                                                         position: animation.drive(
                                                           Tween(
-                                                            begin: const Offset(1.0, 0.0),
+                                                            begin: const Offset(
+                                                              1.0,
+                                                              0.0,
+                                                            ),
                                                             end: Offset.zero,
-                                                          ).chain(CurveTween(curve: Curves.easeInOut)),
+                                                          ).chain(
+                                                            CurveTween(
+                                                              curve: Curves
+                                                                  .easeInOut,
+                                                            ),
+                                                          ),
                                                         ),
                                                         child: child,
                                                       );
                                                     },
+                                              ),
+                                            );
+                                            if (result == true) _loadData();
+                                          } else if (value == 'delete') {
+                                            _deleteItem(item.id, item.name);
+                                          }
+                                        },
+                                        itemBuilder: (_) => [
+                                          PopupMenuItem(
+
+                                            value: 'edit',
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.edit_rounded,
+                                                  color: isDarkMode
+                                                      ? Colors.blue[300]
+                                                      : Colors
+                                                            .deepPurple
+                                                            .shade600,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  lang['edit']!,
+                                                  style: TextStyle(
+                                                    color: isDarkMode
+                                                        ? Colors.blue[300]
+                                                        : Colors.black87,
+                                                    fontFamily:
+                                                        selectedLanguage ==
+                                                            'Khmer'
+                                                        ? 'NotoSansKhmer'
+                                                        : null,
                                                   ),
-                                                );
-                                                if (result == true) _loadData();
-                                              } else if (value == 'delete') {
-                                                _deleteItem(item.id, item.name);
-                                              }
-                                            },
-                                            itemBuilder: (_) => [
-                                              PopupMenuItem(
-                                                value: 'edit',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.edit_rounded,
-                                                      color: isDarkMode ? Colors.blue[300] : Colors.deepPurple.shade600,
-                                                      size: 18,
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      _getTranslatedText('edit'),
-                                                      style: TextStyle(
-                                                        color: isDarkMode ? Colors.blue[300] : Colors.black87,
-                                                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                                                      ),
-                                                    ),
-                                                  ],
                                                 ),
-                                              ),
-                                              PopupMenuItem(
-                                                value: 'delete',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.delete_rounded,
-                                                      color: Colors.red.shade600,
-                                                      size: 18,
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Text(
-                                                      _getTranslatedText('delete'),
-                                                      style: TextStyle(
-                                                        color: Colors.red.shade600,
-                                                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                    onTap: _isSelectionMode
-                                        ? () => _toggleItemSelection(item.id)
-                                        : null,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+                                          PopupMenuItem(
+                                            value: 'delete',
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.delete_rounded,
+                                                  color: Colors.red.shade600,
+                                                  size: 18,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  lang['delete']!,
+                                                  style: TextStyle(
+                                                    color: Colors.red.shade600,
+                                                    fontFamily:
+                                                        selectedLanguage ==
+                                                            'Khmer'
+                                                        ? 'NotoSansKhmer'
+                                                        : null,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                onTap: _isSelectionMode
+                                    ? () => _toggleItemSelection(item.id)
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
                       ),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -994,24 +1177,28 @@ class _ItemListScreenState extends State<ItemListScreen>
                 final result = await Navigator.push(
                   context,
                   PageRouteBuilder(
+
                     pageBuilder: (context, animation, secondaryAnimation) =>
                         const AddItemScreen(),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                      return SlideTransition(
-                        position: animation.drive(
-                          Tween(
-                            begin: const Offset(0.0, 1.0),
-                            end: Offset.zero,
-                          ).chain(CurveTween(curve: Curves.easeInOut)),
-                        ),
-                        child: child,
-                      );
-                    },
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                          return SlideTransition(
+                            position: animation.drive(
+                              Tween(
+                                begin: const Offset(0.0, 1.0),
+                                end: Offset.zero,
+                              ).chain(CurveTween(curve: Curves.easeInOut)),
+                            ),
+                            child: child,
+                          );
+                        },
                   ),
                 );
                 if (result == true) _loadData();
               },
-              backgroundColor: isDarkMode ? Colors.deepPurple[400] : Colors.deepPurple.shade700,
+              backgroundColor: isDarkMode
+                  ? Colors.deepPurple[400]
+                  : Colors.deepPurple.shade700,
               elevation: 6,
               child: const Icon(Icons.add, color: Colors.white, size: 28),
             ),
