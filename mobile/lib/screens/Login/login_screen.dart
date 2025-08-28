@@ -63,7 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
       'no_account': 'មិនមានគណនី?',
       'create_account': 'បង្កើតគណនី',
       'email_not_found': 'រកមិនឃើញអ៊ីមែល។ សូមពិនិត្យ ឬចុះឈ្មោះ',
-      'incorrect_password': 'ពាក្យសម្ងាត់មិនត្រឹមត្រូវ។ សូមព្យាយាមម្តងទៀត',
+      'incorrect_password': 'ពាក្យសម្ងាត់មិនត្រឹមត្រូវ។ �សូមព្យាយាមម្តងទៀត',
       'account_locked': 'គណនីត្រូវបានចាក់សោ។ សូមព្យាយាមម្តងទៀតនៅពេលក្រោយ ឬកំណត់ពាក្យសម្ងាត់ឡើងវិញ',
       'login_failed': 'ការចូលបរាជ័យ។ សូមព្យាយាមម្តងទៀត',
     },
@@ -337,22 +337,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _buildEmailField(isDark, lang),
                           const SizedBox(height: 16),
                           _buildPasswordField(isDark, lang),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                // Add forgot password functionality
-                              },
-                              child: Text(
-                                lang['forgot_password']!,
-                                style: TextStyle(
-                                  color: isDark ? Colors.white70 : Colors.deepPurple.shade600,
-                                  fontSize: 14,
-                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                                ),
-                              ),
-                            ),
-                          ),
+                          
                           const SizedBox(height: 16),
                           // Larger Sign In button
                           SizedBox(
@@ -384,88 +369,82 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Divider(
-                                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16),
-                                child: Text(
-                                  lang['or_continue_with']!,
-                                  style: getTextStyle(),
-                                ),
-                              ),
-                              Expanded(
-                                child: Divider(
-                                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _buildSocialButton(
-                                icon: Icons.g_mobiledata,
-                                label: lang['google']!,
-                                color: Colors.red,
-                                onTap: () {
-                                  // Add Google sign-in logic
-                                },
-                                isDark: isDark,
-                                lang: lang,
-                              ),
-                              _buildSocialButton(
-                                icon: Icons.apple,
-                                label: lang['apple']!,
-                                color: isDark ? Colors.white70 : Colors.black,
-                                onTap: () {
-                                  // Add Apple sign-in logic
-                                },
-                                isDark: isDark,
-                                lang: lang,
-                              ),
-                            ],
+                          // Account creation section - made responsive
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              // For small screens, use a column layout
+                              if (constraints.maxWidth < 400) {
+                                return Column(
+                                  children: [
+                                    Text(
+                                      lang['no_account']!,
+                                      style: getTextStyle(),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => RegisterScreen(
+                                              onThemeToggle: widget.onThemeToggle,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        lang['create_account']!,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white70 : Colors.deepPurple,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                              // For larger screens, use a row layout
+                              else {
+                                return Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      lang['no_account']!,
+                                      style: getTextStyle(),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => RegisterScreen(
+                                              onThemeToggle: widget.onThemeToggle,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        lang['create_account']!,
+                                        style: TextStyle(
+                                          color: isDark ? Colors.white70 : Colors.deepPurple,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }
+                            },
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          lang['no_account']!,
-                          style: getTextStyle(),
-                          textAlign: TextAlign.center,
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => RegisterScreen(
-                                  onThemeToggle: widget.onThemeToggle,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            lang['create_account']!,
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.deepPurple,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -637,54 +616,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
       ],
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    required bool isDark,
-    required Map<String, String> lang,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 120,
-        height: 50,
-        decoration: BoxDecoration(
-          color: isDark ? Colors.grey.shade800 : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: color,
-              size: 28,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: getTextStyle().copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
