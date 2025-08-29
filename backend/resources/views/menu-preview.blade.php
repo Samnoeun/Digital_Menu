@@ -196,8 +196,8 @@
                                         <div class="flex items-center space-x-2 flex-1">
                                             <img src="{{ $item->image_path ? url('storage/' . $item->image_path) : 'https://via.placeholder.com/50' }}" alt="{{ $item->name }}" class="rounded-lg">
                                             <div>
-                                                <h3 class="text-sm font-semibold text-gray-900">{{ $item->name }}</h3>
-                                                <p class="text-xs text-gray-600">${{ number_format($item->price, 2) }}</p>
+                                                <h3 class="text-md font-semibold text-gray-900">{{ $item->name }}</h3>
+                                                <p class="text-md text-gray-600">${{ number_format($item->price, 2) }}</p>
                                             </div>
                                         </div>
                                         <div class="quantity-selector">
