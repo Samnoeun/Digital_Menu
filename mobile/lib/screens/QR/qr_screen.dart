@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:universal_html/html.dart' as html;
 import '../../services/api_services.dart';
-import '../../models/restaurant_model.dart';
 import 'qr_scanner_screen.dart';
 
 class QrScreen extends StatefulWidget {

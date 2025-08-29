@@ -90,10 +90,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
 
       final items = itemsAndCategories[0] as List<item.Item>;
       final categories = itemsAndCategories[1] as List<category.Category>;
-          final orderHistoryData = itemsAndCategories[2] as List<dynamic>; // ← FIX THIS LINE
+      final orderHistoryData =
+          itemsAndCategories[2] as List<dynamic>; // ← FIX THIS LINE
 
-    // Convert raw JSON to OrderHistory objects
-    final orderHistory = orderHistoryData.map((json) => OrderHistory.fromJson(json)).toList();
+      // Convert raw JSON to OrderHistory objects
+      final orderHistory = orderHistoryData
+          .map((json) => OrderHistory.fromJson(json))
+          .toList();
 
       setState(() {
         totalItems = items.length;
@@ -263,20 +266,23 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
 
     // Color definitions
     final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.grey[50];
-  
+
     final infoCardColor = isDarkMode ? Colors.blue[900] : Colors.blue.shade50;
     final Color infoBorderColor = isDarkMode
         ? Colors.blue[800]!
         : Colors.blue.shade100;
     final infoTextColor = isDarkMode ? Colors.blue[100] : Colors.blue.shade800;
-  
 
-     // Color definitions with null assertion operator
-  final cardColor = isDarkMode ? Colors.grey[800]! : Colors.grey.shade100;
-  final textColor = isDarkMode ? Colors.white : Colors.black;
-  final secondaryTextColor = isDarkMode ? Colors.grey[400]! : Colors.grey[600]!;
-  final primaryColor = isDarkMode ? Colors.deepPurple[600]! : Colors.deepPurple;
-  final successColor = isDarkMode ? Colors.green[600]! : Colors.green;
+    // Color definitions with null assertion operator
+    final cardColor = isDarkMode ? Colors.grey[800]! : Colors.grey.shade100;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final secondaryTextColor = isDarkMode
+        ? Colors.grey[400]!
+        : Colors.grey[600]!;
+    final primaryColor = isDarkMode
+        ? Colors.deepPurple[600]!
+        : Colors.deepPurple;
+    final successColor = isDarkMode ? Colors.green[600]! : Colors.green;
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
@@ -723,77 +729,80 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen>
                       // Orders List
                       // Inside your build method, add these color definitions:
 
-
-// Then fix the ListView.builder:
-filteredOrders.isNotEmpty
-    ? ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        itemCount: filteredOrders.length,
-        itemBuilder: (context, index) {
-          final order = filteredOrders[index];
-         return _buildOrderCard(
-  order, 
-  index, 
-  isDarkMode, 
-  cardColor, 
-  textColor, 
-  secondaryTextColor!, // Add ! here
-  primaryColor, 
-  successColor
-);
-        },
-      )
-    : Container(
-        margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(40),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[700]! : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(
-                Icons.inbox_outlined,
-                size: 38,
-                color: secondaryTextColor,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'No Orders Found',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'No orders match your current filter criteria',
-              style: TextStyle(
-                fontSize: 14,
-                color: secondaryTextColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+                      // Then fix the ListView.builder:
+                      filteredOrders.isNotEmpty
+                          ? ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                              ),
+                              itemCount: filteredOrders.length,
+                              itemBuilder: (context, index) {
+                                final order = filteredOrders[index];
+                                return _buildOrderCard(
+                                  order,
+                                  index,
+                                  isDarkMode,
+                                  cardColor,
+                                  textColor,
+                                  secondaryTextColor,
+                                  primaryColor,
+                                  successColor,
+                                );
+                              },
+                            )
+                          : Container(
+                              margin: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(40),
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: isDarkMode
+                                          ? Colors.grey[700]!
+                                          : const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      Icons.inbox_outlined,
+                                      size: 38,
+                                      color: secondaryTextColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No Orders Found',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: textColor,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'No orders match your current filter criteria',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: secondaryTextColor,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
                     ],
                   ),
                 ),

@@ -44,9 +44,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'confirm_password_required': 'Confirm password is required',
       'passwords_match': 'Passwords do not match',
       'continue': 'Continue',
-      'or_continue_with': 'Or continue with',
-      'google': 'Google',
-      'apple': 'Apple',
       'have_account': 'Already have an account? ',
       'login': 'Login',
       'email_taken': 'This email is already registered',
@@ -68,9 +65,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'confirm_password_required': 'ត្រូវការបញ្ជាក់ពាក្យសម្ងាត់',
       'passwords_match': 'ពាក្យសម្ងាត់មិនត្រូវគ្នា',
       'continue': 'បន្ត',
-      'or_continue_with': 'ឬបន្តជាមួយ',
-      'google': 'Google',
-      'apple': 'Apple',
       'have_account': 'មានគណនីរួចហើយ? ',
       'login': 'ចូល',
       'email_taken': 'អ៊ីមែលនេះត្រូវបានចុះឈ្មោះរួចហើយ',
@@ -386,52 +380,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    required bool isDark,
-    required Map<String, String> lang,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 140,
-        height: 60,
-        decoration: BoxDecoration(
-          color: isDark ? Colors.grey.shade800 : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: getTextStyle().copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final lang = localization[selectedLanguage]!;
@@ -616,89 +564,86 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ),
                             ),
                             const SizedBox(height: 30),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Divider(
-                                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                                    thickness: 1.5,
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    lang['or_continue_with']!,
-                                    style: getTextStyle().copyWith(
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Divider(
-                                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                                    thickness: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 30),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildSocialButton(
-                                  icon: Icons.g_mobiledata,
-                                  label: lang['google']!,
-                                  color: Colors.red,
-                                  onTap: () {},
-                                  isDark: isDark,
-                                  lang: lang,
-                                ),
-                                _buildSocialButton(
-                                  icon: Icons.apple,
-                                  label: lang['apple']!,
-                                  color: isDark ? Colors.white70 : Colors.black,
-                                  onTap: () {},
-                                  isDark: isDark,
-                                  lang: lang,
-                                ),
-                              ],
+                            // Account section - made responsive
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                // For small screens, use a column layout
+                                if (constraints.maxWidth < 400) {
+                                  return Column(
+                                    children: [
+                                      Text(
+                                        lang['have_account']!,
+                                        style: getTextStyle().copyWith(
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => LoginScreen(
+                                                onThemeToggle: widget.onThemeToggle,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          lang['login']!,
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white70 : Colors.deepPurple,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+                                // For larger screens, use a row layout
+                                else {
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        lang['have_account']!,
+                                        style: getTextStyle().copyWith(
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => LoginScreen(
+                                                onThemeToggle: widget.onThemeToggle,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          lang['login']!,
+                                          style: TextStyle(
+                                            color: isDark ? Colors.white70 : Colors.deepPurple,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+                              },
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          lang['have_account']!,
-                          style: getTextStyle().copyWith(
-                            fontSize: 16,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => LoginScreen(
-                                  onThemeToggle: widget.onThemeToggle,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            lang['login']!,
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.deepPurple,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
