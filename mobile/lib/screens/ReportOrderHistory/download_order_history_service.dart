@@ -8,17 +8,28 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:excel/excel.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:universal_html/html.dart' as html;
 import '../../models/order_history_model.dart';
+
+// Add this import for kIsWeb
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class DownloadOrderHistoryService {
   static Future<File?> generateOrderHistoryReport(
       List<OrderHistory> orders, String filterName, String format) async {
     try {
-      if (!await _requestStoragePermission()) {
+      // Skip permission check for web
+      if (!kIsWeb && !await _requestStoragePermission()) {
         print('Permission denied for storage access');
         return null;
       }
 
+      // Handle web platform differently
+      if (kIsWeb) {
+        return await _generateWebReport(orders, filterName, format);
+      }
+
+      // Mobile platform code
       final directory = await getDownloadsDirectory();
       if (directory == null) {
         print('Error: Downloads directory not available');
@@ -73,6 +84,69 @@ class DownloadOrderHistoryService {
     }
   }
 
+  // Web-specific report generation
+  static Future<File?> _generateWebReport(
+      List<OrderHistory> orders, String filterName, String format) async {
+    try {
+      final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      final sanitizedFilterName = _sanitizeFileName(filterName);
+      final fileExtension = format.toLowerCase();
+      final fileName = 'order_report_${sanitizedFilterName}_$timestamp.$fileExtension';
+
+      List<int>? fileBytes;
+      String mimeType;
+
+      switch (format.toLowerCase()) {
+        case 'xlsx':
+          fileBytes = await _generateExcelBytes(orders, filterName);
+          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+        case 'pdf':
+          fileBytes = await _generatePdfBytes(orders, filterName);
+          mimeType = 'application/pdf';
+          break;
+        case 'docx':
+          // DOCX not supported, fall back to PDF
+          print('DOCX format not supported, generating PDF instead');
+          fileBytes = await _generatePdfBytes(orders, filterName);
+          mimeType = 'application/pdf';
+          break;
+        default:
+          // Default to Excel if format is not recognized
+          print('Format $format not recognized, generating Excel instead');
+          fileBytes = await _generateExcelBytes(orders, filterName);
+          mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          break;
+      }
+
+      if (fileBytes != null) {
+        // Create a blob and download it
+        final blob = html.Blob([fileBytes], mimeType);
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        
+        final anchor = html.AnchorElement()
+          ..href = url
+          ..download = fileName
+          ..style.display = 'none';
+        
+        html.document.body?.children.add(anchor);
+        anchor.click();
+        
+        // Clean up
+        html.document.body?.children.remove(anchor);
+        html.Url.revokeObjectUrl(url);
+        
+        print('Report downloaded: $fileName');
+        return null; // No File object on web
+      }
+      
+      return null;
+    } catch (e, stackTrace) {
+      print('Error generating web report: $e\n$stackTrace');
+      return null;
+    }
+  }
+
   static Future<File> _generateExcelReport(
       List<OrderHistory> orders, String filterName, Directory directory,
       String sanitizedFilterName, String timestamp) async {
@@ -103,6 +177,34 @@ class DownloadOrderHistoryService {
     final file = File(filePath);
     await file.writeAsBytes(excel.encode()!);
     return file;
+  }
+
+  // Generate Excel bytes for web
+  static Future<List<int>> _generateExcelBytes(
+      List<OrderHistory> orders, String filterName) async {
+    final excel = Excel.createExcel();
+    final sheet = excel['Order History'];
+
+    // Get the same data structure as the PDF
+    final excelData = _buildExcelData(orders, filterName);
+    
+    // Write data to Excel sheet
+    for (var i = 0; i < excelData.length; i++) {
+      for (var j = 0; j < excelData[i].length; j++) {
+        final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: j, rowIndex: i));
+        cell.value = TextCellValue(excelData[i][j].toString());
+      }
+    }
+
+    // Set column widths for the new column order
+    sheet.setColumnWidth(0, 8);  
+    sheet.setColumnWidth(1, 30);  
+    sheet.setColumnWidth(2, 12);  
+    sheet.setColumnWidth(3, 15);  
+    sheet.setColumnWidth(4, 20);  
+    sheet.setColumnWidth(5, 15);  
+
+    return excel.save()!;
   }
 
   static List<List<dynamic>> _buildExcelData(List<OrderHistory> orders, String filterName) {
@@ -180,6 +282,23 @@ class DownloadOrderHistoryService {
     final file = File(filePath);
     await file.writeAsBytes(await pdf.save());
     return file;
+  }
+
+  // Generate PDF bytes for web
+  static Future<List<int>> _generatePdfBytes(
+      List<OrderHistory> orders, String filterName) async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return _buildPdfContent(orders, filterName);
+        },
+      ),
+    );
+
+    return await pdf.save();
   }
 
   static List<pw.Widget> _buildPdfContent(List<OrderHistory> orders, String filterName) {
@@ -286,6 +405,9 @@ class DownloadOrderHistoryService {
 
   static Future<bool> _requestStoragePermission() async {
     try {
+      // Skip permission check for web
+      if (kIsWeb) return true;
+      
       if (Platform.isAndroid) {
         final isAndroid13OrAbove = await _isAndroid13OrAbove();
         if (isAndroid13OrAbove) {

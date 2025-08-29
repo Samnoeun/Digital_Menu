@@ -998,321 +998,311 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
     );
   }
 
-  Widget _buildOrderCard(
-    OrderHistory order,
-    int index,
-    bool isDarkMode,
-    Color cardColor,
-    Color textColor,
-    Color secondaryTextColor,
-    Color primaryColor,
-    Color successColor,
-  ) {
-    final currencyFormat = NumberFormat.currency(symbol: '\$');
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDarkMode ? [Colors.grey[800]!, Colors.grey[900]!] : [Colors.white, const Color(0xFFFAFBFF)],
+Widget _buildOrderCard(
+  OrderHistory order,
+  int index,
+  bool isDarkMode,
+  Color cardColor,
+  Color textColor,
+  Color secondaryTextColor,
+  Color primaryColor,
+  Color successColor,
+) {
+  final currencyFormat = NumberFormat.currency(symbol: '\$');
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: isDarkMode ? Colors.grey[850] : Colors.white, // Single color for dark mode
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: primaryColor.withOpacity(0.08),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+          spreadRadius: 0,
         ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withOpacity(0.08),
-            blurRadius: 30,
-            offset: const Offset(0, 12),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: primaryColor.withOpacity(0.08), width: 1),
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 6,
+          offset: const Offset(0, 2),
+        ),
+      ],
+      border: Border.all(
+        color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA), // Simplified border color
+        width: 1,
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.all(24),
-          childrenPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          leading: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  primaryColor,
-                  primaryColor.withOpacity(0.8),
-                  const Color(0xFFEC4899),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryColor.withOpacity(0.4),
-                  blurRadius: 15,
-                  offset: const Offset(0, 6),
-                ),
+    ),
+    child: Theme(
+      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.all(16),
+        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                primaryColor,
+                primaryColor.withOpacity(0.8),
+                const Color(0xFFEC4899),
               ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            child: Icon(Icons.restaurant_menu, color: Colors.white, size: 22),
-          ),
-          title: Row(
-            children: [
-              Text(
-                'Table ${order.tableNumber}',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18,
-                  color: textColor,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      _getStatusColor(order.status).withOpacity(0.8),
-                      _getStatusColor(order.status),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _getStatusColor(order.status).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  order.status.toUpperCase(),
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withOpacity(0.4),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.access_time_rounded,
-                    size: 16,
-                    color: secondaryTextColor.withOpacity(0.8),
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
-                    style: TextStyle(
-                      color: secondaryTextColor,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 16,
-                    color: primaryColor.withOpacity(0.7),
-                  ),
-                  SizedBox(width: 6),
-                  Text(
-                    '${order.orderItems.length} items',
-                    style: TextStyle(
-                      color: primaryColor.withOpacity(0.8),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          child: Icon(Icons.restaurant_menu, color: Colors.white, size: 18),
+        ),
+        title: Row(
           children: [
+            Text(
+              'Table ${order.tableNumber}',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: textColor,
+                letterSpacing: -0.3,
+              ),
+            ),
+            SizedBox(width: 6),
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: isDarkMode
-                      ? [Colors.grey[700]!, Colors.grey[800]!]
-                      : [const Color(0xFFF8FAFC), const Color(0xFFF1F5F9).withOpacity(0.5)],
+                  colors: [
+                    _getStatusColor(order.status).withOpacity(0.8),
+                    _getStatusColor(order.status),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: primaryColor.withOpacity(0.05), width: 1),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [primaryColor, primaryColor.withOpacity(0.8)],
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(Icons.restaurant, size: 16, color: Colors.white),
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Order Items',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: textColor,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
-                    ],
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: _getStatusColor(order.status).withOpacity(0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 1),
                   ),
-                  SizedBox(height: 16),
-                  ...order.orderItems.map((orderItem) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isDarkMode
-                              ? [Colors.grey[700]!, Colors.grey[800]!]
-                              : [Colors.white, const Color(0xFFF8FAFC).withOpacity(0.8)],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: primaryColor.withOpacity(0.1), width: 1.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: primaryColor.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(borderRadius: BorderRadius.circular(12))),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  orderItem.itemName,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                    color: textColor,
-                                    letterSpacing: -0.1,
-                                  ),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Price: ${currencyFormat.format(orderItem.price)}',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: secondaryTextColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                if (orderItem.specialNote.isNotEmpty) ...[
-                                  SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: isDarkMode
-                                            ? [Colors.amber[800]!, Colors.amber[900]!]
-                                            : [const Color(0xFFFEF3C7), const Color(0xFFFDE68A).withOpacity(0.7)],
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: const Color(0xFFD97706).withOpacity(0.2), width: 1),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.note_alt_outlined,
-                                          size: 12,
-                                          color: isDarkMode ? Colors.amber[100]! : const Color(0xFF92400E),
-                                        ),
-                                        SizedBox(width: 4),
-                                        Flexible(
-                                          child: Text(
-                                            orderItem.specialNote,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: isDarkMode ? Colors.amber[100]! : const Color(0xFF92400E),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [successColor, successColor.withOpacity(0.8)],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: successColor.withOpacity(0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              'x${orderItem.quantity}',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w800,
-                                fontSize: 13,
-                                color: Colors.white,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
                 ],
+              ),
+              child: Text(
+                order.status.toUpperCase(),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
+                ),
               ),
             ),
           ],
         ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 14,
+                  color: secondaryTextColor.withOpacity(0.8),
+                ),
+                SizedBox(width: 4),
+                Text(
+                  DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
+                  style: TextStyle(
+                    color: secondaryTextColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(
+                  Icons.shopping_bag_outlined,
+                  size: 14,
+                  color: primaryColor.withOpacity(0.7),
+                ),
+                SizedBox(width: 4),
+                Text(
+                  '${order.orderItems.length} items',
+                  style: TextStyle(
+                    color: primaryColor.withOpacity(0.8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDarkMode ? Colors.grey[800] : const Color(0xFFF8FAFC), // Single color
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA), // Simplified border
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [primaryColor, primaryColor.withOpacity(0.8)],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.restaurant, size: 14, color: Colors.white),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'Order Items',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: textColor,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 12),
+                ...order.orderItems.map((orderItem) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[800] : Colors.white, // Single color
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA), // Simplified border
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                orderItem.itemName,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  color: textColor,
+                                  letterSpacing: -0.1,
+                                ),
+                              ),
+                              SizedBox(height: 3),
+                              Text(
+                                'Price: ${currencyFormat.format(orderItem.price)}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: secondaryTextColor,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              if (orderItem.specialNote.isNotEmpty) ...[
+                                SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: isDarkMode ? Colors.amber[900] : const Color(0xFFFEF3C7), // Single color
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: isDarkMode ? Colors.amber[800]! : const Color(0xFFD97706).withOpacity(0.2),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.note_alt_outlined,
+                                        size: 10,
+                                        color: isDarkMode ? Colors.amber[100]! : const Color(0xFF92400E),
+                                      ),
+                                      SizedBox(width: 3),
+                                      Flexible(
+                                        child: Text(
+                                          orderItem.specialNote,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: isDarkMode ? Colors.amber[100]! : const Color(0xFF92400E),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [successColor, successColor.withOpacity(0.8)],
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: [
+                              BoxShadow(
+                                color: successColor.withOpacity(0.3),
+                                blurRadius: 6,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            'x${orderItem.quantity}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                              color: Colors.white,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
+    ),
+  );
+}
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'appetizer':
