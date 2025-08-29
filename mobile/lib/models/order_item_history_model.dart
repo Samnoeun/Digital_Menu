@@ -1,23 +1,25 @@
-import '../models/menu_item.dart';
 class OrderItemHistory {
   final int itemId;
   final int quantity;
-  final String? specialNote;
-  final MenuItem item;
+  final String specialNote;
+  final String itemName; // Add this field
+  final String itemCategory; // Add this field
 
   OrderItemHistory({
     required this.itemId,
     required this.quantity,
-    this.specialNote,
-    required this.item,
+    required this.specialNote,
+    required this.itemName, // Add to constructor
+    required this.itemCategory, // Add to constructor
   });
 
   factory OrderItemHistory.fromJson(Map<String, dynamic> json) {
     return OrderItemHistory(
       itemId: json['item_id'],
       quantity: json['quantity'],
-      specialNote: json['special_note'],
-      item: MenuItem.fromJson(json['item']), // Make sure MenuItem.fromJson exists
+      specialNote: json['special_note'] ?? '',
+      itemName: json['item']?['name'] ?? 'Unknown Item', // Extract from nested item object
+      itemCategory: json['item']?['category']?['name'] ?? 'No category', // Extract category name
     );
   }
 }
