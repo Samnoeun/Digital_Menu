@@ -149,14 +149,16 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
   }
 
   TextStyle getTextStyle({bool isSubtitle = false, bool isGray = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return TextStyle(
       fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
       fontSize: isSubtitle ? 14 : 16,
       color: isGray
-          ? Theme.of(context).textTheme.bodyMedium!.color
+          ? isDark ? Colors.grey[400] : Colors.grey[600]
           : isSubtitle
-              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
-              : Theme.of(context).textTheme.bodyLarge!.color,
+              ? isDark ? Colors.grey[300] : Colors.grey[700]
+              : isDark ? Colors.white : Colors.black,
       fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
     );
   }
@@ -167,15 +169,16 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: isDark ? Colors.grey[900] : Colors.grey[50],
       appBar: AppBar(
         title: Text(
           lang['setup_restaurant']!,
-          style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+          style: TextStyle(
             fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            color: isDark ? Colors.white : Colors.white,
           ),
         ),
-        backgroundColor: Colors.deepPurple.shade700, 
+        backgroundColor: isDark ? Colors.deepPurple[800] : Colors.deepPurple[700],
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
@@ -217,10 +220,27 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   labelText: lang['restaurant_name']!,
                   prefixIcon: Icon(
                     Icons.restaurant,
-                    color: isDark ? Colors.white : Colors.deepPurple,
+                    color: isDark ? Colors.white70 : Colors.deepPurple,
                   ),
-                  border: const OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[600]! : Colors.grey[400]!,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[600]! : Colors.grey[400]!,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.deepPurple[400]! : Colors.deepPurple,
+                      width: 2,
+                    ),
+                  ),
                   labelStyle: getTextStyle(),
+                  fillColor: isDark ? Colors.grey[800] : Colors.white,
+                  filled: true,
                 ),
                 style: getTextStyle(),
                 validator: (value) {
@@ -237,10 +257,27 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
                   labelText: lang['address']!,
                   prefixIcon: Icon(
                     Icons.location_on,
-                    color: isDark ? Colors.white : Colors.deepPurple,
+                    color: isDark ? Colors.white70 : Colors.deepPurple,
                   ),
-                  border: const OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[600]! : Colors.grey[400]!,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey[600]! : Colors.grey[400]!,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.deepPurple[400]! : Colors.deepPurple,
+                      width: 2,
+                    ),
+                  ),
                   labelStyle: getTextStyle(),
+                  fillColor: isDark ? Colors.grey[800] : Colors.white,
+                  filled: true,
                 ),
                 style: getTextStyle(),
                 validator: (value) {
@@ -253,11 +290,20 @@ class _RestaurantScreenState extends State<RestaurantScreen> {
               const SizedBox(height: 26),
               ElevatedButton(
                 onPressed: _submit,
-                style: Theme.of(context).elevatedButtonTheme.style,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? Colors.deepPurple[700] : Colors.deepPurple,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
                 child: Text(
                   lang['save_restaurant']!,
                   style: TextStyle(
                     fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
