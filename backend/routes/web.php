@@ -16,3 +16,4 @@
     Route::get('/restaurants/{id}/table-number', [OrderController::class, 'webTableNumber'])->name('web.table-number');
     Route::post('/restaurants/{id}/submit-order', [OrderController::class, 'webSubmitOrder'])->name('web.submit-order');
     Route::get('/restaurants/{id}/order-confirmation', [OrderController::class, 'webOrderConfirmation'])->name('web.order-confirmation');
+    Route::get('/images/{type}/{filename}', [App\Http\Controllers\Api\ImageController::class, 'show'])->name('image.show');

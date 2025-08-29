@@ -184,10 +184,10 @@ class OrderController extends Controller
             return redirect()->route('web.menu-preview', ['id' => $id])->withErrors(['error' => 'Invalid order data']);
         }
 
-        return view('order-confirmation', [
-            'restaurant' => \App\Models\Restaurant::findOrFail($id),
-            'table_number' => $tableNumber,
-            'items' => $items,
-        ]);
+        // return view('order-confirmation', [
+        //     'restaurant' => \App\Models\Restaurant::findOrFail($id),
+        //     'table_number' => $tableNumber,
+        //     'items' => $items,
+        // ]);
     }
 }

@@ -23,6 +23,7 @@ dependencies:
   dio: ^5.9.0
   flutter_animate: ^4.5.2
   simple_animations: ^5.2.0
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:
