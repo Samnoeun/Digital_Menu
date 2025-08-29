@@ -109,15 +109,21 @@
             opacity: 0;
             pointer-events: none;
         }
-        /* Table error styling (default until image is provided) */
+        /* Table error styling - FIXED */
         #table-error {
             background-color: #fee2e2;
             color: #dc2626;
             padding: 0.5rem;
             border-radius: 0.375rem;
             margin-top: 0.5rem;
-            display: flex;
+            display: none; /* Changed from flex to none */
             align-items: center;
+        }
+        #table-error.hidden {
+            display: none;
+        }
+        #table-error.visible {
+            display: flex;
         }
         #table-error svg {
             width: 1.25rem;
@@ -320,6 +326,13 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM loaded, initializing menu...');
+            
+            // Fix for table error visibility issue - ADD THIS
+            const tableError = document.getElementById('table-error');
+            if (tableError) {
+                tableError.classList.add('hidden');
+            }
+            
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             let selectedCategoryId = null;
             let currentLanguage = 'en';
@@ -942,4 +955,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
