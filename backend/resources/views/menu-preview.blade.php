@@ -57,6 +57,73 @@
         .checkmark {
             animation: checkmark 0.5s ease-in-out forwards;
         }
+        .item-card {
+            height: 100px;
+            padding: 8px;
+        }
+        .item-card img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .quantity-selector button {
+            width: 24px;
+            height: 24px;
+            background-color: #6b46c1;
+            color: white;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .quantity-selector span {
+            font-size: 14px;
+            min-width: 20px;
+            text-align: center;
+        }
+        #basket-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            padding: 12px;
+            background-color: #6b46c1;
+            color: white;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 30;
+            transition: opacity 0.3s ease;
+        }
+        #basket-button.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        /* Table error styling (default until image is provided) */
+        #table-error {
+            background-color: #fee2e2;
+            color: #dc2626;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        #table-error svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-purple-50 text-gray-900 en">
@@ -117,16 +184,20 @@
                     @if ($category->items->isNotEmpty())
                         <div class="category-section mb-8" data-category-id="{{ $category->id }}">
                             <h2 class="text-2xl font-bold text-purple-700 mb-4">{{ $category->name }}</h2>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 @foreach ($category->items as $item)
-                                    <div class="item-card bg-white rounded-lg shadow-md hover:shadow-lg transition p-4 cursor-pointer" data-item-id="{{ $item->id }}" data-item-name="{{ $item->name }}" data-item-price="{{ $item->price }}" data-item-description="{{ $item->description ?? '' }}" data-item-image="{{ $item->image_path ? 'storage/' . $item->image_path : '' }}">
-                                        <img src="{{ $item->image_path ? url('storage/' . $item->image_path) : 'https://via.placeholder.com/150' }}" alt="{{ $item->name }}" class="w-full h-40 rounded-lg mb-4" style="object-fit: contain; max-height: 100%; max-width: 100%;">
-                                        <h3 class="text-lg font-semibold text-gray-900">{{ $item->name }}</h3>
-                                        <p class="text-gray-600">${{ number_format($item->price, 2) }}</p>
-                                        <div class="quantity-selector hidden mt-2 flex items-center space-x-2">
-                                            <button class="decrement bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center">-</button>
-                                            <span class="quantity text-gray-900">0</span>
-                                            <button class="increment bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center">+</button>
+                                    <div class="item-card bg-white rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-between cursor-pointer" data-item-id="{{ $item->id }}" data-item-name="{{ $item->name }}" data-item-price="{{ $item->price }}" data-item-description="{{ $item->description ?? '' }}" data-item-image="{{ $item->image_path ? 'storage/' . $item->image_path : '' }}">
+                                        <div class="flex items-center space-x-2 flex-1">
+                                            <img src="{{ $item->image_path ? url('storage/' . $item->image_path) : 'https://via.placeholder.com/50' }}" alt="{{ $item->name }}" class="rounded-lg">
+                                            <div>
+                                                <h3 class="text-sm font-semibold text-gray-900">{{ $item->name }}</h3>
+                                                <p class="text-xs text-gray-600">${{ number_format($item->price, 2) }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="quantity-selector">
+                                            <button class="decrement hidden">-</button>
+                                            <span class="quantity hidden">0</span>
+                                            <button class="increment">+</button>
                                         </div>
                                     </div>
                                 @endforeach
@@ -138,27 +209,28 @@
         </main>
 
         <div id="cart-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
-            <div class="bg-white rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
-                <div class="p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold text-gray-900" data-translate="your_cart">Your Cart</h2>
-                        <button id="close-cart" class="text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <div id="cart-items" class="space-y-4"></div>
-                    <div class="mt-4 pt-4 border-t border-gray-300">
-                        <div class="flex justify-between text-lg font-semibold text-gray-900">
-                            <span data-translate="total">Total:</span>
-                            <span id="cart-modal-total">$0.00</span>
-                        </div>
-                    </div>
-                    <button id="proceed-to-table" class="w-full mt-4 bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition" data-translate="proceed_to_table">Proceed to Table Number</button>
+        <div class="bg-white rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900" data-translate="your_cart">Your Cart</h2>
+                    <button id="close-cart" class="text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
+                <div id="cart-items" class="space-y-4"></div>
+                <div class="mt-4 pt-4 border-t border-gray-300">
+                    <div class="flex justify-between text-lg font-semibold text-gray-900">
+                        <span data-translate="total">Total:</span>
+                        <span id="cart-modal-total">$0.00</span>
+                    </div>
+                </div>
+                <!-- Add condition to hide button when cart is empty -->
+                <button id="proceed-to-table" class="w-full mt-4 bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition hidden" data-translate="proceed_to_table">Proceed to Table Number</button>
             </div>
         </div>
+    </div>
 
         <div id="product-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
             <div class="bg-white rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
@@ -199,7 +271,12 @@
                     <div class="mb-4">
                         <label for="table-number" class="block text-gray-900 mb-2" data-translate="table_number">Table Number</label>
                         <input type="number" id="table-number" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600 text-gray-900" required min="1" step="1">
-                        <p id="table-error" class="text-red-500 text-sm mt-2 hidden"></p>
+                        <p id="table-error" class="text-red-500 text-sm mt-2 hidden">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span>This table already has an order</span>
+                        </p>
                     </div>
                     <button type="submit" id="submit-table" class="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition flex items-center justify-center" data-translate="submit_order">
                         <span>Submit Order</span>
@@ -220,6 +297,8 @@
                         </svg>
                     </div>
                     <h2 class="text-2xl font-bold text-center text-gray-900 mb-4">Thanks for supporting {{ $restaurant->restaurant_name }}!</h2>
+                    <h3 id="confirmation-table-number" class="text-4xl font-bold text-center text-purple-600 mb-2"></h3>
+                    <p class="text-center text-gray-600 mb-4">Please remember this number.</p>
                     <div class="mb-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-2" data-translate="your_order">Your Order</h3>
                         <ul id="ordered-items" class="space-y-4"></ul>
@@ -234,6 +313,8 @@
                 </div>
             </div>
         </div>
+
+        <button id="basket-button" class="hidden">Basket (0) - $0.00</button>
     </div>
 
     <script>
@@ -242,8 +323,8 @@
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
             let selectedCategoryId = null;
             let currentLanguage = 'en';
+            let basketTriggered = false;
 
-            // Translation object
             const translations = {
                 en: {
                     your_cart: 'Your Cart',
@@ -283,24 +364,21 @@
                 }
             };
 
-            // Flag images for languages
             const languageFlags = {
                 en: '/image/UK.png',
                 km: '/image/Khmer.png'
             };
 
-            // Helper function to resolve image paths
             function getImagePath(image) {
                 if (!image || image === '') {
                     console.log('Image path empty, using placeholder');
-                    return 'https://via.placeholder.com/150';
+                    return 'https://via.placeholder.com/50';
                 }
                 const path = image.startsWith('storage/') ? `/${image}` : `/storage/${image}`;
                 console.log('Resolved image path:', path);
                 return path;
             }
 
-            // Function to update translations and font
             function updateTranslations() {
                 console.log('Updating translations for language:', currentLanguage);
                 document.querySelectorAll('[data-translate]').forEach(element => {
@@ -316,14 +394,12 @@
                 if (languageFlag) languageFlag.src = languageFlags[currentLanguage];
             }
 
-            // Function to toggle language
             function toggleLanguage() {
                 currentLanguage = currentLanguage === 'en' ? 'km' : 'en';
                 console.log('Toggling language to:', currentLanguage);
                 updateTranslations();
             }
 
-            // Dark mode toggle
             const themeToggle = document.getElementById('theme-toggle');
             const themeIcon = document.getElementById('theme-icon');
             if (themeToggle && themeIcon) {
@@ -344,14 +420,13 @@
                 console.error('Theme toggle elements not found:', { themeToggle, themeIcon });
             }
 
-            // Load cart from localStorage on page load
             function loadCart() {
                 cart = JSON.parse(localStorage.getItem('cart')) || [];
                 console.log('Loaded cart:', cart);
                 updateCart();
+                updateBasketButton();
             }
 
-            // Save cart to localStorage
             function saveCart() {
                 console.log('Saving cart:', cart);
                 localStorage.setItem('cart', JSON.stringify(cart));
@@ -361,9 +436,10 @@
                 const cartCount = document.getElementById('cart-count');
                 const cartItemsDiv = document.getElementById('cart-items');
                 const cartModalTotal = document.getElementById('cart-modal-total');
+                const proceedButton = document.getElementById('proceed-to-table');
 
-                if (!cartCount || !cartItemsDiv || !cartModalTotal) {
-                    console.error('Cart elements not found:', { cartCount, cartItemsDiv, cartModalTotal });
+                if (!cartCount || !cartItemsDiv || !cartModalTotal || !proceedButton) {
+                    console.error('Cart elements not found:', { cartCount, cartItemsDiv, cartModalTotal, proceedButton });
                     return;
                 }
 
@@ -377,6 +453,9 @@
                 cartCount.textContent = totalItems;
                 cartCount.classList.toggle('hidden', totalItems === 0);
                 cartModalTotal.textContent = `$${totalPrice.toFixed(2)}`;
+                
+                // Show/hide proceed button based on cart items
+                proceedButton.classList.toggle('hidden', totalItems === 0);
 
                 cartItemsDiv.innerHTML = '';
                 Object.entries(itemQuantities).forEach(([itemId, quantity]) => {
@@ -409,6 +488,7 @@
                             cart.splice(index, 1);
                             saveCart();
                             updateCart();
+                            updateBasketButton();
                         }
                     });
                 });
@@ -420,32 +500,58 @@
                         cart.push({ ...item });
                         saveCart();
                         updateCart();
+                        updateBasketButton();
                     });
                 });
 
-                document.querySelectorAll('.quantity-selector').forEach(selector => {
-                    const itemId = selector.closest('.item-card').dataset.itemId;
+                document.querySelectorAll('.item-card').forEach(card => {
+                    const itemId = card.dataset.itemId;
                     const quantity = itemQuantities[itemId] || 0;
-                    const quantityElement = selector.querySelector('.quantity');
-                    if (quantityElement) {
-                        quantityElement.textContent = quantity;
-                        selector.classList.toggle('hidden', quantity === 0);
+                    const decrement = card.querySelector('.decrement');
+                    const quantityElem = card.querySelector('.quantity');
+                    const increment = card.querySelector('.increment');
+                    quantityElem.textContent = quantity;
+                    if (quantity > 0) {
+                        decrement.classList.remove('hidden');
+                        quantityElem.classList.remove('hidden');
+                    } else {
+                        decrement.classList.add('hidden');
+                        quantityElem.classList.add('hidden');
                     }
                 });
             }
 
-            // Function to show confirmation modal
-            function showConfirmationModal() {
-                const confirmationModal = document.getElementById('confirmation-modal');
-                const orderedItemsDiv = document.getElementById('ordered-items');
-                const orderTotal = document.getElementById('order-total');
-
-                if (!confirmationModal || !orderedItemsDiv || !orderTotal) {
-                    console.error('Confirmation modal elements not found:', { confirmationModal, orderedItemsDiv, orderTotal });
+            function updateBasketButton() {
+                const basketButton = document.getElementById('basket-button');
+                if (!basketButton) {
+                    console.error('Basket button not found');
                     return;
                 }
 
-                // Aggregate items by ID and note to show quantities
+                const totalItems = cart.length;
+                const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
+                basketButton.textContent = `Basket (${totalItems}) - $${totalPrice.toFixed(2)}`;
+
+                if (basketTriggered && totalItems > 0) {
+                    basketButton.classList.remove('hidden');
+                } else {
+                    basketButton.classList.add('hidden');
+                }
+            }
+
+            function showConfirmationModal(tableNumber) {
+                const confirmationModal = document.getElementById('confirmation-modal');
+                const orderedItemsDiv = document.getElementById('ordered-items');
+                const orderTotal = document.getElementById('order-total');
+                const confirmationTable = document.getElementById('confirmation-table-number');
+
+                if (!confirmationModal || !orderedItemsDiv || !orderTotal || !confirmationTable) {
+                    console.error('Confirmation modal elements not found');
+                    return;
+                }
+
+                confirmationTable.textContent = `Table ${tableNumber}`;
+
                 const itemQuantities = cart.reduce((acc, item) => {
                     const key = `${item.id}-${item.note || ''}`;
                     if (!acc[key]) {
@@ -455,11 +561,9 @@
                     return acc;
                 }, {});
 
-                // Calculate total price
                 const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
                 orderTotal.textContent = `$${totalPrice.toFixed(2)}`;
 
-                // Populate ordered items with images
                 orderedItemsDiv.innerHTML = Object.values(itemQuantities).map(item => `
                     <li class="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
                         <div class="flex items-center space-x-2">
@@ -504,13 +608,14 @@
                     productPrice.textContent = `$${item.price.toFixed(2)}`;
                     productDescription.textContent = item.description || translations[currentLanguage].no_description;
                     productImage.src = getImagePath(item.image);
-                    productNote.value = '';
+                    productNote.value = cart.find(i => i.id == item.id)?.note || '';
                     const quantity = cart.filter(i => i.id == item.id).length;
                     productQuantity.textContent = quantity;
 
                     const modal = document.getElementById('product-modal');
                     if (modal) {
                         modal.classList.remove('hidden', 'modal-hidden');
+                        document.getElementById('basket-button').classList.add('hidden');
                         updateTranslations();
                     } else {
                         console.error('Product modal not found');
@@ -539,6 +644,39 @@
                         modal.classList.add('hidden');
                         setTimeout(() => modal.classList.add('modal-hidden'), 300);
                     };
+                });
+
+                const decrement = card.querySelector('.decrement');
+                const increment = card.querySelector('.increment');
+
+                decrement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const itemId = card.dataset.itemId;
+                    const index = cart.findIndex(item => item.id == itemId);
+                    if (index !== -1) {
+                        cart.splice(index, 1);
+                        saveCart();
+                        updateCart();
+                        updateBasketButton();
+                        if (cart.length === 0) basketTriggered = false;
+                    }
+                });
+
+                increment.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const item = {
+                        id: card.dataset.itemId,
+                        name: card.dataset.itemName,
+                        price: parseFloat(card.dataset.itemPrice),
+                        description: card.dataset.itemDescription,
+                        image: card.dataset.itemImage || '',
+                        note: cart.find(i => i.id == card.dataset.itemId)?.note || ''
+                    };
+                    cart.push(item);
+                    saveCart();
+                    updateCart();
+                    basketTriggered = true;
+                    updateBasketButton();
                 });
             });
 
@@ -592,6 +730,7 @@
                 if (modal) {
                     modal.classList.add('hidden');
                     setTimeout(() => modal.classList.add('modal-hidden'), 300);
+                    updateBasketButton();
                 } else {
                     console.error('Product modal not found for close');
                 }
@@ -599,11 +738,25 @@
 
             document.getElementById('cart-toggle').addEventListener('click', () => {
                 const modal = document.getElementById('cart-modal');
-                if (modal) {
+                const basketButton = document.getElementById('basket-button');
+                if (modal && basketButton) {
                     modal.classList.remove('hidden', 'modal-hidden');
+                    basketButton.classList.add('hidden');
                     updateTranslations();
                 } else {
-                    console.error('Cart modal not found');
+                    console.error('Cart modal or basket button not found');
+                }
+            });
+
+            document.getElementById('basket-button').addEventListener('click', () => {
+                const modal = document.getElementById('cart-modal');
+                const basketButton = document.getElementById('basket-button');
+                if (modal && basketButton) {
+                    modal.classList.remove('hidden', 'modal-hidden');
+                    basketButton.classList.add('hidden');
+                    updateTranslations();
+                } else {
+                    console.error('Cart modal or basket button not found');
                 }
             });
 
@@ -612,6 +765,7 @@
                 if (modal) {
                     modal.classList.add('hidden');
                     setTimeout(() => modal.classList.add('modal-hidden'), 300);
+                    updateBasketButton();
                 } else {
                     console.error('Cart modal not found for close');
                 }
@@ -642,156 +796,147 @@
 
             document.getElementById('language-toggle').addEventListener('click', toggleLanguage);
 
-            // Close confirmation modal and update cart
             document.getElementById('done-button').addEventListener('click', () => {
                 const modal = document.getElementById('confirmation-modal');
                 if (modal) {
                     modal.classList.add('hidden');
                     setTimeout(() => modal.classList.add('modal-hidden'), 300);
-                    cart = []; // Clear the cart in memory
-                    saveCart(); // Save empty cart to localStorage
-                    updateCart(); // Update UI to reflect empty cart
+                    cart = [];
+                    saveCart();
+                    updateCart();
+                    updateBasketButton();
+                    basketTriggered = false;
                 } else {
                     console.error('Confirmation modal not found for close');
                 }
             });
 
-            // Order submission handler
-            const tableNumberForm = document.getElementById('table-number-form');
-            if (!tableNumberForm) {
-                console.error('Table number form not found');
-                return;
+            const tableNumberInput = document.getElementById('table-number');
+            if (tableNumberInput) {
+                // Clear any existing error when input is focused
+                tableNumberInput.addEventListener('focus', () => {
+                    const errorDiv = document.getElementById('table-error');
+                    errorDiv.classList.add('hidden');
+                    tableNumberInput.classList.remove('border-red-500');
+                });
+                
+                tableNumberInput.addEventListener('input', async () => {
+                    const tableNumber = tableNumberInput.value.trim();
+                    const errorDiv = document.getElementById('table-error');
+                    
+                    // Don't validate if input is empty
+                    if (!tableNumber) {
+                        errorDiv.classList.add('hidden');
+                        tableNumberInput.classList.remove('border-red-500');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await axios.get(`{{ route('web.check-table', ['id' => $restaurant->id]) }}?table_number=${tableNumber}`);
+                        if (!response.data.available) {
+                            errorDiv.classList.remove('hidden');
+                            tableNumberInput.classList.add('border-red-500');
+                        } else {
+                            errorDiv.classList.add('hidden');
+                            tableNumberInput.classList.remove('border-red-500');
+                        }
+                    } catch (error) {
+                        console.error('Table check error:', error);
+                    }
+                });
             }
 
-            console.log('Attaching submit handler to table-number-form');
-            tableNumberForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                console.log('Submit event triggered for table-number-form');
+            const tableNumberForm = document.getElementById('table-number-form');
+            if (tableNumberForm) {
+                tableNumberForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const tableNumberInput = document.getElementById('table-number');
+                    const submitButton = document.getElementById('submit-table');
+                    const loadingIcon = document.getElementById('submit-loading');
+                    const errorDiv = document.getElementById('table-error');
 
-                const tableNumberInput = document.getElementById('table-number');
-                const submitButton = document.getElementById('submit-table');
-                const loadingIcon = document.getElementById('submit-loading');
-                const errorDiv = document.getElementById('table-error');
-
-                if (!tableNumberInput || !submitButton || !errorDiv) {
-                    console.error('Critical order form elements missing:', {
-                        tableNumberInput,
-                        submitButton,
-                        loadingIcon,
-                        errorDiv
-                    });
-                    return;
-                }
-
-                console.log('Form elements found, reading localStorage cart');
-                const cart = JSON.parse(localStorage.getItem('cart')) || [];
-                console.log('Cart from localStorage:', cart);
-
-                const tableNumber = tableNumberInput.value.trim();
-                const tableNumberInt = parseInt(tableNumber, 10);
-                if (!tableNumber || isNaN(tableNumberInt) || tableNumberInt <= 0) {
-                    console.log('Invalid table number:', tableNumber);
-                    errorDiv.textContent = translations[currentLanguage].table_number_error || 'Please enter a valid table number';
-                    errorDiv.classList.remove('hidden');
-                    return;
-                }
-
-                if (cart.length === 0) {
-                    console.log('Cart is empty');
-                    errorDiv.textContent = translations[currentLanguage].empty_cart_error || 'Your cart is empty';
-                    errorDiv.classList.remove('hidden');
-                    return;
-                }
-
-                console.log('Processing cart items for payload');
-                const items = cart.reduce((acc, item) => {
-                    const itemId = parseInt(item.id, 10);
-                    if (isNaN(itemId)) {
-                        console.warn('Skipping invalid item_id:', item.id);
-                        return acc;
-                    }
-                    const existing = acc.find(i => i.item_id === itemId && i.special_note === (item.note || null));
-                    if (existing) {
-                        existing.quantity++;
-                    } else {
-                        acc.push({
-                            item_id: itemId,
-                            quantity: 1,
-                            special_note: item.note || null
-                        });
-                    }
-                    return acc;
-                }, []);
-
-                if (items.length === 0) {
-                    console.log('No valid items in cart after processing');
-                    errorDiv.textContent = translations[currentLanguage].empty_cart_error || 'No valid items in cart';
-                    errorDiv.classList.remove('hidden');
-                    return;
-                }
-
-                const payload = {
-                    table_number: tableNumberInt,
-                    items
-                };
-                console.log('Order payload:', JSON.stringify(payload, null, 2));
-
-                submitButton.disabled = true;
-                if (loadingIcon) {
-                    loadingIcon.classList.remove('hidden');
-                }
-                errorDiv.classList.add('hidden');
-
-                try {
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-                    if (!csrfToken) {
-                        console.error('CSRF token missing');
-                        throw new Error('CSRF token not found');
+                    if (!tableNumberInput || !submitButton || !errorDiv) {
+                        console.error('Critical order form elements missing:', { tableNumberInput, submitButton, loadingIcon, errorDiv });
+                        return;
                     }
 
-                    console.log('Sending POST request to:', '{{ route('web.submit-order', ['id' => $restaurant->id]) }}');
-                    const response = await axios.post('{{ route('web.submit-order', ['id' => $restaurant->id]) }}', payload, {
-                        headers: { 'X-CSRF-TOKEN': csrfToken }
-                    });
+                    const tableNumber = tableNumberInput.value.trim();
+                    const tableNumberInt = parseInt(tableNumber, 10);
+                    if (!tableNumber || isNaN(tableNumberInt) || tableNumberInt <= 0) {
+                        errorDiv.textContent = translations[currentLanguage].table_number_error || 'Please enter a valid table number';
+                        errorDiv.classList.remove('hidden');
+                        return;
+                    }
 
-                    console.log('Order response:', response.data);
+                    if (cart.length === 0) {
+                        errorDiv.textContent = translations[currentLanguage].empty_cart_error || 'Your cart is empty';
+                        errorDiv.classList.remove('hidden');
+                        return;
+                    }
 
-                    if (response.status === 201) {
-                        console.log('Order submitted successfully, clearing cart and showing confirmation');
-                        localStorage.removeItem('cart');
-                        updateCart();
-                        const tableModal = document.getElementById('table-number-modal');
-                        if (tableModal) {
-                            tableModal.classList.add('hidden');
-                            setTimeout(() => tableModal.classList.add('modal-hidden'), 300);
+                    const items = cart.reduce((acc, item) => {
+                        const itemId = parseInt(item.id, 10);
+                        if (isNaN(itemId)) {
+                            console.warn('Skipping invalid item_id:', item.id);
+                            return acc;
                         }
-                        showConfirmationModal();
-                    } else {
-                        console.error('Invalid response status:', response.status);
-                        throw new Error('Unexpected response status');
-                    }
-                } catch (error) {
-                    console.error('Order submission error:', {
-                        message: error.message,
-                        response: error.response?.data,
-                        status: error.response?.status
-                    });
-                    const errorMessage = error.response?.data?.error || error.response?.data?.message || translations[currentLanguage].order_failed || 'Failed to submit order';
-                    errorDiv.textContent = errorMessage;
-                    errorDiv.classList.remove('hidden');
-                    errorDiv.classList.remove('text-green-500');
-                    errorDiv.classList.add('text-red-500');
-                } finally {
-                    submitButton.disabled = false;
-                    if (loadingIcon) {
-                        loadingIcon.classList.add('hidden');
-                    }
-                    console.log('Submission complete, button re-enabled');
-                }
-            });
+                        const existing = acc.find(i => i.item_id === itemId && i.special_note === (item.note || null));
+                        if (existing) {
+                            existing.quantity++;
+                        } else {
+                            acc.push({
+                                item_id: itemId,
+                                quantity: 1,
+                                special_note: item.note || null
+                            });
+                        }
+                        return acc;
+                    }, []);
 
-            // Initialize cart and translations
-            console.log('Initializing cart and translations');
+                    if (items.length === 0) {
+                        errorDiv.textContent = translations[currentLanguage].empty_cart_error || 'No valid items in cart';
+                        errorDiv.classList.remove('hidden');
+                        return;
+                    }
+
+                    const payload = { table_number: tableNumberInt, items };
+                    submitButton.disabled = true;
+                    if (loadingIcon) loadingIcon.classList.remove('hidden');
+                    errorDiv.classList.add('hidden');
+
+                    try {
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+                        if (!csrfToken) throw new Error('CSRF token not found');
+                        const response = await axios.post('{{ route('web.submit-order', ['id' => $restaurant->id]) }}', payload, {
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        });
+
+                        if (response.status === 201) {
+                            localStorage.removeItem('cart');
+                            updateCart();
+                            updateBasketButton();
+                            const tableModal = document.getElementById('table-number-modal');
+                            if (tableModal) {
+                                tableModal.classList.add('hidden');
+                                setTimeout(() => tableModal.classList.add('modal-hidden'), 300);
+                            }
+                            showConfirmationModal(tableNumberInt);
+                        } else {
+                            throw new Error('Unexpected response status');
+                        }
+                    } catch (error) {
+                        console.error('Order submission error:', error);
+                        const errorMessage = error.response?.data?.error || error.response?.data?.message || translations[currentLanguage].order_failed || 'Failed to submit order';
+                        errorDiv.textContent = errorMessage;
+                        errorDiv.classList.remove('hidden');
+                        errorDiv.classList.add('text-red-500');
+                    } finally {
+                        submitButton.disabled = false;
+                        if (loadingIcon) loadingIcon.classList.add('hidden');
+                    }
+                });
+            }
+
             loadCart();
             updateTranslations();
         });

@@ -190,4 +190,19 @@ class OrderController extends Controller
         //     'items' => $items,
         // ]);
     }
+    public function webCheckTable($id, Request $request)
+    {
+        $tableNumber = $request->query('table_number');
+        if (!$tableNumber) {
+            return response()->json(['available' => true]); // No table number, assume available
+        }
+
+        // Check if the table is already in use
+        $existingOrder = Order::where('restaurant_id', $id)
+                             ->where('table_number', $tableNumber)
+                             ->where('status', 'pending') // Adjust status based on your logic
+                             ->first();
+
+        return response()->json(['available' => !$existingOrder]);
+    }
 }
