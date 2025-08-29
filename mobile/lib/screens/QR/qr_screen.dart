@@ -267,41 +267,48 @@ class _QrScreenState extends State<QrScreen> {
 
     return Scaffold(
       backgroundColor: scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: primaryColor,
-        elevation: 0,
-        titleSpacing: 0,
-        title: Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: Text(
-            localization[_language]!['app_bar_title']!,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-            ),
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: localization[_language]!['scan_button'],
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const QRScannerScreen()),
-              );
-            },
-          ),
-          if (showQR)
-            IconButton(
-              icon: const Icon(Icons.download),
-              tooltip: localization[_language]!['download_button'],
-              onPressed: _downloadQRCode,
-            ).animate().scale(duration: 300.ms),
-        ],
+ appBar: AppBar(
+  backgroundColor: primaryColor,
+  elevation: 0,
+  titleSpacing: 0,
+  leading: IconButton(
+    icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+    onPressed: () {
+      Navigator.pop(context);
+    },
+  ),
+  title: Padding(
+    padding: const EdgeInsets.only(left: 10),
+    child: Text(
+      localization[_language]!['app_bar_title']!,
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        color: Colors.white,
+        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
       ),
+    ),
+  ),
+  iconTheme: const IconThemeData(color: Colors.white),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.qr_code_scanner),
+      tooltip: localization[_language]!['scan_button'],
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const QRScannerScreen()),
+        );
+      },
+    ),
+    if (showQR)
+      IconButton(
+        icon: const Icon(Icons.download),
+        tooltip: localization[_language]!['download_button'],
+        onPressed: _downloadQRCode,
+      ).animate().scale(duration: 300.ms),
+  ],
+),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 24.0),
         child: Column(

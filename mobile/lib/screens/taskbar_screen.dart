@@ -8,6 +8,7 @@ import 'QR/qr_screen.dart';
 import 'Setting/settings_screen.dart';
 import 'Preview/menu_preview_screen.dart';
 import 'ReportOrderHistory/report_order_screen.dart';
+import '../screens/ReportOrderHistory/report_order_screen.dart';
 
 
 
@@ -123,17 +124,22 @@ class _MenuScreenState extends State<MenuScreen> {
                   );
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.description),
-                title: const Text('ReportOrder'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const OrderHistoryScreen()),
-                  );
-                },
-              ),
+             ListTile(
+  leading: const Icon(Icons.description),
+  title: const Text('ReportOrder'),
+  onTap: () {
+    Navigator.pop(context);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OrderHistoryScreen(
+          orders: [], // Pass empty list to satisfy required parameter
+          currentFilter: 'All',
+        ),
+      ),
+    );
+  },
+),
               ListTile(
                 leading: const Icon(Icons.settings),
                 title: Text(
