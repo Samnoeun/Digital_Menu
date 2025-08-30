@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
 import '../../models/category_model.dart' as my_models;
 import '../../models/item_model.dart' as item_model;
 import '../../services/api_services.dart';
-import 'dart:typed_data'; // For Uint8List
-import 'package:flutter/foundation.dart'; // For kIsWeb
 import '../../services/image_picker_service.dart'; // For ImagePickerService
 import 'package:shared_preferences/shared_preferences.dart';
 

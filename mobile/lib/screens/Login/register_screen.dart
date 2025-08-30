@@ -17,7 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   bool isLoading = false;
   String? nameError;
   String? emailError;
@@ -44,9 +45,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'confirm_password_required': 'Confirm password is required',
       'passwords_match': 'Passwords do not match',
       'continue': 'Continue',
-      'or_continue_with': 'Or continue with',
-      'google': 'Google',
-      'apple': 'Apple',
       'have_account': 'Already have an account? ',
       'login': 'Login',
       'email_taken': 'This email is already registered',
@@ -68,9 +66,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'confirm_password_required': 'ត្រូវការបញ្ជាក់ពាក្យសម្ងាត់',
       'passwords_match': 'ពាក្យសម្ងាត់មិនត្រូវគ្នា',
       'continue': 'បន្ត',
-      'or_continue_with': 'ឬបន្តជាមួយ',
-      'google': 'Google',
-      'apple': 'Apple',
       'have_account': 'មានគណនីរួចហើយ? ',
       'login': 'ចូល',
       'email_taken': 'អ៊ីមែលនេះត្រូវបានចុះឈ្មោះរួចហើយ',
@@ -178,13 +173,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (mounted) {
         final lang = localization[selectedLanguage]!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(lang['registration_success']!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(lang['registration_success']!)));
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => RestaurantScreen(onThemeToggle: widget.onThemeToggle),
+            builder: (_) =>
+                RestaurantScreen(onThemeToggle: widget.onThemeToggle),
           ),
         );
       }
@@ -193,7 +189,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         final lang = localization[selectedLanguage]!;
         setState(() {
           // Handle specific error cases
-          if (e.toString().contains("email is already taken") || 
+          if (e.toString().contains("email is already taken") ||
               e.toString().contains("email already exists")) {
             emailError = lang['email_taken'];
           } else if (!isValidEmail(emailController.text.trim())) {
@@ -218,219 +214,183 @@ class _RegisterScreenState extends State<RegisterScreen> {
       color: isGray
           ? Theme.of(context).textTheme.bodyMedium!.color
           : isSubtitle
-              ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
-              : Theme.of(context).textTheme.bodyLarge!.color,
+          ? Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.7)
+          : Theme.of(context).textTheme.bodyLarge!.color,
       fontWeight: isSubtitle ? FontWeight.w400 : FontWeight.w600,
     );
   }
 
-  Widget _buildEmailField(bool isDark, Map<String, String> lang) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          height: 70,
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: emailError != null ? Colors.red : Colors.grey.shade400,
-              width: 2.0,
-            ),
-          ),
-          child: TextField(
-            controller: emailController,
-            keyboardType: TextInputType.emailAddress,
-            onChanged: (value) {
-              if (emailError != null) {
-                setState(() => emailError = null);
-              }
-            },
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 24,
-              ),
-              prefixIcon: Icon(
-                Icons.email_outlined,
-                color: emailError != null ? Colors.red : Colors.grey.shade600,
-                size: 28,
-              ),
-              border: InputBorder.none,
-              hintText: lang['email'],
-              hintStyle: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade600,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-              ),
-            ),
-            style: TextStyle(
-              fontSize: 18,
-              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-            ),
-          ),
-        ),
-        if (emailError != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              emailError!,
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
   Widget _buildStyledTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool isPassword = false,
-    TextInputType? keyboardType,
-    String? errorText,
-    required bool isDark,
-    required Map<String, String> lang,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          height: 70,
-          decoration: BoxDecoration(
-            color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: errorText != null
-                  ? Colors.red
-                  : isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-              width: 2.0,
-            ),
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: isPassword 
-                ? (label == lang['password'] ? _obscurePassword : _obscureConfirmPassword)
-                : false,
-            keyboardType: keyboardType,
-            onChanged: (value) {
-              if (errorText != null) {
-                setState(() {
-                  if (controller == nameController) nameError = null;
-                  if (controller == passwordController) passwordError = null;
-                  if (controller == confirmPasswordController) confirmPasswordError = null;
-                });
-              }
-            },
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 24,
-              ),
-              prefixIcon: label.contains(lang['password']!) ? null : Icon(
-                icon,
-                color: errorText != null
-                    ? Colors.red
-                    : isDark ? Colors.white70 : Colors.grey.shade600,
-                size: 28,
-              ),
-              suffixIcon: isPassword ? IconButton(
-                icon: Icon(
-                  label == lang['password']
-                    ? _obscurePassword ? Icons.visibility_off : Icons.visibility
-                    : _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                  color: isDark ? Colors.white70 : Colors.grey.shade600,
-                  size: 20, // Smaller size for password visibility icons
-                ),
-                onPressed: () {
-                  setState(() {
-                    if (label == lang['password']) {
-                      _obscurePassword = !_obscurePassword;
-                    } else {
-                      _obscureConfirmPassword = !_obscureConfirmPassword;
-                    }
-                  });
-                },
-              ) : null,
-              border: InputBorder.none,
-              hintText: label,
-              hintStyle: TextStyle(
-                fontSize: 18,
-                color: Colors.grey.shade600,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-              ),
-            ),
-            style: TextStyle(
-              fontSize: 18,
-              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-            ),
-          ),
-        ),
-        if (errorText != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8, left: 4),
-            child: Text(
-              errorText,
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 16,
-                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSocialButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-    required bool isDark,
-    required Map<String, String> lang,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 140,
-        height: 60,
+  required TextEditingController controller,
+  required String label,
+  required IconData icon,
+  bool isPassword = false,
+  TextInputType? keyboardType,
+  String? errorText,
+  required bool isDark,
+  required Map<String, String> lang,
+}) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        height: 60, // Changed from 50 to 60
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey.shade800 : Colors.white,
+          color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? Colors.grey.shade700 : Colors.grey.shade200,
-            width: 1.5,
+            color: errorText != null
+                ? Colors.red
+                : isDark ? Colors.grey.shade700 : Colors.grey.shade200,
+            width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: getTextStyle().copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
+        child: TextField(
+          controller: controller,
+          obscureText: isPassword 
+              ? (label == lang['password'] ? _obscurePassword : _obscureConfirmPassword)
+              : false,
+          keyboardType: keyboardType,
+          onChanged: (value) {
+            if (errorText != null) {
+              setState(() {
+                if (controller == nameController) nameError = null;
+                if (controller == passwordController) passwordError = null;
+                if (controller == confirmPasswordController) confirmPasswordError = null;
+              });
+            }
+          },
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 18, // Changed from 12 to 18
             ),
-          ],
+            prefixIcon: Icon(
+              icon,
+              color: errorText != null
+                  ? Colors.red
+                  : isDark
+                      ? Colors.white70
+                      : Colors.deepPurple.shade400,
+              size: 28, // Reverted from 24 to 28
+            ),
+            suffixIcon: isPassword
+                ? IconButton(
+                    icon: Icon(
+                      label == lang['password']
+                          ? _obscurePassword ? Icons.visibility_off : Icons.visibility
+                          : _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                      color: isDark ? Colors.white70 : Colors.grey.shade600,
+                      size: 20, // Reverted from 18 to 20
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        if (label == lang['password']) {
+                          _obscurePassword = !_obscurePassword;
+                        } else {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        }
+                      });
+                    },
+                  )
+                : null,
+            border: InputBorder.none,
+            hintText: label,
+            hintStyle: TextStyle(
+              fontSize: 18, // Reverted from 16 to 18
+              color: isDark ? Colors.white70 : Colors.deepPurple.shade400,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
+          ),
+          style: TextStyle(
+            fontSize: 18, // Reverted from 16 to 18
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+          ),
         ),
       ),
-    );
-  }
+      if (errorText != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8, left: 4), // Reverted from 4 to 8
+          child: Text(
+            errorText,
+            style: TextStyle(
+              color: Colors.red,
+              fontSize: 16, // Reverted from 14 to 16
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+Widget _buildEmailField(bool isDark, Map<String, String> lang) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        height: 60, // Changed from 50 to 60
+        decoration: BoxDecoration(
+          color: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: emailError != null ? Colors.red : isDark
+                    ? Colors.grey.shade700
+                    : Colors.grey.shade200,
+            width: 1,
+          ),
+        ),
+        child: TextField(
+          controller: emailController,
+          keyboardType: TextInputType.emailAddress,
+          onChanged: (value) {
+            if (emailError != null) {
+              setState(() => emailError = null);
+            }
+          },
+          decoration: InputDecoration(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 18, // Changed from 12 to 18
+            ),
+            prefixIcon: Icon(
+              Icons.email_outlined,
+              color: emailError != null ? Colors.red : isDark
+                      ? Colors.white70
+                      : Colors.deepPurple.shade400,
+              size: 28, // Reverted from 24 to 28
+            ),
+            border: InputBorder.none,
+            hintText: lang['email'],
+            hintStyle: TextStyle(
+              fontSize: 18, // Reverted from 16 to 18
+              color: isDark
+                      ? Colors.white70
+                      : Colors.deepPurple.shade400,
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
+          ),
+          style: TextStyle(
+            fontSize: 18, // Reverted from 16 to 18
+            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+          ),
+        ),
+      ),
+      if (emailError != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8), // Reverted from 4 to 8
+          child: Text(
+            emailError!,
+            style: TextStyle(
+              color: Colors.red,
+              fontSize: 16, // Reverted from 14 to 16
+              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+            ),
+          ),
+        ),
+    ],
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -480,15 +440,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    const SizedBox(height: 80),
+                    const SizedBox(height: 10),
+                    // Circular logo container
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.grey.shade800 : Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(25),
+                        color: isDark
+                            ? Colors.grey.shade800
+                            : Colors.white.withOpacity(0.9),
+                        shape: BoxShape.circle, // Makes it circular
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),
@@ -497,15 +457,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ],
                       ),
-                      child: Text(
-                        lang['app_title']!,
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundColor: Colors.transparent,
+                        child: Image.asset(
+                          'assets/logo/app_logo.png', // Path to your logo image
+                          height: 50,
+                          width: 50,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback in case image fails to load
+                            return Icon(
+                              Icons.restaurant_menu,
+                              size: 40,
                               color: isDark ? Colors.white : Colors.deepPurple,
-                              letterSpacing: 1.2,
-                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                            ),
+                            );
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(height: 40),
@@ -528,11 +496,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           children: [
                             Text(
                               lang['create_account']!,
-                              style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                                    fontSize: 30,
+                              style: Theme.of(context).textTheme.bodyLarge!
+                                  .copyWith(
+                                    fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: isDark ? Colors.white : Colors.deepPurple,
-                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.deepPurple,
+                                    fontFamily: selectedLanguage == 'Khmer'
+                                        ? 'NotoSansKhmer'
+                                        : null,
                                   ),
                             ),
                             const SizedBox(height: 30),
@@ -544,14 +517,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.red.shade50,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.red.shade200, width: 2),
+                                  border: Border.all(
+                                    color: Colors.red.shade200,
+                                    width: 2,
+                                  ),
                                 ),
                                 child: Text(
                                   generalError!,
                                   style: TextStyle(
                                     color: Colors.red.shade700,
                                     fontSize: 16,
-                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                    fontFamily: selectedLanguage == 'Khmer'
+                                        ? 'NotoSansKhmer'
+                                        : null,
                                   ),
                                 ),
                               ),
@@ -588,7 +566,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             const SizedBox(height: 35),
                             SizedBox(
                               width: double.infinity,
-                              height: 70,
+                              height: 60,
                               child: ElevatedButton(
                                 onPressed: isLoading ? null : registerUser,
                                 style: ElevatedButton.styleFrom(
@@ -597,7 +575,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                   elevation: 5,
-                                  padding: const EdgeInsets.symmetric(vertical: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                 ),
                                 child: isLoading
                                     ? const CircularProgressIndicator(
@@ -610,95 +590,107 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
                                           color: Colors.white,
-                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                          fontFamily:
+                                              selectedLanguage == 'Khmer'
+                                              ? 'NotoSansKhmer'
+                                              : null,
                                         ),
                                       ),
                               ),
                             ),
                             const SizedBox(height: 30),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Divider(
-                                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                                    thickness: 1.5,
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    lang['or_continue_with']!,
-                                    style: getTextStyle().copyWith(
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Divider(
-                                    color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                                    thickness: 1.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 30),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                _buildSocialButton(
-                                  icon: Icons.g_mobiledata,
-                                  label: lang['google']!,
-                                  color: Colors.red,
-                                  onTap: () {},
-                                  isDark: isDark,
-                                  lang: lang,
-                                ),
-                                _buildSocialButton(
-                                  icon: Icons.apple,
-                                  label: lang['apple']!,
-                                  color: isDark ? Colors.white70 : Colors.black,
-                                  onTap: () {},
-                                  isDark: isDark,
-                                  lang: lang,
-                                ),
-                              ],
+                            // Account section - made responsive
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                // For small screens, use a column layout
+                                if (constraints.maxWidth < 400) {
+                                  return Column(
+                                    children: [
+                                      Text(
+                                        lang['have_account']!,
+                                        style: getTextStyle().copyWith(
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => LoginScreen(
+                                                onThemeToggle:
+                                                    widget.onThemeToggle,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          lang['login']!,
+                                          style: TextStyle(
+                                            color: isDark
+                                                ? Colors.white70
+                                                : Colors.deepPurple,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily:
+                                                selectedLanguage == 'Khmer'
+                                                ? 'NotoSansKhmer'
+                                                : null,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+                                // For larger screens, use a row layout
+                                else {
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        lang['have_account']!,
+                                        style: getTextStyle().copyWith(
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => LoginScreen(
+                                                onThemeToggle:
+                                                    widget.onThemeToggle,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          lang['login']!,
+                                          style: TextStyle(
+                                            color: isDark
+                                                ? Colors.white70
+                                                : Colors.deepPurple,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily:
+                                                selectedLanguage == 'Khmer'
+                                                ? 'NotoSansKhmer'
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }
+                              },
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          lang['have_account']!,
-                          style: getTextStyle().copyWith(
-                            fontSize: 16,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => LoginScreen(
-                                  onThemeToggle: widget.onThemeToggle,
-                                ),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            lang['login']!,
-                            style: TextStyle(
-                              color: isDark ? Colors.white70 : Colors.deepPurple,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/category_model.dart' as category_model;
 import '../../models/item_model.dart' as item_model;
 import '../../services/api_services.dart';
@@ -16,11 +17,11 @@ class CategoryDetailScreen extends StatefulWidget {
 
 class _CategoryDetailScreenState extends State<CategoryDetailScreen>
     with TickerProviderStateMixin {
-  late List<item_model.Item> _items;
+  List<item_model.Item> _items = [];
   bool _isLoading = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  String selectedLanguage = 'English'; // Default value
+  String selectedLanguage = 'English';
 
   final Map<String, Map<String, String>> localization = {
     'English': {
@@ -36,6 +37,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
       'item_deleted': '{name} deleted successfully',
       'failed_delete_item': 'Error deleting item: {error}',
       'failed_reload_items': 'Failed to reload items: {error}',
+      'invalid_data': 'Invalid item data',
     },
     'Khmer': {
       'loading_items': 'កំពុងផ្ទុកធាតុ...',
@@ -50,6 +52,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
       'item_deleted': 'បានលុប {name} ដោយជោគជ័យ',
       'failed_delete_item': 'កំហុសក្នុងការលុបធាតុ: {error}',
       'failed_reload_items': 'បរាជ័យក្នុងការផ្ទុកធាតុឡើងវិញ: {error}',
+      'invalid_data': 'ទិន្នន័យធាតុមិនត្រឹមត្រូវ',
     },
   };
 
@@ -61,7 +64,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
   @override
   void initState() {
     super.initState();
-    _items = [];
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -81,7 +83,6 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
     super.dispose();
   }
 
-  // Load the saved language from SharedPreferences
   Future<void> _loadSavedLanguage() async {
     final prefs = await SharedPreferences.getInstance();
     final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
@@ -94,34 +95,44 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
     setState(() => _isLoading = true);
     try {
       final allItems = await ApiService.getItems();
+      print('Loaded items for category ${widget.category.id}: $allItems');
       setState(() {
         _items = allItems
-            .where((item) => item.categoryId == widget.category.id)
+            .where((item) =>
+                item != null &&
+                item.name != null &&
+                item.name!.isNotEmpty &&
+                item.price != null &&
+                item.categoryId == widget.category.id)
             .toList();
       });
       _animationController.forward();
     } catch (e) {
-      _showErrorSnackbar(getTranslatedString('failed_reload_items').replaceFirst('{error}', e.toString()));
+      _showErrorSnackbar(
+          getTranslatedString('failed_reload_items').replaceFirst('{error}', e.toString()));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _deleteItem(int itemId, String itemName) async {
+  Future<void> _deleteItem(int itemId, String? itemName) async {
+    itemName ??= getTranslatedString('item');
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => _buildDeleteConfirmationDialog(itemName),
+      builder: (_) => _buildDeleteConfirmationDialog(itemName!),
     );
     if (confirm != true) return;
 
     try {
       await ApiService.deleteItem(itemId);
-      _showSuccessSnackbar(getTranslatedString('item_deleted').replaceFirst('{name}', itemName));
+      _showSuccessSnackbar(
+          getTranslatedString('item_deleted').replaceFirst('{name}', itemName));
       setState(() {
         _items.removeWhere((item) => item.id == itemId);
       });
     } catch (e) {
-      _showErrorSnackbar(getTranslatedString('failed_delete_item').replaceFirst('{error}', e.toString()));
+      _showErrorSnackbar(
+          getTranslatedString('failed_delete_item').replaceFirst('{error}', e.toString()));
     }
   }
 
@@ -256,14 +267,9 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final primaryColor = isDark ? Colors.deepPurple[300] : Colors.deepPurple;
-    final scaffoldBgColor = isDark
-        ? Colors.grey[900]
-        : Colors.deepPurple.shade50;
-
+    final scaffoldBgColor = isDark ? Colors.grey[900] : Colors.deepPurple.shade50;
     final secondaryTextColor = isDark ? Colors.grey[400]! : Colors.grey[600]!;
-    final emptyStateColor = isDark
-        ? Colors.deepPurple[200]!
-        : Colors.deepPurple[400]!;
+    final emptyStateColor = isDark ? Colors.deepPurple[200]! : Colors.deepPurple[400]!;
     final textColor = isDark ? Colors.white : Colors.black;
     final cardColor = isDark ? Colors.grey[800]! : Colors.white;
 
@@ -286,9 +292,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             gradient: LinearGradient(
               colors: [
                 primaryColor!,
-                isDark
-                    ? Colors.deepPurple.shade500
-                    : Colors.deepPurple.shade400,
+                isDark ? Colors.deepPurple.shade500 : Colors.deepPurple.shade400,
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -309,16 +313,13 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           ),
         ],
       ),
-      body: _isLoading
-          ? _buildLoadingIndicator(isDark)
-          : _items.isEmpty
-              ? _buildEmptyState(
-                  isDark,
-                  emptyStateColor,
-                  textColor,
-                  secondaryTextColor,
-                )
-              : _buildItemList(isDark, cardColor, textColor, secondaryTextColor),
+      body: SafeArea(
+        child: _isLoading
+            ? _buildLoadingIndicator(isDark)
+            : _items.isEmpty
+                ? _buildEmptyState(isDark, emptyStateColor, textColor, secondaryTextColor)
+                : _buildItemList(isDark, cardColor, textColor, secondaryTextColor),
+      ),
     );
   }
 
@@ -335,9 +336,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
           Text(
             getTranslatedString('loading_items'),
             style: TextStyle(
-              color: isDark
-                  ? Colors.deepPurple[300]
-                  : Colors.deepPurple.shade600,
+              color: isDark ? Colors.deepPurple[300] : Colors.deepPurple.shade600,
               fontSize: 16,
               fontWeight: FontWeight.w500,
               fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
@@ -350,7 +349,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
 
   Widget _buildEmptyState(
     bool isDark,
-    Color? emptyStateColor,
+    Color emptyStateColor,
     Color textColor,
     Color secondaryTextColor,
   ) {
@@ -386,7 +385,8 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                getTranslatedString('add_items_prompt').replaceFirst('{name}', widget.category.name),
+                getTranslatedString('add_items_prompt')
+                    .replaceFirst('{name}', widget.category.name),
                 style: TextStyle(
                   fontSize: 16,
                   color: secondaryTextColor,
@@ -410,239 +410,362 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
     return RefreshIndicator(
       onRefresh: _reloadItems,
       color: isDark ? Colors.deepPurple[300] : Colors.deepPurple.shade600,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _items.length,
-          itemBuilder: (context, index) {
-            final item = _items[index];
-            final hasImage =
-                item.imagePath != null && item.imagePath!.isNotEmpty;
-
-            return AnimatedContainer(
-              duration: Duration(milliseconds: 300 + (index * 100)),
-              curve: Curves.easeOutBack,
-              margin: const EdgeInsets.only(bottom: 16),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _items.length,
+        itemBuilder: (context, index) {
+          final item = _items[index];
+          if (item == null || item.name == null || item.name!.isEmpty || item.price == null) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
               child: Card(
-                elevation: 6,
-                shadowColor: Colors.deepPurple.withOpacity(isDark ? 0.1 : 0.2),
+                elevation: 4,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: LinearGradient(
-                      colors: [
-                        cardColor,
-                        isDark ? Colors.grey[800]! : Colors.deepPurple.shade50,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                color: cardColor,
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    getTranslatedString('invalid_data'),
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                     ),
-                  ),
-                  child: _buildItemTile(
-                    item,
-                    hasImage,
-                    isDark,
-                    textColor,
-                    secondaryTextColor,
                   ),
                 ),
               ),
             );
-          },
-        ),
-      ),
-    );
-  }
+          }
+          final hasImage = item.imagePath != null && item.imagePath!.isNotEmpty;
 
-  Widget _buildItemTile(
-    item_model.Item item,
-    bool hasImage,
-    bool isDark,
-    Color textColor,
-    Color secondaryTextColor,
-  ) {
-    return ListTile(
-      contentPadding: const EdgeInsets.all(20),
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            gradient: hasImage
-                ? null
-                : LinearGradient(
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Card(
+              elevation: 6,
+              shadowColor: Colors.deepPurple.withOpacity(isDark ? 0.1 : 0.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
                     colors: [
-                      isDark
-                          ? Colors.deepPurple[400]!
-                          : Colors.deepPurple.shade200,
-                      isDark
-                          ? Colors.deepPurple[300]!
-                          : Colors.deepPurple.shade100,
+                      cardColor,
+                      isDark ? Colors.grey[800]! : Colors.deepPurple.shade50,
                     ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-          ),
-          child: hasImage
-              ? Image.network(
-                  ApiService.getImageUrl(item.imagePath!),
-                  width: 70,
-                  height: 70,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      _buildErrorImage(isDark),
-                )
-              : Icon(
-                  Icons.image_not_supported_rounded,
-                  color: isDark
-                      ? Colors.deepPurple[100]
-                      : Colors.deepPurple.shade600,
-                  size: 32,
                 ),
-        ),
-      ),
-      title: Text(
-        item.name,
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          color: textColor,
-          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-        ),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (item.description != null && item.description!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                item.description!,
-                style: TextStyle(
-                  color: secondaryTextColor,
-                  fontSize: 14,
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    isDark
-                        ? Colors.deepPurple[400]!
-                        : Colors.deepPurple.shade600,
-                    isDark
-                        ? Colors.deepPurple[300]!
-                        : Colors.deepPurple.shade400,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                '\$${item.price.toStringAsFixed(2)}',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                child: ItemTile(
+                  item: item,
+                  hasImage: hasImage,
+                  isDark: isDark,
+                  textColor: textColor,
+                  secondaryTextColor: secondaryTextColor,
+                  selectedLanguage: selectedLanguage,
+                  onEdit: () => _editItem(item),
+                  onDelete: () => _deleteItem(item.id, item.name),
                 ),
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
-      trailing: _buildPopupMenuButton(item, isDark),
+    );
+  }
+}
+
+class ItemTile extends StatefulWidget {
+  final item_model.Item item;
+  final bool hasImage;
+  final bool isDark;
+  final Color textColor;
+  final Color secondaryTextColor;
+  final String selectedLanguage;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const ItemTile({
+    Key? key,
+    required this.item,
+    required this.hasImage,
+    required this.isDark,
+    required this.textColor,
+    required this.secondaryTextColor,
+    required this.selectedLanguage,
+    required this.onEdit,
+    required this.onDelete,
+  }) : super(key: key);
+
+  @override
+  _ItemTileState createState() => _ItemTileState();
+}
+
+class _ItemTileState extends State<ItemTile> with TickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _scaleController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
     );
   }
 
-  Widget _buildErrorImage(bool isDark) {
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    super.dispose();
+  }
+
+  String getTranslatedString(String key) {
+    final localization = {
+      'English': {
+        'edit': 'Edit',
+        'delete': 'Delete',
+      },
+      'Khmer': {
+        'edit': 'កែសម្រួល',
+        'delete': 'លុប',
+      },
+    };
+    final translations = localization[widget.selectedLanguage] ?? localization['English']!;
+    return translations[key] ?? 'Translation missing: $key';
+  }
+
+  Widget _buildErrorImage() {
     return Container(
-      width: 70,
-      height: 70,
+      width: 80,
+      height: 80,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            isDark ? Colors.deepPurple[400]! : Colors.deepPurple.shade200,
-            isDark ? Colors.deepPurple[300]! : Colors.deepPurple.shade100,
+            widget.isDark ? Colors.deepPurple[400]! : Colors.deepPurple.shade200,
+            widget.isDark ? Colors.deepPurple[300]! : Colors.deepPurple.shade100,
           ],
         ),
       ),
       child: Icon(
-        Icons.broken_image_rounded,
-        color: isDark ? Colors.deepPurple[100] : Colors.deepPurple.shade600,
+        Icons.image_not_supported_rounded,
+        color: widget.isDark ? Colors.deepPurple[100] : Colors.deepPurple.shade600,
         size: 32,
       ),
     );
   }
 
-  PopupMenuButton<String> _buildPopupMenuButton(
-    item_model.Item item,
-    bool isDark,
-  ) {
-    return PopupMenuButton<String>(
-      icon: Icon(
-        Icons.more_vert_rounded,
-        color: isDark ? Colors.deepPurple[100] : Colors.deepPurple.shade600,
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minHeight: 80,
+        maxHeight: 100,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      onSelected: (value) {
-        if (value == 'edit') {
-          _editItem(item);
-        } else if (value == 'delete') {
-          _deleteItem(item.id, item.name);
-        }
-      },
-      itemBuilder: (_) => [
-        PopupMenuItem(
-          value: 'edit',
-          child: Row(
-            children: [
-              Icon(
-                Icons.edit_rounded,
-                color: isDark
-                    ? Colors.deepPurple[300]
-                    : Colors.deepPurple.shade600,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                getTranslatedString('edit'),
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.deepPurple.shade700,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Image Section
+          Padding(
+            padding: const EdgeInsets.only(left: 8, top: 8, bottom: 8),
+            child: GestureDetector(
+              onTapDown: (_) => _scaleController.forward(),
+              onTapUp: (_) => _scaleController.reverse(),
+              onTapCancel: () => _scaleController.reverse(),
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: widget.isDark ? Colors.grey[700]! : Colors.deepPurple.shade200,
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(widget.isDark ? 0.2 : 0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withOpacity(widget.isDark ? 0.2 : 0.1),
+                          Colors.transparent,
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                    ),
+                    child: widget.hasImage
+                        ? CachedNetworkImage(
+                            imageUrl: ApiService.getImageUrl(widget.item.imagePath!),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                color: widget.isDark
+                                    ? Colors.deepPurple[300]
+                                    : Colors.deepPurple.shade600,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => _buildErrorImage(),
+                            fadeInDuration: const Duration(milliseconds: 300),
+                            fadeOutDuration: const Duration(milliseconds: 300),
+                          )
+                        : _buildErrorImage(),
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: Row(
-            children: [
-              Icon(Icons.delete_rounded, color: Colors.red.shade600, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                getTranslatedString('delete'),
-                style: TextStyle(
-                  color: Colors.red.shade600,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
-                ),
+          // Item Details
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.item.name ?? 'Unknown',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: widget.textColor,
+                      fontFamily: widget.selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            widget.isDark
+                                ? Colors.deepPurple[400]!
+                                : Colors.deepPurple.shade600,
+                            widget.isDark
+                                ? Colors.deepPurple[300]!
+                                : Colors.deepPurple.shade400,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(widget.isDark ? 0.2 : 0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '\$${widget.item.price!.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                          fontFamily:
+                              widget.selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (widget.item.description != null && widget.item.description!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        widget.item.description!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: widget.secondaryTextColor,
+                          fontFamily:
+                              widget.selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ],
+          // Popup Menu
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert_rounded,
+                color: widget.isDark ? Colors.deepPurple[100] : Colors.deepPurple.shade600,
+              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              onSelected: (value) {
+                if (value == 'edit') {
+                  widget.onEdit();
+                } else if (value == 'delete') {
+                  widget.onDelete();
+                }
+              },
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.edit_rounded,
+                        color: widget.isDark
+                            ? Colors.deepPurple[300]
+                            : Colors.deepPurple.shade600,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        getTranslatedString('edit'),
+                        style: TextStyle(
+                          color: widget.isDark ? Colors.white : Colors.deepPurple.shade700,
+                          fontWeight: FontWeight.w500,
+                          fontFamily:
+                              widget.selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_rounded, color: Colors.red.shade600, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        getTranslatedString('delete'),
+                        style: TextStyle(
+                          color: Colors.red.shade600,
+                          fontWeight: FontWeight.w500,
+                          fontFamily:
+                              widget.selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
