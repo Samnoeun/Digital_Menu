@@ -450,17 +450,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    localization[_language]?.containsKey(
-                                              'welcome_message',
-                                            ) ==
-                                            true
-                                        ? localization[_language]!['welcome_message']!
-                                              .replaceAll(
-                                                '{restaurantName}',
-                                                restaurant?.restaurantName ??
-                                                    'Admin',
-                                              )
-                                        : 'Welcome, Admin',
+                                    restaurant?.restaurantName ?? 'Admin',
                                     style: TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,

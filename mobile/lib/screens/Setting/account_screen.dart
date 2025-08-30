@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../services/api_services.dart';
 import '../../models/restaurant_model.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -31,7 +30,6 @@ class _AccountScreenState extends State<AccountScreen> {
   Restaurant? _restaurant;
   bool _isLoading = true;
   bool _isSaving = false;
-  String? _statusMessage;
   bool _showSuccess = false;
 
   final Map<String, Map<String, String>> localization = {
@@ -115,14 +113,12 @@ class _AccountScreenState extends State<AccountScreen> {
 
   void _showStatusMessage(String message) {
     setState(() {
-      _statusMessage = message;
       _showSuccess = message.contains('successfully') || message.contains('ជោគជ័យ');
     });
 
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
-          _statusMessage = null;
           _showSuccess = false;
         });
       }
@@ -134,7 +130,6 @@ Future<void> _saveChanges() async {
 
   setState(() {
     _isSaving = true;
-    _statusMessage = null;
     _showSuccess = false;
   });
 
