@@ -10,10 +10,54 @@ import 'package:excel/excel.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:universal_html/html.dart' as html;  // for kIsWeb
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/order_history_model.dart';
 
 class DownloadOrderHistoryService {
+  // Add localization map
+  static final Map<String, Map<String, String>> _localization = {
+    'English': {
+      'order_history_report': 'ORDER HISTORY REPORT',
+      'generated_on': 'Generated on:',
+      'no': 'NO',
+      'item_name': 'Item Name',
+      'quantity': 'Quantity',
+      'price': 'Price',
+      'date': 'Date',
+      'report_summary': 'REPORT SUMMARY',
+      'total_orders': 'Total Orders:',
+      'total_items': 'Total Items:',
+      'total_revenue': 'Total Revenue:',
+      'orders': 'Orders',
+    },
+    'Khmer': {
+      'order_history_report': 'របាយការណ៍ប្រវត្តិការកម្មង់',
+      'generated_on': 'បានបង្កើតនៅ:',
+      'no': 'ល.រ',
+      'item_name': 'ឈ្មោះទំនិញ',
+      'quantity': 'បរិមាណ',
+      'price': 'តម្លៃ',
+      'date': 'កាលបរិច្ឆេទ',
+      'report_summary': 'សង្ខេបរបាយការណ៍',
+      'total_orders': 'ការកម្មង់សរុប:',
+      'total_items': 'ទំនិញសរុប:',
+      'total_revenue': 'ចំណូលសរុប:',
+      'orders': 'ការកម្មង់',
+    },
+  };
+
+  // Helper method to get translations
+  static Future<Map<String, String>> _getTranslations() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+      return _localization[savedLanguage] ?? _localization['English']!;
+    } catch (e) {
+      return _localization['English']!;
+    }
+  }
+
   static Future<File?> generateOrderHistoryReport(
       List<OrderHistory> orders, String filterName, String format) async {
     try {
@@ -41,7 +85,6 @@ class DownloadOrderHistoryService {
       final fileName = 'order_report_${sanitizedFilterName}_$timestamp.$effectiveFormat';
       final filePath = '${directory.path}/$fileName';
 
-      final file = File(filePath);
       File resultFile;
 
       switch (effectiveFormat) {
@@ -125,7 +168,8 @@ class DownloadOrderHistoryService {
       String timestamp) async {
     final excel = Excel.createExcel();
     final sheet = excel['Order History'];
-    final excelData = _buildExcelData(orders, filterName);
+    final lang = await _getTranslations();
+    final excelData = await _buildExcelData(orders, filterName, lang);
 
     final headerStyle = CellStyle(
       bold: true,
@@ -176,7 +220,8 @@ class DownloadOrderHistoryService {
       List<OrderHistory> orders, String filterName) async {
     final excel = Excel.createExcel();
     final sheet = excel['Order History'];
-    final excelData = _buildExcelData(orders, filterName);
+    final lang = await _getTranslations();
+    final excelData = await _buildExcelData(orders, filterName, lang);
 
     for (var i = 0; i < excelData.length; i++) {
       for (var j = 0; j < excelData[i].length; j++) {
@@ -195,16 +240,22 @@ class DownloadOrderHistoryService {
     return excel.save()!;
   }
 
-  static List<List<dynamic>> _buildExcelData(
-      List<OrderHistory> orders, String filterName) {
+  static Future<List<List<dynamic>>> _buildExcelData(
+      List<OrderHistory> orders, String filterName, Map<String, String> lang) {
     final excelData = <List<dynamic>>[];
 
-    excelData.add(['ORDER HISTORY REPORT']);
+    excelData.add([lang['order_history_report']]);
     excelData.add(
-        ['Generated on: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}']);
+        ['${lang['generated_on']} ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}']);
     excelData.add([]);
 
-    excelData.add(['NO', 'Item Name', 'Quantity', 'Price', 'Date']);
+    excelData.add([
+      lang['no']!,
+      lang['item_name']!,
+      lang['quantity']!,
+      lang['price']!,
+      lang['date']!
+    ]);
     int idCounter = 1;
 
     for (var order in orders) {
@@ -220,26 +271,26 @@ class DownloadOrderHistoryService {
     }
 
     excelData.add([]);
-    excelData.add(['REPORT SUMMARY']);
-    excelData.add(['Total Orders: ${orders.length}']);
+    excelData.add([lang['report_summary']]);
+    excelData.add(['${lang['total_orders']} ${orders.length}']);
 
     final totalItems = orders.fold(
         0, (sum, order) => sum + order.orderItems.fold(0, (itemSum, item) => itemSum + item.quantity));
-    excelData.add(['Total Items: $totalItems']);
+    excelData.add(['${lang['total_items']} $totalItems']);
 
     final totalRevenue = orders.fold(
         0.0, (sum, order) => sum + order.orderItems.fold(0.0, (itemSum, item) => itemSum + (item.price * item.quantity)));
-    excelData.add(['Total Revenue: \$${totalRevenue.toStringAsFixed(2)}']);
+    excelData.add(['${lang['total_revenue']} \$${totalRevenue.toStringAsFixed(2)}']);
 
     final statusCounts = <String, int>{};
     for (var order in orders) {
       statusCounts[order.status] = (statusCounts[order.status] ?? 0) + 1;
     }
     statusCounts.forEach((status, count) {
-      excelData.add(['$status Orders: $count']);
+      excelData.add(['$status ${lang['orders']}: $count']);
     });
 
-    return excelData;
+    return Future.value(excelData);
   }
 
   static Future<File> _generatePdfReport(
@@ -249,12 +300,14 @@ class DownloadOrderHistoryService {
       String sanitizedFilterName,
       String timestamp) async {
     final pdf = pw.Document();
+    final lang = await _getTranslations();
+    
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         build: (pw.Context context) {
-          return _buildPdfContent(orders, filterName);
+          return _buildPdfContent(orders, filterName, lang);
         },
       ),
     );
@@ -269,12 +322,14 @@ class DownloadOrderHistoryService {
   static Future<List<int>> _generatePdfBytes(
       List<OrderHistory> orders, String filterName) async {
     final pdf = pw.Document();
+    final lang = await _getTranslations();
+    
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         build: (pw.Context context) {
-          return _buildPdfContent(orders, filterName);
+          return _buildPdfContent(orders, filterName, lang);
         },
       ),
     );
@@ -282,22 +337,28 @@ class DownloadOrderHistoryService {
   }
 
   static List<pw.Widget> _buildPdfContent(
-      List<OrderHistory> orders, String filterName) {
+      List<OrderHistory> orders, String filterName, Map<String, String> lang) {
     final content = <pw.Widget>[];
 
     content.add(
       pw.Text(
-        'ORDER HISTORY REPORT',
+        lang['order_history_report']!,
         style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
         textAlign: pw.TextAlign.center,
       ),
     );
 
     content.add(pw.SizedBox(height: 10));
-    content.add(pw.Text('Generated on: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}'));
+    content.add(pw.Text('${lang['generated_on']} ${DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now())}'));
     content.add(pw.SizedBox(height: 20));
 
-    final headers = ['NO', 'Item Name', 'Quantity', 'Price', 'Date'];
+    final headers = [
+      lang['no']!,
+      lang['item_name']!,
+      lang['quantity']!,
+      lang['price']!,
+      lang['date']!
+    ];
     int idCounter = 1;
 
     final tableData = orders.expand((order) {
@@ -327,27 +388,27 @@ class DownloadOrderHistoryService {
       pw.Header(
         level: 1,
         child: pw.Text(
-          'REPORT SUMMARY',
+          lang['report_summary']!,
           style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
         ),
       ),
     );
 
-    content.add(pw.Text('Total Orders: ${orders.length}'));
+    content.add(pw.Text('${lang['total_orders']} ${orders.length}'));
     final totalItems = orders.fold(
         0, (sum, order) => sum + order.orderItems.fold(0, (itemSum, item) => itemSum + item.quantity));
-    content.add(pw.Text('Total Items: $totalItems'));
+    content.add(pw.Text('${lang['total_items']} $totalItems'));
 
     final totalRevenue = orders.fold(
         0.0, (sum, order) => sum + order.orderItems.fold(0.0, (itemSum, item) => itemSum + (item.price * item.quantity)));
-    content.add(pw.Text('Total Revenue: \$${totalRevenue.toStringAsFixed(2)}'));
+    content.add(pw.Text('${lang['total_revenue']} \$${totalRevenue.toStringAsFixed(2)}'));
 
     final statusCounts = <String, int>{};
     for (var order in orders) {
       statusCounts[order.status] = (statusCounts[order.status] ?? 0) + 1;
     }
     statusCounts.forEach((status, count) {
-      content.add(pw.Text('$status Orders: $count'));
+      content.add(pw.Text('$status ${lang['orders']}: $count'));
     });
 
     return content;

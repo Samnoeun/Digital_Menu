@@ -7,6 +7,7 @@ import '../../models/item_model.dart' as item;
 import '../../services/api_services.dart';
 import '../../screens/ReportOrderHistory/download_order_history_service.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   final List<OrderHistory> orders;
@@ -29,12 +30,67 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
   bool isLoading = true;
   bool isDownloading = false;
   String? errorMessage;
+  String selectedLanguage = 'English'; // Add language state
 
   int totalItems = 0;
   int totalCategories = 0;
   int totalOrders = 0;
   List<OrderHistory> orders = [];
   List<OrderHistory> filteredOrders = [];
+
+  // Add localization map
+  final Map<String, Map<String, String>> localization = {
+    'English': {
+      'order_history': 'Order History',
+      'filter_orders': 'Filter Orders',
+      'all': 'All',
+      'today': 'Today',
+      'this_week': 'This Week',
+      'this_month': 'This Month',
+      'custom_date': 'Custom Date',
+      'custom_range': 'Custom Range',
+      'selected': 'Selected',
+      'range': 'Range',
+      'loading_orders': 'Loading your orders...',
+      'no_orders': 'No Orders Found',
+      'no_orders_filter': 'No orders match your current filter criteria',
+      'order_items': 'Order Items',
+      'price': 'Price',
+      'select_format': 'Select Format',
+      'excel': 'Excel',
+      'pdf': 'PDF',
+      'download': 'Download',
+      'table': 'Table',
+      'items': 'items',
+      'try_again': 'Try Again',
+      'something_wrong': 'Oops! Something went wrong',
+    },
+    'Khmer': {
+      'order_history': 'ប្រវត្តិការកម្មង់',
+      'filter_orders': 'តម្រងការកម្មង់',
+      'all': 'ទាំងអស់',
+      'today': 'ថ្ងៃនេះ',
+      'this_week': 'សប្តាហ៍នេះ',
+      'this_month': 'ខែនេះ',
+      'custom_date': 'កាលបរិច្ឆេទផ្ទាល់',
+      'custom_range': 'ជួរដែលបានកំណត់',
+      'selected': 'បានជ្រើសរើស',
+      'range': 'ជួរ',
+      'loading_orders': 'កំពុងដំណើរការការកម្មង់របស់អ្នក...',
+      'no_orders': 'រកមិនឃើញការកម្មង់',
+      'no_orders_filter': 'គ្មានការកម្មង់ដែលត្រូវគ្នានឹងលក្ខណៈវិនិច្ឆ័យតម្រងបច្ចុប្បន្នរបស់អ្នកទេ',
+      'order_items': 'ទំនិញកម្មង់',
+      'price': 'តម្លៃ',
+      'select_format': 'ជ្រើសរើសទ្រង់ទ្រាយ',
+      'excel': 'Excel',
+      'pdf': 'PDF',
+      'download': 'ទាញយក',
+      'table': 'តុ',
+      'items': 'ទំនិញ',
+      'try_again': 'ព្យាយាមម្តងទៀត',
+      'something_wrong': 'មានអ្វីមួយមិនត្រឹមត្រូវ',
+    },
+  };
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -61,6 +117,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
       CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
     );
 
+    _loadSavedLanguage(); // Load saved language
     _loadOrderHistory();
   }
 
@@ -69,6 +126,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
     _fadeController.dispose();
     _slideController.dispose();
     super.dispose();
+  }
+
+  // Load the saved language from SharedPreferences
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    setState(() {
+      selectedLanguage = savedLanguage;
+    });
   }
 
   void _updateFilter(String newFilter) {
@@ -338,6 +404,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final currencyFormat = NumberFormat.currency(symbol: '\$');
+    final lang = localization[selectedLanguage]!; // Get translations for current language
 
     final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.grey[50];
     final infoCardColor = isDarkMode ? Colors.blue[900] : Colors.blue.shade50;
@@ -374,12 +441,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'Order History',
+                      lang['order_history']!, // Translated title
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.5,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ),
@@ -390,7 +458,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                     onPressed: isDownloading || isLoading || filteredOrders.isEmpty
                         ? null
                         : () => _showDownloadOptions(context),
-                    tooltip: 'Download Order History',
+                    tooltip: lang['download']!, // Translated tooltip
                   ),
                 ],
               ),
@@ -420,11 +488,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                       ),
                       SizedBox(height: 16),
                       Text(
-                        'Loading your orders...',
+                        lang['loading_orders']!, // Translated text
                         style: TextStyle(
                           color: secondaryTextColor,
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
+                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                         ),
                       ),
                     ],
@@ -453,11 +522,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                           ),
                           SizedBox(height: 16),
                           Text(
-                            'Oops! Something went wrong',
+                            lang['something_wrong']!, // Translated text
                             style: TextStyle(
                               color: textColor,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                           ),
                           SizedBox(height: 8),
@@ -466,6 +536,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                             style: TextStyle(
                               color: secondaryTextColor,
                               fontSize: 14,
+                              fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -485,8 +556,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                               elevation: 0,
                             ),
                             child: Text(
-                              'Try Again',
-                              style: TextStyle(fontWeight: FontWeight.w600),
+                              lang['try_again']!, // Translated text
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                              ),
                             ),
                           ),
                         ],
@@ -499,234 +573,236 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                       position: _slideAnimation,
                       child: Column(
                         children: [
-  Container(
-  margin: const EdgeInsets.all(20),
-  padding: const EdgeInsets.all(20),
-  decoration: BoxDecoration(
-    color: isDarkMode ? cardColor : Colors.white, // ✅ white in light mode, cardColor in dark mode
-    borderRadius: BorderRadius.circular(20),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.05),
-        blurRadius: 20,
-        offset: const Offset(0, 4),
-      ),
-    ],
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.filter_list,
-              color: primaryColor,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            'Filter Orders',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 16),
-      LayoutBuilder(
-        builder: (context, constraints) {
-          return Column(
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildFilterChip(
-                      'All',
-                      Icons.list_alt,
-                      isDarkMode,
-                      primaryColor,
-                      textColor,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(
-                      'Today',
-                      Icons.today,
-                      isDarkMode,
-                      primaryColor,
-                      textColor,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(
-                      'This Week',
-                      Icons.date_range,
-                      isDarkMode,
-                      primaryColor,
-                      textColor,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildFilterChip(
-                      'This Month',
-                      Icons.calendar_month,
-                      isDarkMode,
-                      primaryColor,
-                      textColor,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildFilterChip(
-                      'Custom Date',
-                      Icons.event,
-                      isDarkMode,
-                      primaryColor,
-                      textColor,
-                      onTap: () => _selectCustomDate(context),
-                      isFullWidth: true,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildFilterChip(
-                      'Custom Range',
-                      Icons.date_range_outlined,
-                      isDarkMode,
-                      primaryColor,
-                      textColor,
-                      onTap: () => _pickCustomRange(context),
-                      isFullWidth: true,
-                    ),
-                  ),
-                ],
-              ),
-              if (_currentFilter == 'Custom Date' && customDate != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: primaryColor.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today,
-                        size: 16,
-                        color: primaryColor,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Selected: ${DateFormat('MMM dd, yyyy').format(customDate!)}',
-                        style: TextStyle(
-                          color: primaryColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            customDate = null;
-                            _currentFilter = 'All';
-                            filteredOrders = _filterOrdersByDate(orders);
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
+                          Container(
+                            margin: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? cardColor : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: primaryColor.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.filter_list,
+                                        color: primaryColor,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      lang['filter_orders']!, // Translated text
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: textColor,
+                                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    return Column(
+                                      children: [
+                                        SingleChildScrollView(
+                                          scrollDirection: Axis.horizontal,
+                                          child: Row(
+                                            children: [
+                                              _buildFilterChip(
+                                                lang['all']!, // Translated text
+                                                Icons.list_alt,
+                                                isDarkMode,
+                                                primaryColor,
+                                                textColor,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _buildFilterChip(
+                                                lang['today']!, // Translated text
+                                                Icons.today,
+                                                isDarkMode,
+                                                primaryColor,
+                                                textColor,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _buildFilterChip(
+                                                lang['this_week']!, // Translated text
+                                                Icons.date_range,
+                                                isDarkMode,
+                                                primaryColor,
+                                                textColor,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              _buildFilterChip(
+                                                lang['this_month']!, // Translated text
+                                                Icons.calendar_month,
+                                                isDarkMode,
+                                                primaryColor,
+                                                textColor,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: _buildFilterChip(
+                                                lang['custom_date']!, // Translated text
+                                                Icons.event,
+                                                isDarkMode,
+                                                primaryColor,
+                                                textColor,
+                                                onTap: () => _selectCustomDate(context),
+                                                isFullWidth: true,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: _buildFilterChip(
+                                                lang['custom_range']!, // Translated text
+                                                Icons.date_range_outlined,
+                                                isDarkMode,
+                                                primaryColor,
+                                                textColor,
+                                                onTap: () => _pickCustomRange(context),
+                                                isFullWidth: true,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        if (_currentFilter == 'Custom Date' && customDate != null) ...[
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: primaryColor.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: primaryColor.withOpacity(0.2),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.calendar_today,
+                                                  size: 16,
+                                                  color: primaryColor,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  '${lang['selected']!}: ${DateFormat('MMM dd, yyyy').format(customDate!)}', // Translated prefix
+                                                  style: TextStyle(
+                                                    color: primaryColor,
+                                                    fontWeight: FontWeight.w600,
+                                                    fontSize: 13,
+                                                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                                  ),
+                                                ),
+                                                const Spacer(),
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      customDate = null;
+                                                      _currentFilter = 'All';
+                                                      filteredOrders = _filterOrdersByDate(orders);
+                                                    });
+                                                  },
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(4),
+                                                    decoration: BoxDecoration(
+                                                      color: primaryColor.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.close,
+                                                      size: 14,
+                                                      color: primaryColor,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                        if (_currentFilter == 'Custom Range' && customRange != null) ...[
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: primaryColor.withOpacity(0.1),
+                                              borderRadius: BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: primaryColor.withOpacity(0.2),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.date_range,
+                                                  size: 16,
+                                                  color: primaryColor,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    '${lang['range']!}: ${DateFormat('MMM dd').format(customRange!.start)} - ${DateFormat('MMM dd, yyyy').format(customRange!.end)}', // Translated prefix
+                                                    style: TextStyle(
+                                                      color: primaryColor,
+                                                      fontWeight: FontWeight.w600,
+                                                      fontSize: 13,
+                                                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                                                    ),
+                                                  ),
+                                                ),
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      customRange = null;
+                                                      _currentFilter = 'All';
+                                                      filteredOrders = _filterOrdersByDate(orders);
+                                                    });
+                                                  },
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(4),
+                                                    decoration: BoxDecoration(
+                                                      color: primaryColor.withOpacity(0.1),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.close,
+                                                      size: 14,
+                                                      color: primaryColor,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
-                          child: Icon(
-                            Icons.close,
-                            size: 14,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              if (_currentFilter == 'Custom Range' && customRange != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: primaryColor.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.date_range,
-                        size: 16,
-                        color: primaryColor,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Range: ${DateFormat('MMM dd').format(customRange!.start)} - ${DateFormat('MMM dd, yyyy').format(customRange!.end)}',
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            customRange = null;
-                            _currentFilter = 'All';
-                            filteredOrders = _filterOrdersByDate(orders);
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Icon(
-                            Icons.close,
-                            size: 14,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          );
-        },
-      ),
-    ],
-  ),
-),
-
 
                           SizedBox(height: 20),
                           filteredOrders.isNotEmpty
@@ -748,6 +824,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                                         secondaryTextColor,
                                         primaryColor,
                                         successColor,
+                                        currencyFormat,
+                                        lang, // Pass translations
                                       );
                                     },
                                   ),
@@ -782,19 +860,21 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                                       ),
                                       SizedBox(height: 16),
                                       Text(
-                                        'No Orders Found',
+                                        lang['no_orders']!, // Translated text
                                         style: TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
                                           color: textColor,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                         ),
                                       ),
                                       SizedBox(height: 8),
                                       Text(
-                                        'No orders match your current filter criteria',
+                                        lang['no_orders_filter']!, // Translated text
                                         style: TextStyle(
                                           fontSize: 14,
                                           color: secondaryTextColor,
+                                          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                         ),
                                         textAlign: TextAlign.center,
                                       ),
@@ -812,6 +892,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
   void _showDownloadOptions(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final lang = localization[selectedLanguage]!; // Get translations for current language
 
     showModalBottomSheet(
       context: context,
@@ -827,16 +908,17 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Select Format',
+                lang['select_format']!, // Translated text
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: isDarkMode ? Colors.white : Colors.black,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
               ),
               const SizedBox(height: 16),
-              _buildFormatOption(context, 'Excel', Icons.table_chart, 'xlsx'),
-              _buildFormatOption(context, 'PDF', Icons.picture_as_pdf, 'pdf'),
+              _buildFormatOption(context, lang['excel']!, Icons.table_chart, 'xlsx'), // Translated text
+              _buildFormatOption(context, lang['pdf']!, Icons.picture_as_pdf, 'pdf'), // Translated text
              
               const SizedBox(height: 8),
             ],
@@ -853,7 +935,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
 
     return ListTile(
       leading: Icon(icon, color: primaryColor),
-      title: Text(title, style: TextStyle(color: isDarkMode ? Colors.white : Colors.black)),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: isDarkMode ? Colors.white : Colors.black,
+          fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+        ),
+      ),
       onTap: () {
         Navigator.pop(context);
         _downloadReport(format);
@@ -862,8 +950,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
   }
 
   void _downloadReport(String format) {
-    // Check if there are orders to download
-    final ordersToDownload = filteredOrders; // Use filteredOrders instead of widget.orders
+    final ordersToDownload = filteredOrders;
     if (ordersToDownload.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -891,7 +978,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
       _currentFilter,
       format,
     ).then((file) {
-      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context);
       setState(() {
         isDownloading = false;
       });
@@ -912,7 +999,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
         );
       }
     }).catchError((error) {
-      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context);
       setState(() {
         isDownloading = false;
       });
@@ -987,6 +1074,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
                   color: isSelected ? Colors.white : isDarkMode ? Colors.grey[300] : const Color(0xFF64748B),
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -997,56 +1085,57 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> with TickerProv
     );
   }
 
-Widget _buildOrderCard(
-  OrderHistory order,
-  int index,
-  bool isDarkMode,
-  Color cardColor,
-  Color textColor,
-  Color secondaryTextColor,
-  Color primaryColor,
-  Color successColor,
-) {
-  final currencyFormat = NumberFormat.currency(symbol: '\$');
-  return Container(
-    margin: const EdgeInsets.only(bottom: 16),
-    decoration: BoxDecoration(
-      color: isDarkMode ? Colors.grey[850] : Colors.white, // Single color for dark mode
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [
-        BoxShadow(
-          color: primaryColor.withOpacity(0.08),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
-          spreadRadius: 0,
+  Widget _buildOrderCard(
+    OrderHistory order,
+    int index,
+    bool isDarkMode,
+    Color cardColor,
+    Color textColor,
+    Color secondaryTextColor,
+    Color primaryColor,
+    Color successColor,
+    NumberFormat currencyFormat,
+    Map<String, String> lang, // Add translations parameter
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[850] : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border.all(
+          color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA),
+          width: 1,
         ),
-        BoxShadow(
-          color: Colors.black.withOpacity(0.04),
-          blurRadius: 6,
-          offset: const Offset(0, 2),
-        ),
-      ],
-      border: Border.all(
-        color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA), // Simplified border color
-        width: 1,
       ),
-    ),
-    child: Theme(
-      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-      child: ExpansionTile(
-        tilePadding: const EdgeInsets.all(16),
-        childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                primaryColor,
-                primaryColor.withOpacity(0.8),
-                const Color(0xFFEC4899),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.all(16),
+          childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  primaryColor,
+                  primaryColor.withOpacity(0.8),
+                  const Color(0xFFEC4899),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
@@ -1062,12 +1151,13 @@ Widget _buildOrderCard(
         title: Row(
           children: [
             Text(
-              'Table ${order.tableNumber}',
+              '${lang['table']!} ${order.tableNumber}', // Translated prefix
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
                 color: textColor,
                 letterSpacing: -0.3,
+                fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),
             SizedBox(width: 6),
@@ -1119,6 +1209,7 @@ Widget _buildOrderCard(
                     color: secondaryTextColor,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
+                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                   ),
                 ),
               ],
@@ -1133,11 +1224,12 @@ Widget _buildOrderCard(
                 ),
                 SizedBox(width: 4),
                 Text(
-                  '${order.orderItems.length} items',
+                  '${order.orderItems.length} ${lang['items']!}', // Translated suffix
                   style: TextStyle(
                     color: primaryColor.withOpacity(0.8),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
+                    fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                   ),
                 ),
               ],
@@ -1148,10 +1240,10 @@ Widget _buildOrderCard(
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.grey[800] : const Color(0xFFF8FAFC), // Single color
+              color: isDarkMode ? Colors.grey[800] : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA), // Simplified border
+                color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA),
                 width: 1,
               ),
             ),
@@ -1172,12 +1264,13 @@ Widget _buildOrderCard(
                     ),
                     SizedBox(width: 10),
                     Text(
-                      'Order Items',
+                      lang['order_items']!, // Translated text
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
                         color: textColor,
                         letterSpacing: -0.2,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
                   ],
@@ -1188,10 +1281,10 @@ Widget _buildOrderCard(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[800] : Colors.white, // Single color
+                      color: isDarkMode ? Colors.grey[800] : Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA), // Simplified border
+                        color: isDarkMode ? Colors.grey[700]! : const Color(0xFFEAEAEA),
                         width: 1,
                       ),
                       boxShadow: [
@@ -1216,15 +1309,17 @@ Widget _buildOrderCard(
                                   fontSize: 13,
                                   color: textColor,
                                   letterSpacing: -0.1,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                               SizedBox(height: 3),
                               Text(
-                                'Price: ${currencyFormat.format(orderItem.price)}',
+                                '${lang['price']!}: ${currencyFormat.format(orderItem.price)}', // Translated prefix
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: secondaryTextColor,
                                   fontWeight: FontWeight.w500,
+                                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                 ),
                               ),
                               if (orderItem.specialNote.isNotEmpty) ...[
@@ -1232,7 +1327,7 @@ Widget _buildOrderCard(
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: isDarkMode ? Colors.amber[900] : const Color(0xFFFEF3C7), // Single color
+                                    color: isDarkMode ? Colors.amber[900] : const Color(0xFFFEF3C7),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
                                       color: isDarkMode ? Colors.amber[800]! : const Color(0xFFD97706).withOpacity(0.2),
@@ -1255,6 +1350,7 @@ Widget _buildOrderCard(
                                             fontSize: 10,
                                             color: isDarkMode ? Colors.amber[100]! : const Color(0xFF92400E),
                                             fontWeight: FontWeight.w600,
+                                            fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
                                           ),
                                         ),
                                       ),
@@ -1302,6 +1398,7 @@ Widget _buildOrderCard(
     ),
   );
 }
+
   Color _getCategoryColor(String category) {
     switch (category.toLowerCase()) {
       case 'appetizer':
