@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:universal_html/html.dart' as html;
 import '../../services/api_services.dart';
-import '../../models/restaurant_model.dart';
 import 'qr_scanner_screen.dart';
 
 class QrScreen extends StatefulWidget {
@@ -117,7 +115,7 @@ class _QrScreenState extends State<QrScreen> {
     try {
       final restaurant = await ApiService.getRestaurant();
       setState(() {
-        qrText = 'http://192.168.108.131:8000/restaurants/${restaurant.id}/menu';
+        qrText = 'https://qrmenu.zapto.org/restaurants/${restaurant.id}/menu';
         restaurantName = restaurant.restaurantName;
         showQR = true;
         isLoading = false;
@@ -273,6 +271,12 @@ class _QrScreenState extends State<QrScreen> {
         backgroundColor: primaryColor,
         elevation: 0,
         titleSpacing: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         title: Padding(
           padding: const EdgeInsets.only(left: 10),
           child: Text(
@@ -310,20 +314,23 @@ class _QrScreenState extends State<QrScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (isLoading)
-              Column(
-                children: [
-                  CircularProgressIndicator(color: primaryColor),
-                  const SizedBox(height: 16),
-                  Text(
-                    localization[_language]!['loading']!,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 16,
-                      fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+              Center( // Centered loading indicator and text
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: primaryColor),
+                    const SizedBox(height: 16),
+                    Text(
+                      localization[_language]!['loading']!,
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 16,
+                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                  ],
+                ),
               ).animate().fadeIn(duration: 300.ms)
             else if (errorMessage != null)
               Column(

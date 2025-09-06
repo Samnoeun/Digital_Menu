@@ -184,10 +184,25 @@ class OrderController extends Controller
             return redirect()->route('web.menu-preview', ['id' => $id])->withErrors(['error' => 'Invalid order data']);
         }
 
-        return view('order-confirmation', [
-            'restaurant' => \App\Models\Restaurant::findOrFail($id),
-            'table_number' => $tableNumber,
-            'items' => $items,
-        ]);
+        // return view('order-confirmation', [
+        //     'restaurant' => \App\Models\Restaurant::findOrFail($id),
+        //     'table_number' => $tableNumber,
+        //     'items' => $items,
+        // ]);
+    }
+    public function webCheckTable($id, Request $request)
+    {
+        $tableNumber = $request->query('table_number');
+        if (!$tableNumber) {
+            return response()->json(['available' => true]); // No table number, assume available
+        }
+
+        // Check if the table is already in use
+        $existingOrder = Order::where('restaurant_id', $id)
+                             ->where('table_number', $tableNumber)
+                             ->where('status', 'pending') // Adjust status based on your logic
+                             ->first();
+
+        return response()->json(['available' => !$existingOrder]);
     }
 }

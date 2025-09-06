@@ -24,6 +24,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'apply': 'Apply',
       'account': 'Account',
       'logout': 'Log Out',
+      'logout_confirm_title': 'Confirm',
+      'logout_confirm_message': 'Are you sure you want to log out?',
+      'cancel': 'Cancel',
     },
     'Khmer': {
       'settings': 'ការកំណត់',
@@ -33,6 +36,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       'apply': 'អនុវត្ត',
       'account': 'គណនី',
       'logout': 'ចាកចេញ',
+      'logout_confirm_title': 'ចាកចេញ',
+      'logout_confirm_message': 'តើអ្នកប្រាកដថាចង់ចាកចេញមែនទេ?',
+      'cancel': 'បោះបង់',
     },
   };
 
@@ -150,6 +156,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+ void _showLogoutConfirmation(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: Material(
+            borderRadius: BorderRadius.circular(20),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    localization[selectedLanguage]!['logout_confirm_title']!,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    localization[selectedLanguage]!['logout_confirm_message']!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      minimumSize: const Size(200, 50), // Updated width and height
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _logout(context);
+                    },
+                    child: Text(
+                      localization[selectedLanguage]!['logout']!,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      localization[selectedLanguage]!['cancel']!,
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                        fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
   void _logout(BuildContext context) {
     Navigator.pushAndRemoveUntil(
       context,
@@ -177,7 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final lang = localization[selectedLanguage]!;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] :    Colors.grey[50];
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.grey[50];
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
@@ -294,7 +381,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               lang['logout']!,
               style: getTextStyle().copyWith(color: Colors.red),
             ),
-            onTap: () => _logout(context),
+            onTap: () => _showLogoutConfirmation(context),
           ),
         ],
       ),

@@ -12,7 +12,7 @@ class QRScannerScreen extends StatefulWidget {
   State<QRScannerScreen> createState() => _QRScannerScreenState();
 }
 
-class _QRScannerScreenState extends State<QRScannerScreen> {
+class _QRScannerScreenState extends State<QRScannerScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _brandNameController = TextEditingController();
   String _language = 'English'; // Default language
@@ -20,12 +20,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   bool showQR = false; // Whether to show generated QR code
   String customBrandName = ''; // Custom brand name
   Color _qrColor = Colors.purple; // Default QR code color
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   // Localization map for English and Khmer
   final Map<String, Map<String, String>> localization = {
     'English': {
       'app_bar_title': 'QR Code Generator',
-      'info_text': 'Enter a URL and optional brand name to generate a QR code. Customize the color and download the QR code as an image.',
       'url_label': 'Enter URL for QR Code:',
       'url_hint': 'Enter a URL (e.g., https://example.com)',
       'brand_name_label': 'Custom Brand Name:',
@@ -46,7 +47,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     },
     'Khmer': {
       'app_bar_title': 'បង្កើត QR Code',
-      'info_text': 'បញ្ចូល URL និងឈ្មោះម៉ាក (ស្រេចចិត្ត) ដើម្បីបង្កើត QR Code។ ប្តូរពណ៌ និងទាញយក QR Code ជារូបភាព។',
       'url_label': 'បញ្ចូល URL សម្រាប់ QR Code:',
       'url_hint': 'បញ្ចូល URL (ឧ. https://example.com)',
       'brand_name_label': 'ឈ្មោះម៉ាកផ្ទាល់ខ្លួន:',
@@ -72,6 +72,14 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     super.initState();
     _loadSavedLanguage();
     _loadCustomBrandName();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
   }
 
   // Load the saved language from SharedPreferences
@@ -109,6 +117,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           content: Text(localization[_language]!['empty_input_error']!),
           backgroundColor: Colors.red.shade700,
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
         ),
       );
       return;
@@ -117,6 +126,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     setState(() {
       qrText = url;
       showQR = true;
+      _animationController.forward(from: 0.0);
     });
   }
 
@@ -238,6 +248,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   void dispose() {
     _urlController.dispose();
     _brandNameController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -245,19 +256,19 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final scaffoldBgColor = isDarkMode ? Colors.grey[900] : Colors.deepPurple.shade50;
-    final cardColor = isDarkMode ? Colors.grey[800] : Colors.deepPurple.shade100;
-    final textColor = isDarkMode ? Colors.white : Colors.deepPurple.shade800;
-    final borderColor = isDarkMode ? Colors.grey[700]! : Colors.deepPurple.shade200;
-    final primaryColor = isDarkMode ? Colors.deepPurple[600] : Colors.deepPurple.shade600;
-    final hintColor = isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade400;
-    final inputFillColor = isDarkMode ? Colors.grey[800] : Colors.white;
+    final scaffoldBgColor = isDarkMode ? Colors.grey[900]! : Colors.white;
+    final cardColor = isDarkMode ? Colors.grey[850]! : Colors.grey[100]!;
+    final textColor = isDarkMode ? Colors.white : Colors.grey[800]!;
+    final borderColor = isDarkMode ? Colors.grey[700]! : Colors.grey[300]!;
+    final primaryColor = Colors.deepPurple; // Updated to deepPurple
+    final hintColor = isDarkMode ? Colors.grey[400]! : Colors.grey[500]!;
+    final inputFillColor = isDarkMode ? Colors.grey[800]! : Colors.white;
 
     return Scaffold(
       backgroundColor: scaffoldBgColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: primaryColor,
+        backgroundColor: primaryColor, // Uses deepPurple
         elevation: 0,
         titleSpacing: 0,
         title: Padding(
@@ -296,41 +307,16 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Info box
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: borderColor),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info, color: textColor),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      localization[_language]!['info_text']!,
-                      style: TextStyle(
-                        color: textColor,
-                        fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
             // URL input for QR code generation
             Text(
               localization[_language]!['url_label']!,
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: textColor,
                 fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
@@ -340,12 +326,16 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               controller: _urlController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(color: borderColor),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: primaryColor, width: 2),
                 ),
                 hintText: localization[_language]!['url_hint']!,
                 prefixIcon: Icon(Icons.link, color: primaryColor),
@@ -366,13 +356,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               ),
               maxLines: 1,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             // Brand name input
             Text(
               localization[_language]!['brand_name_label']!,
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: textColor,
                 fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
@@ -382,12 +372,16 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               controller: _brandNameController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(color: borderColor),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: primaryColor, width: 2),
                 ),
                 hintText: localization[_language]!['brand_name_hint']!,
                 prefixIcon: Icon(Icons.edit, color: primaryColor),
@@ -414,13 +408,16 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 _saveCustomBrandName(value);
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             // Color picker
             GestureDetector(
               onTap: () async {
                 final Color? pickedColor = await showDialog<Color>(
                   context: context,
                   builder: (context) => AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     title: Text(
                       localization[_language]!['color_picker_label']!,
                       style: TextStyle(
@@ -428,46 +425,52 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                       ),
                     ),
                     content: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
                         children: [
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              Colors.purple,
-                              Colors.blue,
-                              Colors.green,
-                              Colors.red,
-                              Colors.orange,
-                              Colors.black,
-                            ].map((color) {
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context).pop(color);
-                                },
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: _qrColor == color ? Colors.white : Colors.grey,
-                                      width: 2,
-                                    ),
-                                  ),
+                          Colors.purple,
+                          Colors.blue,
+                          Colors.green,
+                          Colors.red,
+                          Colors.orange,
+                          Colors.black,
+                        ].map((color) {
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).pop(color);
+                            },
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _qrColor == color ? Colors.white : Colors.grey,
+                                  width: _qrColor == color ? 3 : 1,
                                 ),
-                              );
-                            }).toList(),
-                          ),
-                        ],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: Text('Cancel'),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(color: primaryColor),
+                        ),
                       ),
                     ],
                   ),
@@ -475,6 +478,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 if (pickedColor != null) {
                   setState(() {
                     _qrColor = pickedColor;
+                    if (showQR) _animationController.forward(from: 0.0);
                   });
                 }
               },
@@ -482,8 +486,14 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: cardColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: borderColor),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -492,25 +502,33 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                       localization[_language]!['color_picker_label']!,
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: primaryColor,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
                         fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                       ),
                     ),
-                    Container(
-                      width: 24,
-                      height: 24,
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
                         color: _qrColor,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             // Generate button
             SizedBox(
               width: double.infinity,
@@ -519,93 +537,102 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 label: Text(
                   localization[_language]!['generate_button']!,
                   style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                     fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                   ),
                 ),
                 onPressed: _generateQRCode,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: isDarkMode ? Colors.black : Colors.white,
+                  backgroundColor: primaryColor, // Uses deepPurple
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                   ),
+                  elevation: 2,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             // Generated QR code
-            if (showQR) ...[
-              Center(
-                child: Card(
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: borderColor, width: 1),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: cardColor,
+            if (showQR)
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Center(
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isDarkMode
-                            ? [Colors.grey[800]!, Colors.grey[850]!]
-                            : [Colors.white, Colors.deepPurple.shade50],
-                      ),
                     ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(20), // White border around QR code
-                          color: Colors.white,
-                          child: QrImageView(
-                            data: qrText,
-                            version: QrVersions.auto,
-                            size: 250.0,
-                            backgroundColor: Colors.white,
-                            foregroundColor: _qrColor,
-                            errorCorrectionLevel: QrErrorCorrectLevel.M,
-                          ),
-                        ),
-                        if (customBrandName.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          Text(
-                            customBrandName,
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w500,
-                              color: textColor,
-                              fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
-                            ),
-                            textAlign: TextAlign.center,
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
                           ),
                         ],
-                      ],
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: QrImageView(
+                              data: qrText,
+                              version: QrVersions.auto,
+                              size: 250.0,
+                              backgroundColor: Colors.white,
+                              foregroundColor: _qrColor,
+                              errorCorrectionLevel: QrErrorCorrectLevel.M,
+                            ),
+                          ),
+                          if (customBrandName.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              customBrandName,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: textColor,
+                                fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
+            if (showQR) ...[
               const SizedBox(height: 20),
               Text(
                 qrText,
                 style: TextStyle(
-                  fontSize: 13,
-                  color: textColor,
+                  fontSize: 14,
+                  color: textColor.withOpacity(0.7),
                   fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
                 ),
                 textAlign: TextAlign.center,
               ),
             ],
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             // Test instructions
             Text(
               localization[_language]!['how_to_test']!,
               style: TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: textColor,
                 fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
@@ -614,7 +641,8 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
             Text(
               localization[_language]!['test_instructions']!,
               style: TextStyle(
-                color: isDarkMode ? Colors.grey[400] : Colors.deepPurple.shade600,
+                fontSize: 14,
+                color: textColor.withOpacity(0.7),
                 fontFamily: _language == 'Khmer' ? 'NotoSansKhmer' : null,
               ),
             ),

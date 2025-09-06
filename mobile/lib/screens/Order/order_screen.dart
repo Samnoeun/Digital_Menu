@@ -36,10 +36,7 @@ class _OrderScreenState extends State<OrderScreen> {
       'items': 'Items',
       'mark_as': 'Mark as',
       'failed_to_load': 'Failed to load orders',
-      'confirm_completion': 'Confirm Completion',
-      'complete_order_message': 'Mark this order as completed?',
-      'yes': 'Yes',
-      'cancel': 'Cancel',
+      'order_completed': 'Order completed successfully',
       'note': 'Note',
     },
     'Khmer': {
@@ -57,10 +54,7 @@ class _OrderScreenState extends State<OrderScreen> {
       'items': 'ធាតុ',
       'mark_as': 'សម្គាល់ជា',
       'failed_to_load': 'បរាជ័យក្នុងការផ្ទុកការកម្មង់',
-      'confirm_completion': 'បញ្ជាក់ការបញ្ចប់',
-      'complete_order_message': 'សម្គាល់ការកម្មង់នេះថាបានបញ្ចប់?',
-      'yes': 'បាទ/ចាស',
-      'cancel': '取消',
+      'order_completed': 'ការកម្មង់បានបញ្ចប់ដោយជោគជ័យ',
       'note': 'ចំណាំ',
     },
   };
@@ -140,37 +134,25 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Future<void> _updateOrderStatus(Order order, String newStatus) async {
     try {
-      // Show confirmation dialog for completing orders
-      if (newStatus == 'completed') {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text(localization[selectedLanguage]!['confirm_completion']!),
-              content: Text(localization[selectedLanguage]!['complete_order_message']!),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(localization[selectedLanguage]!['cancel']!),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(localization[selectedLanguage]!['yes']!),
-                ),
-              ],
-            );
-          },
-        );
-        
-        if (confirmed != true) return;
-      }
-      
       await ApiService.updateOrderStatus(order.id, newStatus);
 
       if (!mounted) return;
 
       setState(() {
         if (newStatus == 'completed') {
+          // Show SnackBar alert
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                localization[selectedLanguage]!['order_completed']!,
+                style: TextStyle(
+                  fontFamily: selectedLanguage == 'Khmer' ? 'NotoSansKhmer' : null,
+                ),
+              ),
+              duration: const Duration(seconds: 2),
+              backgroundColor: Colors.green,
+            ),
+          );
           _orders.removeWhere((o) => o.id == order.id);
           _expandedOrders.remove(order.id);
         } else {
