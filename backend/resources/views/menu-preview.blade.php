@@ -7,6 +7,8 @@
     <title>Restaurant Menu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- Add html2canvas library -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Battambang:wght@100;300;400;700;900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
         body.km {
@@ -109,6 +111,14 @@
             opacity: 0;
             pointer-events: none;
         }
+        .restaurant-profile {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 10px;
+            border: 3px solid #6b46c1;
+        }
         /* Table error styling - FIXED */
         #table-error {
             background-color: #fee2e2;
@@ -129,6 +139,34 @@
             width: 1.25rem;
             height: 1.25rem;
             margin-right: 0.5rem;
+        }
+        /* Receipt styling */
+        #receipt-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 15px;
+        }
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .receipt-total {
+            font-weight: bold;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            margin-top: 15px;
+        }
+        #download-loading {
+            display: none;
         }
     </style>
 </head>
@@ -320,6 +358,55 @@
             </div>
         </div>
 
+        <!-- New Receipt Modal -->
+        <div id="receipt-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center hidden modal-hidden">
+            <div class="bg-white rounded-t-lg sm:rounded-lg w-full sm:w-96 max-h-[80vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-gray-900" data-translate="your_receipt">Your Receipt</h2>
+                        <button id="close-receipt" class="text-gray-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Receipt content that will be converted to image -->
+                    <div id="receipt-container">
+                        <div class="receipt-header">
+                            <img src="{{ $restaurant->profile ? url('storage/' . $restaurant->profile) : 'https://via.placeholder.com/80' }}" alt="{{ $restaurant->restaurant_name }}" class="restaurant-profile w-12 h-12 object-cover rounded-full">
+                            <h2 class="text-xl font-bold">{{ $restaurant->restaurant_name }}</h2>
+                            <p id="receipt-date" class="text-gray-600"></p>
+                            <p class="text-lg font-semibold mt-2">Table <span id="receipt-table-number"></span></p>
+                        </div>
+                        
+                        <div id="receipt-items" class="mb-4">
+                            <!-- Items will be inserted here -->
+                        </div>
+                        
+                        <div class="receipt-total flex justify-between">
+                            <span>Total:</span>
+                            <span id="receipt-total-amount">$0.00</span>
+                        </div>
+                        
+                        <div class="text-center mt-6 text-sm text-gray-500">
+                            Thank you for your order!
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-4 mt-6">
+                        <button id="cancel-receipt" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-400 transition" data-translate="cancel">Cancel</button>
+                        <button id="download-receipt" class="flex-1 bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition flex items-center justify-center">
+                            <span data-translate="download">Download</span>
+                            <svg id="download-loading" class="w-5 h-5 ml-2 animate-spin hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12a8 8 0 0116 0"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <button id="basket-button" class="hidden">Basket (0) - $0.00</button>
     </div>
 
@@ -337,6 +424,7 @@
             let selectedCategoryId = null;
             let currentLanguage = 'en';
             let basketTriggered = false;
+            let currentOrderData = null; // Store order data for receipt
 
             const translations = {
                 en: {
@@ -355,7 +443,10 @@
                     table_number_error: 'Please enter a table number',
                     order_success: 'Order submitted successfully',
                     your_order: 'Your Order',
-                    done: 'Done'
+                    done: 'Done',
+                    your_receipt: 'Your Receipt',
+                    cancel: 'Cancel',
+                    download: 'Download'
                 },
                 km: {
                     your_cart: 'កន្ត្រករបស់អ្នក',
@@ -373,7 +464,10 @@
                     table_number_error: 'សូមបញ្ចូលលេខតុ',
                     order_success: 'ការបញ្ជាទិញបានជោគជ័យ',
                     your_order: 'ការបញ្ជាទិញរបស់អ្នក',
-                    done: 'រួចរាល់'
+                    done: 'រួចរាល់',
+                    your_receipt: 'បង្កាន់ដៃរបស់អ្នក',
+                    cancel: 'បោះបង់',
+                    download: 'ទាញយក'
                 }
             };
 
@@ -590,8 +684,111 @@
                     </li>
                 `).join('');
 
+                // Store order data for receipt
+                currentOrderData = {
+                    tableNumber: tableNumber,
+                    items: Object.values(itemQuantities),
+                    total: totalPrice,
+                    date: new Date()
+                };
+
                 confirmationModal.classList.remove('hidden', 'modal-hidden');
                 updateTranslations();
+            }
+
+            function showReceiptModal() {
+                const receiptModal = document.getElementById('receipt-modal');
+                const receiptItems = document.getElementById('receipt-items');
+                const receiptTotal = document.getElementById('receipt-total-amount');
+                const receiptTableNumber = document.getElementById('receipt-table-number');
+                const receiptDate = document.getElementById('receipt-date');
+                
+                if (!receiptModal || !receiptItems || !receiptTotal || !receiptTableNumber || !receiptDate) {
+                    console.error('Receipt modal elements not found');
+                    return;
+                }
+                
+                if (!currentOrderData) {
+                    console.error('No order data available for receipt');
+                    return;
+                }
+                
+                // Update receipt content
+                receiptTableNumber.textContent = currentOrderData.tableNumber;
+                receiptTotal.textContent = `$${currentOrderData.total.toFixed(2)}`;
+                receiptDate.textContent = currentOrderData.date.toLocaleString();
+                
+                // Populate receipt items
+                receiptItems.innerHTML = currentOrderData.items.map(item => `
+                    <div class="receipt-item">
+                        <div>
+                            <div class="font-semibold">${item.quantity}x ${item.name}</div>
+                            ${item.note ? `<div class="text-sm text-gray-600">Note: ${item.note}</div>` : ''}
+                        </div>
+                        <div>$${(item.price * item.quantity).toFixed(2)}</div>
+                    </div>
+                `).join('');
+                
+                // Show the receipt modal
+                receiptModal.classList.remove('hidden', 'modal-hidden');
+                updateTranslations();
+            }
+
+            function downloadReceipt() {
+                const receiptContainer = document.getElementById('receipt-container');
+                const downloadButton = document.getElementById('download-receipt');
+                const loadingIcon = document.getElementById('download-loading');
+                
+                if (!receiptContainer || !downloadButton) {
+                    console.error('Receipt download elements not found');
+                    return;
+                }
+                
+                // Show loading indicator
+                downloadButton.disabled = true;
+                if (loadingIcon) loadingIcon.classList.remove('hidden');
+                
+                // Use html2canvas to convert the receipt to an image
+                html2canvas(receiptContainer, {
+                    scale: 2, // Higher quality
+                    backgroundColor: '#ffffff'
+                }).then(canvas => {
+                    try {
+                        // Convert canvas to data URL
+                        const imageData = canvas.toDataURL('image/png');
+                        
+                        // Create download link
+                        const link = document.createElement('a');
+                        link.download = `receipt-table-${currentOrderData.tableNumber}.png`;
+                        link.href = imageData;
+                        
+                        // Trigger download
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } catch (error) {
+                        console.error('Error creating download link:', error);
+                        // Fallback for mobile devices
+                        canvas.toBlob(blob => {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.download = `receipt-table-${currentOrderData.tableNumber}.png`;
+                            link.href = url;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+                        });
+                    }
+                    
+                    // Hide loading indicator
+                    downloadButton.disabled = false;
+                    if (loadingIcon) loadingIcon.classList.add('hidden');
+                }).catch(error => {
+                    console.error('Error generating receipt image:', error);
+                    downloadButton.disabled = false;
+                    if (loadingIcon) loadingIcon.classList.add('hidden');
+                });
             }
 
             document.querySelectorAll('.item-card').forEach(card => {
@@ -814,15 +1011,47 @@
                 if (modal) {
                     modal.classList.add('hidden');
                     setTimeout(() => modal.classList.add('modal-hidden'), 300);
+                    // Show receipt modal instead of clearing cart immediately
+                    showReceiptModal();
+                } else {
+                    console.error('Confirmation modal not found for close');
+                }
+            });
+
+            // Receipt modal event handlers
+            document.getElementById('close-receipt').addEventListener('click', () => {
+                const modal = document.getElementById('receipt-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    setTimeout(() => modal.classList.add('modal-hidden'), 300);
+                    // Clear cart after closing receipt
                     cart = [];
                     saveCart();
                     updateCart();
                     updateBasketButton();
                     basketTriggered = false;
                 } else {
-                    console.error('Confirmation modal not found for close');
+                    console.error('Receipt modal not found for close');
                 }
             });
+
+            document.getElementById('cancel-receipt').addEventListener('click', () => {
+                const modal = document.getElementById('receipt-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                    setTimeout(() => modal.classList.add('modal-hidden'), 300);
+                    // Clear cart after closing receipt
+                    cart = [];
+                    saveCart();
+                    updateCart();
+                    updateBasketButton();
+                    basketTriggered = false;
+                } else {
+                    console.error('Receipt modal not found for close');
+                }
+            });
+
+            document.getElementById('download-receipt').addEventListener('click', downloadReceipt);
 
             const tableNumberInput = document.getElementById('table-number');
             if (tableNumberInput) {
@@ -955,4 +1184,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
