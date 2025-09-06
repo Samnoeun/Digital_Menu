@@ -115,7 +115,7 @@ class _QrScreenState extends State<QrScreen> {
     try {
       final restaurant = await ApiService.getRestaurant();
       setState(() {
-        qrText = 'http://192.168.108.35:8080/restaurants/${restaurant.id}/menu';
+        qrText = 'https://qrmenu.zapto.org/restaurants/${restaurant.id}/menu';
         restaurantName = restaurant.restaurantName;
         showQR = true;
         isLoading = false;
